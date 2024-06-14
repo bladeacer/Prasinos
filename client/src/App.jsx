@@ -1,7 +1,7 @@
 import './App.css';
 import TopNavbarV2 from './reusables/top_navbarv2';
 
-function App() {
+export default function App() {
 
   return (
     <>
@@ -10,4 +10,3 @@ function App() {
   )
 }
 
-export default App
