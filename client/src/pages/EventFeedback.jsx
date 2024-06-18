@@ -1,29 +1,27 @@
-import '../App.css'
+import '../App.css';
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Container } from 'react-bootstrap';
 import { Box, Typography, Grid, Card, CardContent, Input, IconButton } from '@mui/material';
 import { Formik, Field, Form as FormikForm, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { AccessTime, Search, Clear } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { AccessTime, Search, Clear, Edit } from '@mui/icons-material';
+import { useNavigate, Link } from 'react-router-dom';
 import Rating from 'react-rating-stars-component';
 import http from '../http';
 import dayjs from 'dayjs';
 import global from '../global';
 
-
 const validationSchema = Yup.object({
   comment: Yup.string().trim().min(3).max(500).required('Comment is required'),
-  feedback: Yup.string().trim().min(3).max(500).required('Feedback is required')
+  feedback: Yup.string().trim().min(3).max(500).required('Feedback is required'),
+  rating: Yup.number().min(1, 'Rating is required').max(5).required('Rating is required'),
 });
 
 function EventFeedback() {
-
-  const [eventfblist, seteventfblist] = useState([]);
+  const [eventfblist, setEventfblist] = useState([]);
   const [search, setSearch] = useState('');
 
   const [show, setShow] = useState(true);
-  const [rating, setRating] = useState(0);
   const navigate = useNavigate();
 
   const onSearchChange = (e) => {
@@ -32,19 +30,22 @@ function EventFeedback() {
 
   const getEventfb = () => {
     http.get('/eventfb').then((res) => {
-      seteventfblist(res.data);
+      setEventfblist(res.data);
     });
   };
 
   const searchEventfb = () => {
     http.get(`/eventfb?search=${search}`).then((res) => {
-      seteventfblist(res.data);
+      setEventfblist(res.data);
     });
   };
 
   useEffect(() => {
-    getEventfb();
-  }, []);
+    http.get('/eventfb').then((res) => {
+      console.log(res.data);
+      setEventfblist(res.data);
+    });
+  }, [])
 
   const onSearchKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -60,13 +61,6 @@ function EventFeedback() {
     setSearch('');
     getEventfb();
   };
-
-  useEffect(() => {
-    http.get('/eventfb').then((res) => {
-      console.log(res.data);
-      seteventfblist(res.data);
-    });
-  }, []);
 
   const handleClose = () => setShow(false);
   const handleHome = () => navigate('/');
@@ -97,9 +91,16 @@ function EventFeedback() {
                 <Grid item xs={12} md={6} lg={4} key={eventfb.id}>
                   <Card>
                     <CardContent>
-                      <Typography variant="h6" sx={{ mb: 1 }}>
-                        {eventfb.comment}
-                      </Typography>
+                      <Box sx={{ display: 'flex', mb: 1 }}>
+                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                          {eventfb.comment}
+                        </Typography>
+                        <Link to={`/editeventfeedback/${eventfb.id}`}>
+                          <IconButton color="primary" sx={{ padding: '4px' }}>
+                            <Edit />
+                          </IconButton>
+                        </Link>
+                      </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
                         color="text.secondary">
                         <AccessTime sx={{ mr: 1 }} />
@@ -110,6 +111,9 @@ function EventFeedback() {
                       <Typography sx={{ whiteSpace: 'pre-wrap' }}>
                         {eventfb.feedback}
                       </Typography>
+                      <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+                        {eventfb.rating}
+                      </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -119,7 +123,7 @@ function EventFeedback() {
         </Grid>
       </Box>
       <Formik
-        initialValues={{ comment: '', feedback: '' }}
+        initialValues={{ comment: '', feedback: '', rating: 0 }}
         validationSchema={validationSchema}
         onSubmit={(values) => {
           values.comment = values.comment.trim();
@@ -131,7 +135,7 @@ function EventFeedback() {
           handleClose();
         }}
       >
-        {({ handleSubmit }) => (
+        {({ handleSubmit, setFieldValue }) => (
           <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
               <Modal.Title style={{ marginLeft: "auto" }}>Event Feedback</Modal.Title>
@@ -146,12 +150,13 @@ function EventFeedback() {
                         count={5}
                         size={45}
                         activeColor="#ffd700"
-                        value={rating}
+                        value={0}
                         onChange={(newRating) => {
-                          setRating(newRating);
+                          setFieldValue('rating', newRating);
                         }}
                       />
                     </div>
+                    <ErrorMessage name="rating" component="div" className="text-danger" />
                   </Form.Group>
                   <Form.Group controlId="formComment">
                     <Form.Label>Comment</Form.Label>
@@ -177,7 +182,6 @@ function EventFeedback() {
         )}
       </Formik>
     </>
-
   );
 }
 
