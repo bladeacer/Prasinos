@@ -2,7 +2,7 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import { AppBar, Box, Button, Stack } from '@mui/material';
 import imgUrl from '../assets/prasinos-logo.jpg';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import GetNavbarState from './navbarstate_bootleg';
 
 const SignInButton = styled(Button)({
     boxShadow: 'none',
@@ -19,7 +19,8 @@ const SignInButton = styled(Button)({
         borderColor: '#9f8e6255',
         boxShadow: 'none',
     },
-    overflow: 'hidden'
+    overflow: 'hidden',
+    zIndex: 0
 });
 
 const SignUpButton = styled(Button)({
@@ -37,7 +38,8 @@ const SignUpButton = styled(Button)({
         borderColor: '#9f8e6255',
         boxShadow: 'none',
     },
-    overflow: 'hidden'
+    overflow: 'hidden',
+    zIndex: 0
 });
 
 const CustButton = styled(Button)({
@@ -59,33 +61,39 @@ const AccentedButton = styled(Button)({
 
 const CustButtonsStack = styled(Stack)({
     backgroundColor: 'transparent',
-    position: 'fixed',
-    right: '12vw',
+    position: 'absolute',
+    right: '-37vw',
     overflow: 'hidden',
-    zIndex: '2'
+    zIndex: '0'
 })
 
 const CustNavStack = styled(Stack)({
     backgroundColor: 'transparent',
-    position: 'fixed',
-    right: '30vw',
+    position: 'absolute',
+    right: '-20vw',
     marginRight: '1.5vw',
     overflow: 'hidden',
-    zIndex: '1'
+    zIndex: '0'
 })
-
 
 const CustomAppBar = styled(AppBar)({
     backgroundColor: 'transparent',
     boxShadow: 'unset',
+    display: 'inline'
 })
 
-var is_accent = [false, false];
-if (window.location.pathname.toString() == "/") {
-    is_accent[0] = true;
-} else {
-    is_accent[0] = false;
-}
+const D9Background = styled(AppBar)({
+    backgroundColor: 'rgba(217, 217, 217, 0.51)',
+    color: '#000000',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: -1000,
+    zIndex: -10,
+    position: 'absolute',
+})
+
+var is_accent = GetNavbarState();
 
 export default function TopNavbarV2() {
     return (
@@ -95,42 +103,93 @@ export default function TopNavbarV2() {
         //         Bootstrap
         //     </SignUpButton>
         // </Stack>
-        <Box sx={{ flexGrow: 1 }}>
-            <CustomAppBar position="static">
-                <Box
-                    component="img"
-                    sx={{
-                        maxWidth: { xs: 0, md: 0, lg: 195 },
-                        right: '78vw',
-                        position: 'fixed',
-                        marginTop: '-12.75px',
-                        marginRight: '2vw',
-                    }}
-                    alt="Prasinos logo"
-                    src={imgUrl}
-                />
-                <CustNavStack spacing={4} direction="row">
-                    {is_accent[0] && (
-                        <>
-                            <AccentedButton href='/'>Home</AccentedButton>
-                        </>
-                    )}
-                    {!is_accent[0] && (
-                        <>
-                            <CustButton href='/'>Home</CustButton>
-                        </>
-                    )}
-                    <CustButton href='/'>Booking</CustButton>
-                    <CustButton href='/'>Events</CustButton>
-                    <CustButton href='/'>Rewards</CustButton>
-                    <CustButton href='/'>Support</CustButton>
-                </CustNavStack>
-                <CustButtonsStack spacing={3} direction="row">
-                    <SignInButton href='/' variant="contained">Sign In</SignInButton>
-                    <SignUpButton href='/' variant="contained"> Sign Up</SignUpButton>
-                </CustButtonsStack>
+        <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-            </CustomAppBar>
+            {!is_accent[5] && (
+                <>
+                    <Box
+                        component="img"
+                        sx={{
+                            maxWidth: { xs: 0, md: 0, lg: 195 },
+                            right: '78vw',
+                            position: 'absolute',
+                            marginTop: '-12.75px',
+                            marginRight: '2vw',
+                            zIndex: '0',
+                            top: '39px'
+                        }}
+                        alt="Prasinos logo"
+                        src={imgUrl}
+                    />
+                    <CustomAppBar position="sticky">
+                        <CustNavStack spacing={4} direction="row">
+                            {is_accent[0] && (
+                                <>
+                                    <AccentedButton href='/'>Home</AccentedButton>
+                                </>
+                            )}
+                            {!is_accent[0] && (
+                                <>
+                                    <CustButton href='/'>Home</CustButton>
+                                </>
+                            )}
+                            {is_accent[1] && (
+                                <>
+                                    <AccentedButton href='/booking'>Booking</AccentedButton>
+                                </>
+                            )}
+                            {!is_accent[1] && (
+                                <>
+                                    <CustButton href='/booking'>Booking</CustButton>
+                                </>
+                            )}
+
+                            <CustButton href='/events'>Events</CustButton>
+                            <CustButton href='/rewards'>Rewards</CustButton>
+                            <CustButton href='/support'>Support</CustButton>
+                        </CustNavStack>
+                        <CustButtonsStack spacing={3} direction="row">
+                            <SignInButton href='/login' variant="contained">Sign In</SignInButton>
+                            <SignUpButton href='/register' variant="contained"> Sign Up</SignUpButton>
+                        </CustButtonsStack>
+
+                    </CustomAppBar>
+                </>
+            )}
+            {is_accent[5] && (
+                <>
+                    <Box
+                        component="img"
+                        sx={{
+                            maxWidth: { xs: 0, md: 0, lg: 195 },
+                            right: '78vw',
+                            position: 'absolute',
+                            marginTop: '-12.75px',
+                            marginRight: '2vw',
+                            zIndex: '0',
+                            top: '39px',
+                            opacity: '0.25'
+                        }}
+                        alt="Prasinos logo"
+                        src={imgUrl}
+                    />
+                    <D9Background position="sticky">
+                        <CustNavStack spacing={4} direction="row" sx={{right: '450px', top: '40px'}}>
+                            <CustButton>Home</CustButton>
+                            <CustButton>Booking</CustButton>
+                            <CustButton>Events</CustButton>
+                            <CustButton>Rewards</CustButton>
+                            <CustButton>Support</CustButton>
+                        </CustNavStack>
+                        <CustButtonsStack spacing={3} direction="row" sx={{right: '200px', top: '40px'}}>
+                            <SignInButton variant="contained">Sign In</SignInButton>
+                            <SignUpButton variant="contained" sx={{ backgroundColor: '#007c48'}}> Sign Up</SignUpButton>
+                        </CustButtonsStack>
+
+                    </D9Background>
+
+                </>
+            )}
 
             {/* Use our custom implementation of checking pathname instead of Route :D 
               <Route path={"/"} element={<Tutorials />} />
