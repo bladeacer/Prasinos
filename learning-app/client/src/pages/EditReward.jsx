@@ -1,34 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import http from "../http";
-import { Box, Typography, TextField, Button, Grid } from "@mui/material";
-import { useFormik } from "formik";
-import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
 import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
 } from "@mui/material";
+import { useFormik } from "formik";
+import * as yup from "yup";
+import { Link, useNavigate } from "react-router-dom";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UserContext from "../contexts/UserContext";
 
 function EditReward() {
   const navigate = useNavigate();
-  const [imageFile, setImageFile] = useState(null);
+  const { user } = useContext(UserContext); // Get current user from context
 
+  const [imageFile, setImageFile] = useState(null);
   const { id } = useParams();
   const [reward, setReward] = useState({
     name: "",
     description: "",
     points_needed: "",
     tier_required: "",
+    userId: "", // Ensure userId is included in reward state
   });
 
   const [loading, setLoading] = useState(true);
+  const [editable, setEditable] = useState(false); // State to track editability
 
   useEffect(() => {
     http.get(`/reward/${id}`).then((res) => {
@@ -36,8 +44,18 @@ function EditReward() {
       setImageFile(res.data.imageFile);
       setReward(res.data);
       setLoading(false);
+      // Check if current user can edit this reward
+      if (user && user.id === res.data.userId) {
+        setEditable(true);
+      } else {
+        setEditable(false);
+        // Redirect or show error message if not authorized
+        navigate("/rewards"); // Redirect to rewards page if not authorized
+        // Or show error message
+        toast.error("You are not authorized to edit this reward.");
+      }
     });
-  }, [id]);
+  }, [id, navigate, user]);
 
   const formik = useFormik({
     initialValues: reward,
@@ -115,6 +133,28 @@ function EditReward() {
         });
     }
   };
+
+  if (!editable) {
+    return (
+      <Box>
+        <Typography variant="h5" sx={{ my: 2 }}>
+          Error
+        </Typography>
+        <Typography variant="body1">
+          Either the reward is deleted or <br></br>
+          You do not have permission to edit this reward.
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          component={Link}
+          to="/rewards"
+        >
+          Go Back
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -231,10 +271,10 @@ function EditReward() {
         </Box>
       )}
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Delete Tutorial</DialogTitle>
+        <DialogTitle>Delete Reward</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this tutorial?
+            Are you sure you want to delete this reward?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

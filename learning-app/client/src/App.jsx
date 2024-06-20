@@ -14,20 +14,25 @@ import { ThemeProvider } from "@mui/material/styles";
 import { useState, useEffect } from "react";
 import MyTheme from "./themes/MyTheme";
 
-import AddReward from "./pages/AddReward";
-import Reward from "./pages/Rewards";
-import EditReward from "./pages/EditReward";
+import AddReward from "./pages/AddReward"; // Staff
+import Reward from "./pages/Rewards"; // Staff
+import EditReward from "./pages/EditReward"; // Staff
+
+import UserRewards from "./pages/UserRewards"; // User
+
+import Homepage from "./pages/Homepage";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 
 function App() {
   const [user, setUser] = useState(null);
+
   useEffect(() => {
+    // Check if user is logged in
     if (localStorage.getItem("accessToken")) {
       http.get("/user/auth").then((res) => {
         setUser(res.data.user);
       });
-      setUser({ name: "User" });
     }
   }, []);
 
@@ -48,17 +53,23 @@ function App() {
                     Prasinos
                   </Typography>
                 </Link>
-                <Link to="/rewards">
-                  <Typography>Rewards</Typography>
-                </Link>
-                <Box sx={{ flexGrow: 1 }}></Box>
                 {user && (
+                  <Link to="/user-rewards">
+                    <Typography>User - Rewards</Typography>
+                  </Link>
+                )}
+                {user && (
+                  <Link to="/rewards">
+                    <Typography>Staff - Rewards</Typography>
+                  </Link>
+                )}
+                <Box sx={{ flexGrow: 1 }}></Box>
+                {user ? (
                   <>
                     <Typography>{user.name}</Typography>
                     <Button onClick={logout}>Logout</Button>
                   </>
-                )}
-                {!user && (
+                ) : (
                   <>
                     <Link to="/register">
                       <Typography>Register</Typography>
@@ -73,12 +84,13 @@ function App() {
           </AppBar>
           <Container>
             <Routes>
-              <Route path={"/"} element={<Reward />} />
-              <Route path={"/rewards"} element={<Reward />} />
-              <Route path={"/addreward"} element={<AddReward />} />
-              <Route path={"/editreward/:id"} element={<EditReward />} />
-              <Route path={"/register"} element={<Register />} />
-              <Route path={"/login"} element={<Login />} />
+              <Route path="/" element={<Homepage />} />
+              <Route path="/rewards" element={<Reward />} />
+              <Route path="/addreward" element={<AddReward />} />
+              <Route path="/editreward/:id" element={<EditReward />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/user-rewards/:id" element={<UserRewards />} />
             </Routes>
           </Container>
         </ThemeProvider>
@@ -86,4 +98,5 @@ function App() {
     </UserContext.Provider>
   );
 }
+
 export default App;

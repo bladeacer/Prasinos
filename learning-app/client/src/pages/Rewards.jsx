@@ -16,6 +16,8 @@ import {
   Search,
   Clear,
   Edit,
+  ArrowUpward,
+  ArrowDownward,
 } from "@mui/icons-material";
 import http from "../http";
 import dayjs from "dayjs";
@@ -25,44 +27,74 @@ import UserContext from "../contexts/UserContext";
 function Reward() {
   const [rewardList, setRewardList] = useState([]);
   const [search, setSearch] = useState("");
+  const [sortedList, setSortedList] = useState([]);
+  const [ascending, setAscending] = useState(true); // Track ascending or descending order
   const { user } = useContext(UserContext);
 
-  const onSearchChange = (e) => {
-    setSearch(e.target.value);
-  };
-
+  // Fetch rewards from backend
   const getRewards = () => {
     http.get("/reward").then((res) => {
       setRewardList(res.data);
     });
   };
-  const searchRewards = () => {
-    http.get(`/reward?search=${search}`).then((res) => {
-      setRewardList(res.data);
-    });
-  };
+
+  // Initial fetch on component mount
   useEffect(() => {
     getRewards();
   }, []);
+
+  // Sort rewards alphabetically based on name
+  const sortRewards = () => {
+    const sorted = [...rewardList].sort((a, b) => {
+      const nameA = a.name.toUpperCase();
+      const nameB = b.name.toUpperCase();
+      if (nameA < nameB) return ascending ? -1 : 1;
+      if (nameA > nameB) return ascending ? 1 : -1;
+      return 0;
+    });
+    setSortedList(sorted);
+  };
+
+  // Handle search input change
+  const onSearchChange = (e) => {
+    setSearch(e.target.value);
+  };
+
+  // Perform search on Enter key press
   const onSearchKeyDown = (e) => {
     if (e.key === "Enter") {
       searchRewards();
     }
   };
+
+  // Perform search on button click
   const onClickSearch = () => {
     searchRewards();
   };
+
+  // Clear search and fetch all rewards
   const onClickClear = () => {
     setSearch("");
     getRewards();
   };
 
-  useEffect(() => {
-    http.get("/reward").then((res) => {
-      console.log(res.data);
+  // Search rewards based on input value
+  const searchRewards = () => {
+    http.get(`/reward?search=${search}`).then((res) => {
       setRewardList(res.data);
     });
-  }, []);
+  };
+
+  // Toggle sorting order (ascending or descending)
+  const toggleSortOrder = () => {
+    setAscending(!ascending);
+    sortRewards();
+  };
+
+  // Initial sort when rewardList changes
+  useEffect(() => {
+    sortRewards();
+  }, [rewardList, ascending]);
 
   return (
     <Box>
@@ -89,10 +121,13 @@ function Reward() {
             <Button variant="contained">Add</Button>
           </Link>
         )}
+        <IconButton color="primary" onClick={toggleSortOrder}>
+          {ascending ? <ArrowUpward /> : <ArrowDownward />}
+        </IconButton>
       </Box>
 
       <Grid container spacing={2}>
-        {rewardList.map((reward, i) => {
+        {sortedList.map((reward, i) => {
           return (
             <Grid item xs={12} md={6} lg={4} key={reward.id}>
               <Card>
@@ -100,9 +135,7 @@ function Reward() {
                   <Box className="aspect-ratio-container">
                     <img
                       alt="reward"
-                      src={`${import.meta.env.VITE_FILE_BASE_URL}${
-                        reward.imageFile
-                      }`}
+                      src={`${import.meta.env.VITE_FILE_BASE_URL}${reward.imageFile}`}
                     ></img>
                   </Box>
                 )}
