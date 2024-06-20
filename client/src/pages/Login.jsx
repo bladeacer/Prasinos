@@ -1,31 +1,16 @@
-import React, { useContext } from 'react';
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
+import { Box, Typography, TextField, Button} from '@mui/material';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import http from '../http';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import UserContext from '../contexts/UserContext';
-
-const CustBox = styled(Box)({
-    backgroundImage: 'url("https://images.unsplash.com/photo-1525498128493-380d1990a112?q=80&w=2835&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")',
-    imageRendering: 'optimizeQuality',
-    backgroundSize: 'cover',
-    position: 'relative',
-    left: '40vw',
-    width: '40vw',
-    height: '83vh',
-    overflow: 'unset',
-    overflow: 'unset',
-    zIndex: 2,
-    top: '-40vh'
-})
-
+import { useContext } from 'react';
+import { LogBox, CustBox, LoginWrapper} from '../reusables/components/login_components';
 
 function Login() {
     // Render user using useContext
     const { setUser } = useContext(UserContext);
-
     const formik = useFormik({
         initialValues: {
             email: "",
@@ -54,20 +39,9 @@ function Login() {
                 });
         }
     });
-
     return (
-        <Box sx={{ backgroundColor: 'white', height: '90vh', width: '90vw',  position: 'fixed', top: '70px' }}>
-            {/* <Funny>Hi</Funny> */}
-            <Box sx={{
-                marginTop: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                maxWidth: '25vw',
-                position: 'relative',
-                left: '9vw',
-                zIndex: 2
-            }}>
+        <LoginWrapper>
+            <LogBox>
                 <Typography variant="h5" sx={{ my: 2 }}>
                     Get Started Now
                 </Typography>
@@ -100,8 +74,8 @@ function Login() {
                 </Box>
                 <ToastContainer />
                 <CustBox></CustBox>
-            </Box>
-        </Box>
+            </LogBox>
+        </LoginWrapper>
 
     );
 }

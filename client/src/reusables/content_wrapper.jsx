@@ -3,17 +3,7 @@ import { Container, Typography } from '@mui/material';
 import GetNavbarState from './navbarstate_bootleg';
 import Login from '../pages/Login';
 import Home from '../pages/Home';
-
-const CustomContainer = styled(Container)({
-    position: 'sticky',
-    marginTop: '100px',
-    right: '20vh',
-    padding: 'unset',
-    width: '90vw',
-    color: "#000000",
-    // border: "1px solid black",
-    overflowX: 'hidden'
-})
+import { CustomContainer } from './components/wrapper_components';
 
 var is_accent = GetNavbarState();
 
@@ -29,13 +19,14 @@ export default function CustContainer() {
 
             </CustomContainer>
             {is_accent[0] && (
-                    <>
-                        <Home></Home>
+                <>
+                    <Home></Home>
 
-                    </>
-                )}
+                </>
+            )}
             {is_accent[5] && (
                 <>
+                    <Home></Home>
                     <Login></Login>
                 </>
             )}

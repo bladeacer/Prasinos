@@ -1,99 +1,12 @@
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import { AppBar, Box, Button, Stack } from '@mui/material';
 import imgUrl from '../assets/prasinos-logo.jpg';
 import GetNavbarState from './navbarstate_bootleg';
+import { Box } from '@mui/material';
+import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
 
-const SignInButton = styled(Button)({
-    boxShadow: 'none',
-    textTransform: 'none',
-    fontSize: '20px',
-    padding: '6px 12px',
-    border: '1px solid',
-    borderRadius: 'unset',
-    backgroundColor: '#d9d9d9',
-    borderColor: '#d9d9d9',
-    color: '#000000',
-    '&:hover': {
-        backgroundColor: '#9f8e6255',
-        borderColor: '#9f8e6255',
-        boxShadow: 'none',
-    },
-    overflow: 'hidden',
-    zIndex: 0
-});
-
-const SignUpButton = styled(Button)({
-    boxShadow: 'none',
-    textTransform: 'none',
-    fontSize: '20px',
-    padding: '6px 12px',
-    border: '1px solid',
-    borderRadius: 'unset',
-    backgroundColor: '#8ab78f',
-    borderColor: '#8ab78f',
-    color: '#000000',
-    '&:hover': {
-        backgroundColor: '#9f8e6255',
-        borderColor: '#9f8e6255',
-        boxShadow: 'none',
-    },
-    overflow: 'hidden',
-    zIndex: 0
-});
-
-const CustButton = styled(Button)({
-    color: '#000000',
-    paddingTop: '0.7vh',
-    textTransform: 'unset',
-    fontSize: '24px',
-    overflow: 'hidden'
-})
-
-const AccentedButton = styled(Button)({
-    color: '#8ab78f',
-    textDecoration: 'underline',
-    paddingTop: '0.7vh',
-    textTransform: 'unset',
-    fontSize: '24px',
-    overflow: 'hidden'
-})
-
-const CustButtonsStack = styled(Stack)({
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: '-37vw',
-    overflow: 'hidden',
-    zIndex: '0'
-})
-
-const CustNavStack = styled(Stack)({
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: '-20vw',
-    marginRight: '1.5vw',
-    overflow: 'hidden',
-    zIndex: '0'
-})
-
-const CustomAppBar = styled(AppBar)({
-    backgroundColor: 'transparent',
-    boxShadow: 'unset',
-    display: 'inline'
-})
-
-const D9Background = styled(AppBar)({
-    backgroundColor: 'rgba(217, 217, 217, 0.51)',
-    color: '#000000',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: -1000,
-    zIndex: -10,
-    position: 'absolute',
-})
 
 var is_accent = GetNavbarState();
+// const { setUser } = useContext(UserContext);
 
 export default function TopNavbarV2() {
     return (
@@ -107,18 +20,10 @@ export default function TopNavbarV2() {
 
             {!is_accent[5] && (
                 <>
-                    <Box
+                    <ImageBox
                         component="img"
-                        sx={{
-                            maxWidth: { xs: 0, md: 0, lg: 195 },
-                            right: '78vw',
-                            position: 'absolute',
-                            marginTop: '-12.75px',
-                            marginRight: '2vw',
-                            zIndex: '0',
-                            top: '39px'
-                        }}
                         alt="Prasinos logo"
+                        sx={{ maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 } }}
                         src={imgUrl}
                     />
                     <CustomAppBar position="sticky">
@@ -158,32 +63,31 @@ export default function TopNavbarV2() {
             )}
             {is_accent[5] && (
                 <>
-                    <Box
+                    <ImageBox
                         component="img"
                         sx={{
-                            maxWidth: { xs: 0, md: 0, lg: 195 },
-                            right: '78vw',
-                            position: 'absolute',
-                            marginTop: '-12.75px',
-                            marginRight: '2vw',
-                            zIndex: '0',
-                            top: '39px',
-                            opacity: '0.25'
+                            opacity: '0.30',
+                            maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 }
                         }}
                         alt="Prasinos logo"
                         src={imgUrl}
                     />
                     <D9Background position="sticky">
-                        <CustNavStack spacing={4} direction="row" sx={{right: '450px', top: '40px'}}>
+                        <CustNavStack spacing={4} direction="row" sx={{ right: '450px', top: '40px' }}>
                             <CustButton>Home</CustButton>
                             <CustButton>Booking</CustButton>
                             <CustButton>Events</CustButton>
                             <CustButton>Rewards</CustButton>
                             <CustButton>Support</CustButton>
                         </CustNavStack>
-                        <CustButtonsStack spacing={3} direction="row" sx={{right: '200px', top: '40px'}}>
-                            <SignInButton variant="contained">Sign In</SignInButton>
-                            <SignUpButton variant="contained" sx={{ backgroundColor: '#007c48'}}> Sign Up</SignUpButton>
+                        <CustButtonsStack spacing={3} direction="row" sx={{ right: '200px', top: '40px' }}>
+                            {true && (
+                                <>
+                                    <SignInButton variant="contained">Sign In</SignInButton>
+                                    <SignUpButton variant="contained" sx={{ backgroundColor: '#007c48' }}> Sign Up</SignUpButton>
+                                </>
+                            )}
+
                         </CustButtonsStack>
 
                     </D9Background>
