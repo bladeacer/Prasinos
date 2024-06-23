@@ -14,6 +14,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
+      points: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      tier: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+      },
     },
     {
       tableName: "users",
@@ -24,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.Reward, {
       foreignKey: "userId",
       onDelete: "cascade",
+      as: "rewards",
     });
   };
   return User;

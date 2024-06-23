@@ -118,7 +118,7 @@ function Reward() {
         <Box sx={{ flexGrow: 1 }} />
         {user && (
           <Link to="/addreward" style={{ textDecoration: "none" }}>
-            <Button variant="contained">Add</Button>
+            <Button variant="contained">+ Add Reward</Button>
           </Link>
         )}
         <IconButton color="primary" onClick={toggleSortOrder}>
@@ -135,7 +135,9 @@ function Reward() {
                   <Box className="aspect-ratio-container">
                     <img
                       alt="reward"
-                      src={`${import.meta.env.VITE_FILE_BASE_URL}${reward.imageFile}`}
+                      src={`${import.meta.env.VITE_FILE_BASE_URL}${
+                        reward.imageFile
+                      }`}
                     ></img>
                   </Box>
                 )}
@@ -157,7 +159,7 @@ function Reward() {
                     color="text.secondary"
                   >
                     <AccountCircle sx={{ mr: 1 }} />
-                    <Typography>{reward.user?.name}</Typography>
+                    <Typography>Created by: {reward.user?.name}</Typography>
                   </Box>
                   <Box
                     sx={{ display: "flex", alignItems: "center", mb: 1 }}
@@ -165,11 +167,23 @@ function Reward() {
                   >
                     <AccessTime sx={{ mr: 1 }} />
                     <Typography>
+                      Created on:{" "}
                       {dayjs(reward.createdAt).format(global.datetimeFormat)}
                     </Typography>
                   </Box>
-                  <Typography sx={{ whiteSpace: "pre-wrap", mb: 1 }}>
-                    {reward.description}
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                    color="text.secondary"
+                  >
+                    <AccessTime sx={{ mr: 1 }} />
+                    <Typography>
+                      Last edited:{" "}
+                      {dayjs(reward.updatedAt).format(global.datetimeFormat)}
+                    </Typography>
+                  </Box>
+
+                  <Typography sx={{ wordBreak: "break-word", mb: 1 }}>
+                    Description: {reward.description}
                   </Typography>
                   <Typography sx={{ whiteSpace: "pre-wrap", mb: 1 }}>
                     Points Needed: {reward.points_needed}

@@ -71,7 +71,7 @@ function EditReward() {
         .string()
         .trim()
         .min(3, "Description must be at least 3 characters")
-        .max(500, "Description must be at most 500 characters")
+        .max(200, "Description must be at most 200 characters")
         .required("Description is required"),
       points_needed: yup
         .number()
@@ -80,6 +80,7 @@ function EditReward() {
       tier_required: yup
         .number()
         .positive("Tier required must be a positive number")
+        .max(3, "Highest tier is 3")
         .required("Tier required is required"),
     }),
     onSubmit: (data) => {
@@ -158,6 +159,11 @@ function EditReward() {
 
   return (
     <Box>
+      <Box sx = {{ my: 2 }}>
+        <Button variant="contained" component={Link} to="/rewards">
+        Go Back
+      </Button>
+      </Box>
       <Typography variant="h5" sx={{ my: 2 }}>
         Edit Reward
       </Typography>

@@ -54,7 +54,7 @@ function App() {
                   </Typography>
                 </Link>
                 {user && (
-                  <Link to="/user-rewards">
+                  <Link to={`/user-rewards/${user.id}`}>
                     <Typography>User - Rewards</Typography>
                   </Link>
                 )}
@@ -90,7 +90,7 @@ function App() {
               <Route path="/editreward/:id" element={<EditReward />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/user-rewards/:id" element={<UserRewards />} />
+              <Route path="/user-rewards/:userid" element={<UserRewards />} />
             </Routes>
           </Container>
         </ThemeProvider>

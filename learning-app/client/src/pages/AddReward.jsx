@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import http from "../http";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -29,7 +29,7 @@ function AddReward() {
         .string()
         .trim()
         .min(3, "Description must be at least 3 characters")
-        .max(500, "Description must be at most 500 characters")
+        .max(200, "Description must be at most 200 characters")
         .required("Description is required"),
       points_needed: yup
         .number()
@@ -38,6 +38,7 @@ function AddReward() {
       tier_required: yup
         .number()
         .positive("Tier required must be a positive number")
+        .max(3, "Highest tier is 3")
         .required("Tier required is required"),
     }),
     onSubmit: (data) => {
@@ -79,6 +80,11 @@ function AddReward() {
 
   return (
     <Box>
+      <Box sx = {{ my: 2 }}>
+        <Button variant="contained" component={Link} to="/rewards">
+        Go Back
+      </Button>
+      </Box>
       <Typography variant="h5" sx={{ my: 2 }}>
         Add Reward
       </Typography>

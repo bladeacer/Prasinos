@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const { User } = require("../models");
+const { User, Reward } = require("../models");
 const yup = require("yup");
 const { sign } = require("jsonwebtoken");
 const { validateToken } = require("../middlewares/auth");
@@ -120,6 +120,64 @@ router.get("/auth", validateToken, (req, res) => {
   res.json({
     user: userInfo,
   });
+});
+
+router.get("/user-rewards/:userid", validateToken, async (req, res) => {
+  let userId = req.params.userid;
+
+  try {
+    let user = await User.findByPk(userId, {
+      attributes: ["id", "name", "email", "points", "tier"],
+      include: [
+        {
+          model: Reward,
+          as: "rewards", // Ensure this alias matches the one in User model association
+          attributes: ["id", "name", "points_needed", "tier_required"],
+        },
+      ],
+    });
+
+    // Check if user is not found
+    if (!user) {
+      res.sendStatus(404);
+      return;
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "An error occurred", error: err.message });
+  }
+});
+
+router.put("/user-rewards/:userid", async (req, res) => {
+  const userId = req.params.userid;
+  const { points, tier } = req.body;
+
+  // Validate tier value
+  if (tier > 3 || tier < 0) {
+    return res.status(400).json({ message: "Tier must be between 0 and 3." });
+  }
+
+  try {
+    // Find user by id
+    let user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Update user's points and tier
+    user.points = points;
+    user.tier = tier;
+    await user.save();
+
+    res.json({ message: "User data updated successfully.", user });
+  } catch (err) {
+    console.error("Error updating user data:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to update user data.", error: err.message });
+  }
 });
 
 module.exports = router;
