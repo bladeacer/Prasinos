@@ -26,7 +26,7 @@ function Header() {
                         <LinkContainer to="/rewards" style={{ paddingRight: "3%" }}>
                             <Nav.Link>Rewards</Nav.Link>
                         </LinkContainer>
-                        <LinkContainer to="/chatbot" style={{ paddingRight: "3%" }}>
+                        <LinkContainer to="/websitefeedback" style={{ paddingRight: "3%" }}>
                             <Nav.Link>Support</Nav.Link>
                         </LinkContainer>
                         <Button variant="secondary" className="sign">Sign In</Button>

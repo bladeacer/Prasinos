@@ -19,6 +19,9 @@ app.get("/", (req, res) => {
 const eventfbRoute = require('./routes/eventfeedback');
 app.use("/eventfb", eventfbRoute);
 
+const websitefbRoute = require('./routes/websitefeedback');
+app.use("/websitefb", websitefbRoute);
+
 const db = require('./models');
 db.sequelize.sync({ alter: true })
     .then(() => {
