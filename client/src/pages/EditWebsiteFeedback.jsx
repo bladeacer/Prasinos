@@ -14,6 +14,8 @@ const validationSchema = Yup.object({
 
 function EditWebsiteFeedback() {
     const { id } = useParams();
+    const [show, setShow] = useState(true);
+    const handleClose = () => setShow(false);
     const navigate = useNavigate();
     const [feedback, setFeedback] = useState(null);
 
@@ -31,54 +33,58 @@ function EditWebsiteFeedback() {
 
     return (
         <Formik
-            validationSchema={validationSchema}
-            onSubmit={async (data) => {
-                await http.put(`/websitefb/${id}`, data);
-                navigate('/websitefeedback');
-            }}
-            initialValues={{
-                name: feedback.name,
-                email: feedback.email,
-                reporttype: feedback.reporttype,
-                elaboration: feedback.elaboration,
-            }}
+        initialValues={{
+            name: feedback.name,
+            email: feedback.email,
+            reporttype: feedback.reporttype,
+            elaboration: feedback.elaboration,
+          }}
+          validationSchema={validationSchema}
+          onSubmit={(values) => {
+            values.name = values.name.trim();
+            values.email = values.email.trim();
+            values.elaboration = values.elaboration.trim();
+            http.put(`/websitefb/${id}`, values)
+              .then((res) => {
+                console.log(res.data)
+                navigate("/websitefeedback");
+              });
+            handleClose();
+          }}
         >
             {({
                 handleSubmit,
-                handleChange,
-                values,
-                errors,
             }) => (
-                <Modal show={true} onHide={() => navigate('/websitefeedback')}>
+                <Modal show={true} onHide={() => navigate('/websitefeedback')} centered>
                     <Modal.Header closeButton>
-                        <Modal.Title>Edit Website Feedback</Modal.Title>
+                        <Modal.Title style={{ marginLeft: "auto" }}>Edit Website Feedback</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <FormikForm noValidate>
                             <Form.Group className="mb-3">
                                 <Form.Label>Full Name</Form.Label>
-                                <Field name="name" type="text" className="form-control" isInvalid={!!errors.name} />
-                                <ErrorMessage name="name" component="div" className="invalid-feedback" />
+                                <Field name="name" type="text" className="form-control" />
+                                <ErrorMessage name="name" component="div" className="text-danger" />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Email</Form.Label>
-                                <Field name="email" type="text" className="form-control" isInvalid={!!errors.email} />
-                                <ErrorMessage name="email" component="div" className="invalid-feedback" />
+                                <Field name="email" type="text" className="form-control"  />
+                                <ErrorMessage name="email" component="div" className="text-danger" />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Purpose of report</Form.Label>
-                                <Field as="select" name="reporttype" className="form-control" isInvalid={!!errors.reporttype}>
+                                <Field as="select" name="reporttype" className="form-control" >
                                     <option value="" label="Select report type" />
                                     <option value="Bug Report" label="Bug Report" />
                                     <option value="Feature Request" label="Feature Request" />
                                     <option value="General Feedback" label="General Feedback" />
                                 </Field>
-                                <ErrorMessage name="reporttype" component="div" className="invalid-feedback" />
+                                <ErrorMessage name="reporttype" component="div" className="text-danger" />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Elaboration</Form.Label>
-                                <Field as="textarea" name="elaboration" rows={3} className="form-control" isInvalid={!!errors.elaboration} />
-                                <ErrorMessage name="elaboration" component="div" className="invalid-feedback" />
+                                <Field as="textarea" name="elaboration" rows={3} className="form-control" />
+                                <ErrorMessage name="elaboration" component="div" className="text-danger" />
                             </Form.Group>
                             <Button variant="primary" type="submit" onClick={handleSubmit}>
                                 Save Changes

@@ -44,7 +44,7 @@ function WebsiteFeedback() {
       console.log(res.data);
       setWebsitefblist(res.data);
     });
-  }, [])
+  }, []);
 
   const onSearchKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -67,7 +67,7 @@ function WebsiteFeedback() {
     <>
       <Box style={{ paddingTop: "100px", height: "1000px" }}>
         <Typography variant="h5" sx={{ my: 2 }}>
-          Event Feedbacks
+          Website Feedbacks
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Input value={search} placeholder="Search"
@@ -84,96 +84,94 @@ function WebsiteFeedback() {
         </Box>
         <Grid container spacing={2}>
           {
-            websitefblist.map((websitefb, i) => {
-              return (
-                <Grid item xs={12} md={6} lg={4} key={websitefb.id}>
-                  <Card>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', mb: 1 }}>
-                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                          {websitefb.name}
-                        </Typography>
-                        <Link to={`/editwebsitefeedback/${websitefb.id}`}>
-                          <IconButton color="primary" sx={{ padding: '4px' }}>
-                            <Edit />
-                          </IconButton>
-                        </Link>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                        color="text.secondary">
-                        <AccessTime sx={{ mr: 1 }} />
-                        <Typography>
-                          {dayjs(websitefb.createdAt).format(global.datetimeFormat)}
-                        </Typography>
-                      </Box>
-                      <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-                        {websitefb.email}
+            websitefblist.map((websitefb, i) => (
+              <Grid item xs={12} md={6} lg={4} key={websitefb.id}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', mb: 1 }}>
+                      <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        {websitefb.name}
                       </Typography>
-                      <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-                        {websitefb.reporttype}
+                      <Link to={`/editwebsitefeedback/${websitefb.id}`}>
+                        <IconButton color="primary" sx={{ padding: '4px' }}>
+                          <Edit />
+                        </IconButton>
+                      </Link>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }} color="text.secondary">
+                      <AccessTime sx={{ mr: 1 }} />
+                      <Typography>
+                        {dayjs(websitefb.createdAt).format(global.datetimeFormat)}
                       </Typography>
-                      <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-                        {websitefb.elaboration}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })
+                    </Box>
+                    <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+                      {websitefb.email}
+                    </Typography>
+                    <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+                      {websitefb.reporttype}
+                    </Typography>
+                    <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+                      {websitefb.elaboration}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
           }
         </Grid>
       </Box>
       <Formik
-        validationSchema={validationSchema}
-        onSubmit={async (data, { resetForm }) => {
-          await http.post("/websitefb", data);
-          resetForm();
-          setShow(false);
-          getWebsitefb();
-        }}
         initialValues={{
           name: '',
           email: '',
           reporttype: '',
           elaboration: '',
         }}
+        validationSchema={validationSchema}
+        onSubmit={(values) => {
+          values.name = values.name.trim();
+          values.email = values.email.trim();
+          values.elaboration = values.elaboration.trim();
+          http.post("/websitefb", values)
+            .then((res) => {
+              console.log(res.data)
+            });
+          handleClose();
+        }}
       >
         {({
-          handleSubmit,
-          handleChange,
-          values,
-          errors,
+          handleSubmit
         }) => (
-          <Modal show={show} onHide={handleClose}>
+          <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
-              <Modal.Title>Website Feedback</Modal.Title>
+              <Modal.Title style={{ marginLeft: "auto" }}>Website Feedback</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <FormikForm noValidate>
                 <Form.Group className="mb-3">
                   <Form.Label>Full Name</Form.Label>
-                  <Field name="name" type="text" className="form-control" isInvalid={!!errors.name} />
-                  <ErrorMessage name="name" component="div" className="invalid-feedback" />
+                  <Field name="name" type="text" className="form-control"/>
+                  <ErrorMessage name="name" component="div" className="text-danger" />
                 </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Email</Form.Label>
-                  <Field name="email" type="text" className="form-control" isInvalid={!!errors.email} />
-                  <ErrorMessage name="email" component="div" className="invalid-feedback" />
+                  <Field name="email" type="text" className="form-control" />
+                  <ErrorMessage name="email" component="div" className="text-danger" />
                 </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Purpose of report</Form.Label>
-                  <Field as="select" name="reporttype" className="form-control" isInvalid={!!errors.reporttype}>
+                  <Field as="select" name="reporttype" className="form-control">
                     <option value="" label="Select report type" />
                     <option value="Bug Report" label="Bug Report" />
                     <option value="Feature Request" label="Feature Request" />
                     <option value="General Feedback" label="General Feedback" />
                   </Field>
-                  <ErrorMessage name="reporttype" component="div" className="invalid-feedback" />
+                  <ErrorMessage name="reporttype" component="div" className="text-danger" />
                 </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Elaboration</Form.Label>
-                  <Field as="textarea" name="elaboration" rows={3} className="form-control" isInvalid={!!errors.elaboration} />
-                  <ErrorMessage name="elaboration" component="div" className="invalid-feedback" />
+                  <Field as="textarea" name="elaboration" rows={3} className="form-control" />
+                  <ErrorMessage name="elaboration" component="div" className="text-danger" />
                 </Form.Group>
                 <Button variant="primary" type="submit" onClick={handleSubmit}>
                   Submit
