@@ -9,6 +9,9 @@ import {
   Input,
   IconButton,
   Button,
+  Pagination,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   AccountCircle,
@@ -16,8 +19,6 @@ import {
   Search,
   Clear,
   Edit,
-  ArrowUpward,
-  ArrowDownward,
 } from "@mui/icons-material";
 import http from "../http";
 import dayjs from "dayjs";
@@ -28,77 +29,102 @@ function Reward() {
   const [rewardList, setRewardList] = useState([]);
   const [search, setSearch] = useState("");
   const [sortedList, setSortedList] = useState([]);
-  const [ascending, setAscending] = useState(true); // Track ascending or descending order
+  const [ascending, setAscending] = useState(true);
+  const [sortBy, setSortBy] = useState("name");
   const { user } = useContext(UserContext);
 
-  // Fetch rewards from backend
+  const [page, setPage] = useState(1);
+  const rewardsPerPage = 5;
+
+  const [anchorEl, setAnchorEl] = useState(null);
+
   const getRewards = () => {
     http.get("/reward").then((res) => {
       setRewardList(res.data);
     });
   };
 
-  // Initial fetch on component mount
   useEffect(() => {
     getRewards();
   }, []);
 
-  // Sort rewards alphabetically based on name
   const sortRewards = () => {
     const sorted = [...rewardList].sort((a, b) => {
-      const nameA = a.name.toUpperCase();
-      const nameB = b.name.toUpperCase();
-      if (nameA < nameB) return ascending ? -1 : 1;
-      if (nameA > nameB) return ascending ? 1 : -1;
+      let valueA, valueB;
+
+      if (sortBy === "name") {
+        valueA = a.name.toUpperCase();
+        valueB = b.name.toUpperCase();
+      } else {
+        valueA = a.id;
+        valueB = b.id;
+      }
+
+      if (valueA < valueB) return ascending ? -1 : 1;
+      if (valueA > valueB) return ascending ? 1 : -1;
       return 0;
     });
     setSortedList(sorted);
   };
 
-  // Handle search input change
   const onSearchChange = (e) => {
     setSearch(e.target.value);
   };
 
-  // Perform search on Enter key press
   const onSearchKeyDown = (e) => {
     if (e.key === "Enter") {
       searchRewards();
     }
   };
 
-  // Perform search on button click
   const onClickSearch = () => {
     searchRewards();
   };
 
-  // Clear search and fetch all rewards
   const onClickClear = () => {
     setSearch("");
     getRewards();
   };
 
-  // Search rewards based on input value
   const searchRewards = () => {
     http.get(`/reward?search=${search}`).then((res) => {
       setRewardList(res.data);
     });
   };
 
-  // Toggle sorting order (ascending or descending)
   const toggleSortOrder = () => {
     setAscending(!ascending);
     sortRewards();
   };
 
-  // Initial sort when rewardList changes
   useEffect(() => {
     sortRewards();
-  }, [rewardList, ascending]);
+  }, [rewardList, ascending, sortBy]);
+
+  const handleChangePage = (event, value) => {
+    setPage(value);
+  };
+
+  const handleSortMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleSortMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSortChange = (sortMethod) => {
+    setSortBy(sortMethod);
+    handleSortMenuClose();
+  };
+
+  const startIndex = (page - 1) * rewardsPerPage;
+  const endIndex = startIndex + rewardsPerPage;
+  const paginatedRewards = sortedList.slice(startIndex, endIndex);
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ my: 2 }}>
+      <Typography variant="h3" sx={{ my: 2 }}>
         Rewards
       </Typography>
 
@@ -121,13 +147,35 @@ function Reward() {
             <Button variant="contained">+ Add Reward</Button>
           </Link>
         )}
-        <IconButton color="primary" onClick={toggleSortOrder}>
-          {ascending ? <ArrowUpward /> : <ArrowDownward />}
-        </IconButton>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSortMenuClick}
+          sx={{ ml: 2 }} // Add margin to the left
+        >
+          Sort
+        </Button>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleSortMenuClose}
+        >
+          <MenuItem onClick={() => handleSortChange("name")}>
+            Sort by Alphabetical Order
+          </MenuItem>
+          <MenuItem onClick={() => handleSortChange("id")}>
+            Sort by ID
+          </MenuItem>
+        </Menu>
       </Box>
 
+      <Typography variant="body1" sx={{ mb: 2 }}>
+        Showing {startIndex + 1} - {Math.min(endIndex, sortedList.length)} out
+        of {sortedList.length}
+      </Typography>
+
       <Grid container spacing={2}>
-        {sortedList.map((reward, i) => {
+        {paginatedRewards.map((reward) => {
           return (
             <Grid item xs={12} md={6} lg={4} key={reward.id}>
               <Card>
@@ -135,9 +183,7 @@ function Reward() {
                   <Box className="aspect-ratio-container">
                     <img
                       alt="reward"
-                      src={`${import.meta.env.VITE_FILE_BASE_URL}${
-                        reward.imageFile
-                      }`}
+                      src={`${import.meta.env.VITE_FILE_BASE_URL}${reward.imageFile}`}
                     ></img>
                   </Box>
                 )}
@@ -154,6 +200,9 @@ function Reward() {
                       </Link>
                     )}
                   </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    ID: {reward.id}
+                  </Typography>
                   <Box
                     sx={{ display: "flex", alignItems: "center", mb: 1 }}
                     color="text.secondary"
@@ -183,13 +232,13 @@ function Reward() {
                   </Box>
 
                   <Typography sx={{ wordBreak: "break-word", mb: 1 }}>
-                    Description: {reward.description}
+                    <strong>Description:</strong> {reward.description}
                   </Typography>
                   <Typography sx={{ whiteSpace: "pre-wrap", mb: 1 }}>
-                    Points Needed: {reward.points_needed}
+                    <strong>Points Needed:</strong> {reward.points_needed}
                   </Typography>
                   <Typography sx={{ whiteSpace: "pre-wrap" }}>
-                    Tier Required: {reward.tier_required}
+                    <strong>Tier Required:</strong> {reward.tier_required}
                   </Typography>
                 </CardContent>
               </Card>
@@ -197,6 +246,16 @@ function Reward() {
           );
         })}
       </Grid>
+
+      {sortedList.length > rewardsPerPage && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Pagination
+            count={Math.ceil(sortedList.length / rewardsPerPage)}
+            page={page}
+            onChange={handleChangePage}
+          />
+        </Box>
+      )}
     </Box>
   );
 }

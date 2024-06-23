@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import http from "../http";
 import {
   Box,
@@ -12,11 +12,10 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  MenuItem,
 } from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
-import { Link, useNavigate } from "react-router-dom";
-
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserContext from "../contexts/UserContext";
@@ -135,6 +134,11 @@ function EditReward() {
     }
   };
 
+  const removeImage = () => {
+    setImageFile(null);
+    toast.success("Image removed successfully.");
+  };
+  
   if (!editable) {
     return (
       <Box>
@@ -142,7 +146,7 @@ function EditReward() {
           Error
         </Typography>
         <Typography variant="body1">
-          Either the reward is deleted or <br></br>
+          Either the reward is deleted or <br />
           You do not have permission to edit this reward.
         </Typography>
         <Button
@@ -159,13 +163,16 @@ function EditReward() {
 
   return (
     <Box>
-      <Box sx = {{ my: 2 }}>
+      <Box sx={{ my: 2 }}>
         <Button variant="contained" component={Link} to="/rewards">
-        Go Back
-      </Button>
+          Go Back
+        </Button>
       </Box>
-      <Typography variant="h5" sx={{ my: 2 }}>
+      <Typography variant="h4" sx={{ my: 2 }}>
         Edit Reward
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        * means compulsory
       </Typography>
       {!loading && (
         <Box component="form" onSubmit={formik.handleSubmit}>
@@ -175,7 +182,7 @@ function EditReward() {
                 fullWidth
                 margin="dense"
                 autoComplete="off"
-                label="Name"
+                label="Name *"
                 name="name"
                 value={formik.values.name}
                 onChange={formik.handleChange}
@@ -189,7 +196,7 @@ function EditReward() {
                 autoComplete="off"
                 multiline
                 minRows={2}
-                label="Description"
+                label="Description *"
                 name="description"
                 value={formik.values.description}
                 onChange={formik.handleChange}
@@ -206,7 +213,7 @@ function EditReward() {
                 fullWidth
                 margin="dense"
                 autoComplete="off"
-                label="Points Needed"
+                label="Points Needed *"
                 name="points_needed"
                 value={formik.values.points_needed}
                 onChange={formik.handleChange}
@@ -222,8 +229,8 @@ function EditReward() {
               <TextField
                 fullWidth
                 margin="dense"
-                autoComplete="off"
-                label="Tier Required"
+                select
+                label="Tier Required *"
                 name="tier_required"
                 value={formik.values.tier_required}
                 onChange={formik.handleChange}
@@ -235,7 +242,13 @@ function EditReward() {
                 helperText={
                   formik.touched.tier_required && formik.errors.tier_required
                 }
-              />
+              >
+                {[1, 2, 3].map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid item xs={12} md={6} lg={4}>
               <Box sx={{ textAlign: "center", mt: 2 }}>
@@ -249,12 +262,35 @@ function EditReward() {
                     onChange={onFileChange}
                   />
                 </Button>
-                {imageFile && (
+                {imageFile ? (
                   <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
                     <img
                       alt="reward"
                       src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}
-                    ></img>
+                    />
+                    <Button
+                      variant="contained"
+                      color="error"
+                      sx={{ mt: 2 }}
+                      onClick={removeImage}
+                    >
+                      Remove Image
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      border: "1px solid black",
+                      borderRadius: "4px",
+                      mt: 2,
+                      p: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100px",
+                    }}
+                  >
+                    <Typography>No Image</Typography>
                   </Box>
                 )}
               </Box>
