@@ -16,12 +16,12 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'users'
     });
 
-    User.associate = (models) => {
-        User.hasMany(models.Tutorial, {
-            foreignKey: "userId",
-            onDelete: "cascade"
-        });
-    };
+    // User.associate = (models) => {
+    //     User.hasMany(models.Tutorial, {
+    //         foreignKey: "userId",
+    //         onDelete: "cascade"
+    //     });
+    // };
 
     return User;
 }

@@ -35,8 +35,8 @@ function Login() {
                 .then((res) => {
                     localStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
-                    toast.done("Login successful!")
                     navigate("/");
+                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -87,6 +87,7 @@ function Login() {
                         </Button>
                     </Box>
                     <ToastContainer />
+                    {((formik.touched.email && Boolean(formik.errors.email)) || (formik.touched.password && Boolean(formik.errors.password))) && window.location.reload()}
                     <CustBox></CustBox>
                 </LogBox>
             </LoginWrapper>

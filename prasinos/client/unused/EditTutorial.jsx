@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Grid } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
-import http from '../http';
+import http from '../src/http';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { ToastContainer, toast } from 'react-toastify';

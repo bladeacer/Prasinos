@@ -45,9 +45,8 @@ function Register() {
             data.password = data.password.trim();
             http.post("/user/register", data)
                 .then((res) => {
-                    
-                    toast.done(res.data.message);
                     navigate("/login");
+                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -57,7 +56,7 @@ function Register() {
 
     return (
         <>
-         <LoginWrapper>
+            <LoginWrapper>
                 <LogBox>
                     <Typography sx={{ my: 2, fontSize: '1.7em' }}>
                         Get Started
@@ -119,7 +118,8 @@ function Register() {
                         </Button>
                     </Box>
                     <ToastContainer />
-                    <CustBox sx={{ bottom: '652px' }}></CustBox>
+                    {((formik.touched.name && Boolean(formik.errors.name)) || (formik.touched.email && Boolean(formik.errors.email)) || (formik.touched.password && Boolean(formik.errors.password)) || (formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword))) && window.location.reload()}
+                    <CustBox sx={{ bottom: { xs: '734px', sm: '662px', md: '629px', lg: '629px', xl: '629px' } }}></CustBox>
                 </LogBox>
             </LoginWrapper>
         </>

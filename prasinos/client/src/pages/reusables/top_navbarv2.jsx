@@ -27,7 +27,20 @@ export default function TopNavbarV2() {
     else if (window.location.pathname.toString() == "/booking") {
         falseAll();
         is_accent[1] = true;
-    } else if (window.location.pathname.toString() == "/login") {
+    }
+    else if (window.location.pathname.toString() == "/events") {
+        falseAll();
+        is_accent[2] = true;
+    }
+    else if (window.location.pathname.toString() == "/rewards") {
+        falseAll();
+        is_accent[3] = true;
+    }
+    else if (window.location.pathname.toString() == "/support") {
+        falseAll();
+        is_accent[4] = true;
+    }
+    else if (window.location.pathname.toString() == "/login") {
         is_accent[5] = true;
         is_accent[6] = false;
     } else if (window.location.pathname.toString() == "/register") {
@@ -69,10 +82,37 @@ export default function TopNavbarV2() {
                                         <CustButton href='/booking'>Booking</CustButton>
                                     </>
                                 )}
+                                {is_accent[2] && (
+                                    <>
+                                        <AccentedButton href='/events'>Events</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[2] && (
+                                    <>
+                                        <CustButton href='/events'>Events</CustButton>
+                                    </>
+                                )}
+                                {is_accent[3] && (
+                                    <>
+                                        <AccentedButton href='/rewards'>Rewards</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[3] && (
+                                    <>
+                                        <CustButton href='/rewards'>Rewards</CustButton>
+                                    </>
+                                )}
+                                {is_accent[4] && (
+                                    <>
+                                        <AccentedButton href='/support'>Support</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[4] && (
+                                    <>
+                                        <CustButton href='/support'>Support</CustButton>
+                                    </>
+                                )}
 
-                                <CustButton href='/events'>Events</CustButton>
-                                <CustButton href='/rewards'>Rewards</CustButton>
-                                <CustButton href='/support'>Support</CustButton>
                             </CustNavStack>
                             {!user && (
                                 <>
@@ -106,11 +146,56 @@ export default function TopNavbarV2() {
                         />
                         <D9Background position="sticky">
                             <CustNavStack spacing={4} direction="row" sx={{ right: '450px', top: '40px' }}>
-                                <CustButton>Home</CustButton>
-                                <CustButton>Booking</CustButton>
-                                <CustButton>Events</CustButton>
-                                <CustButton>Rewards</CustButton>
-                                <CustButton>Support</CustButton>
+                                {is_accent[0] && (
+                                    <>
+                                        <AccentedButton>Home</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[0] && (
+                                    <>
+                                        <CustButton>Home</CustButton>
+                                    </>
+                                )}
+                                {is_accent[1] && (
+                                    <>
+                                        <AccentedButton>Booking</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[1] && (
+                                    <>
+                                        <CustButton>Booking</CustButton>
+                                    </>
+                                )}
+                                {is_accent[2] && (
+                                    <>
+                                        <AccentedButton>Events</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[2] && (
+                                    <>
+                                        <CustButton>Events</CustButton>
+                                    </>
+                                )}
+                                {is_accent[3] && (
+                                    <>
+                                        <AccentedButton>Rewards</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[3] && (
+                                    <>
+                                        <CustButton>Rewards</CustButton>
+                                    </>
+                                )}
+                                {is_accent[4] && (
+                                    <>
+                                        <AccentedButton>Support</AccentedButton>
+                                    </>
+                                )}
+                                {!is_accent[4] && (
+                                    <>
+                                        <CustButton>Support</CustButton>
+                                    </>
+                                )}
                             </CustNavStack>
                             <CustButtonsStack spacing={3} direction="row" sx={{ right: '200px', top: '40px' }}>
                                 {!user && (
@@ -124,10 +209,8 @@ export default function TopNavbarV2() {
                                 )}
                                 {user && (
                                     <>
-                                        <CustButtonsStack spacing={3} direction="row">
-                                            <CustButton>{user.name}</CustButton>
-                                            <SignUpButton onClick={logout}>Logout</SignUpButton>
-                                        </CustButtonsStack>
+                                        {is_accent[5] = false}
+                                        {is_accent[6] = false}
                                     </>
                                 )}
                             </CustButtonsStack>

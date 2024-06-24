@@ -1,24 +1,35 @@
 import { Box, Typography, styled } from '@mui/material';
 
 export const CustBanner = styled(Box)({
-    backgroundImage: 'url("https://i.pinimg.com/736x/9b/53/dc/9b53dc5191a9859d9103c52c5405674c.jpg")',
-    position: 'sticky',
-    marginTop: '120px',
-    padding: 'unset',
+    position: 'relative',
     height: '277px',
-    width: '1440px',
-    marginLeft: '-80px',
+    width: '100vw',
     color: "#ffffff",
+    right: '50vw',
     imageRendering: 'optimizeQuality',
     backgroundSize: 'cover',
-    overflowX: 'hidden',
+})
+
+export const Pain = styled(Box)({
+    position: 'absolute',
+    background: 'transparent',
+    zIndex: '-1',
+    left: '0%',
+    top: '15%'
 })
 
 export const CustBannerText = styled(Typography)({
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    position: 'relative',
+    left: '25%',
+    transform: 'translate(-50%, -210px)',
     fontSize: '80px',
-    width: '200vw'
+    width: '200vw',
+    color: "#ffffff",
+})
+
+export const TextBox1 = styled(Box)({
+    postion: 'relative',
+    maxWidth: '50%',
+    textAlign: 'left',
+    margin: '-20px 90px 0px'
 })
