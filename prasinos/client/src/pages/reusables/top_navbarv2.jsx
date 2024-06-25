@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
 import { useContext } from 'react';
 import UserContext from '../../contexts/UserContext';
+import url from '../../assets/dimmed-logo.png'
 
 export default function TopNavbarV2() {
     const { user } = useContext(UserContext);
@@ -20,7 +21,8 @@ export default function TopNavbarV2() {
     }
 
     var is_accent = [true, false, false, false, false, false, false, false];
-    if (window.location.pathname.toString() == "/") {
+    var goof_check = false;
+    if (window.location.pathname.toString() == "/home") {
         falseAll();
         is_accent[0] = true;
     }
@@ -46,13 +48,17 @@ export default function TopNavbarV2() {
     } else if (window.location.pathname.toString() == "/register") {
         is_accent[6] = true;
         is_accent[5] = false;
+    } else {
+        falseAll();
+        var goof_check = true;
     }
+    
 
     return (
         <>
             <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-                {!is_accent[5] && !is_accent[6] && (
+                {!goof_check && !is_accent[5] && !is_accent[6] && (
                     <>
                         <ImageBox
                             component="img"
@@ -64,12 +70,12 @@ export default function TopNavbarV2() {
                             <CustNavStack spacing={4} direction="row">
                                 {is_accent[0] && (
                                     <>
-                                        <AccentedButton href='/'>Home</AccentedButton>
+                                        <AccentedButton href='/home'>Home</AccentedButton>
                                     </>
                                 )}
                                 {!is_accent[0] && (
                                     <>
-                                        <CustButton href='/'>Home</CustButton>
+                                        <CustButton href='/home'>Home</CustButton>
                                     </>
                                 )}
                                 {is_accent[1] && (
@@ -133,16 +139,17 @@ export default function TopNavbarV2() {
                         </CustomAppBar>
                     </>
                 )}
-                {(is_accent[5] || is_accent[6]) && (
+                {!goof_check && (is_accent[5] || is_accent[6]) && (
                     <>
                         <ImageBox
                             component="img"
                             sx={{
                                 opacity: '0.30',
-                                maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 }
+                                maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 },
+                                marginTop: '-2px'
                             }}
                             alt="Prasinos logo"
-                            src={imgUrl}
+                            src={url}
                         />
                         <D9Background position="sticky">
                             <CustNavStack spacing={4} direction="row" sx={{ right: '450px', top: '40px' }}>
@@ -200,13 +207,12 @@ export default function TopNavbarV2() {
                             <CustButtonsStack spacing={3} direction="row" sx={{ right: '200px', top: '40px' }}>
                                 {!user && (
                                     <>
-                                        <CustButtonsStack spacing={3} direction="row">
-                                            <SignInButton variant="contained">Sign In</SignInButton>
-                                            <SignUpButton variant="contained" sx={{ backgroundColor: '#007c48' }}> Sign Up</SignUpButton>
-                                        </CustButtonsStack>
-
+                                        <SignInButton variant="contained">Sign In</SignInButton>
+                                        <SignUpButton variant="contained" sx={{ backgroundColor: '#007c48' }}> Sign Up</SignUpButton>
                                     </>
                                 )}
+
+
                                 {user && (
                                     <>
                                         {is_accent[5] = false}
@@ -217,6 +223,7 @@ export default function TopNavbarV2() {
                         </D9Background>
                     </>
                 )}
+
             </Box>
         </>
     )

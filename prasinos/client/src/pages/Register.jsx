@@ -46,7 +46,6 @@ function Register() {
             http.post("/user/register", data)
                 .then((res) => {
                     navigate("/login");
-                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -61,10 +60,10 @@ function Register() {
                     <Typography sx={{ my: 2, fontSize: '1.7em' }}>
                         Get Started
                     </Typography>
-                    <Box component="form" sx={{ maxWidth: '500px' }}
+                    <Box component="form" sx={{ maxWidth: '500px'}}
                         onSubmit={formik.handleSubmit}>
 
-                        <Typography variant='h6' sx={{ mt: 4 }}>Name</Typography>
+                        <Typography variant='h6' sx={{ mt: 0 }}>Name</Typography>
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Name"
@@ -76,7 +75,7 @@ function Register() {
                             helperText={formik.touched.name && formik.errors.name}
                         />
 
-                        <Typography variant='h6' sx={{ mt: 4 }}>Email address</Typography>
+                        <Typography variant='h6' sx={{ mt: 2 }}>Email address</Typography>
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Email"
@@ -118,7 +117,6 @@ function Register() {
                         </Button>
                     </Box>
                     <ToastContainer />
-                    {((formik.touched.name && Boolean(formik.errors.name)) || (formik.touched.email && Boolean(formik.errors.email)) || (formik.touched.password && Boolean(formik.errors.password)) || (formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword))) && window.location.reload()}
                     <CustBox sx={{ bottom: { xs: '734px', sm: '662px', md: '629px', lg: '629px', xl: '629px' } }}></CustBox>
                 </LogBox>
             </LoginWrapper>

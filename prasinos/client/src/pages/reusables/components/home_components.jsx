@@ -31,5 +31,26 @@ export const TextBox1 = styled(Box)({
     postion: 'relative',
     maxWidth: '50%',
     textAlign: 'left',
-    margin: '-20px 90px 0px'
+    margin: '-10px 90px 20px'
+})
+
+export const CustImg1 = styled(Box)({
+    position: 'relative',
+    left: "36%",
+    maxWidth: '50%',
+    margin: '-200px 100px 0px'
+})
+
+export const TextBox2 = styled(Box)({
+    postion: 'relative',
+    maxWidth: '50%',
+    textAlign: 'left',
+    margin: '120px 54vw 0px'
+})
+
+export const CustImg2 = styled(Box)({
+    position: 'relative',
+    right: "63%",
+    maxWidth: '50%',
+    margin: '-200px 140px 0px',
 })

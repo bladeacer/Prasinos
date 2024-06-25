@@ -35,7 +35,7 @@ function Login() {
                 .then((res) => {
                     localStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
-                    navigate("/");
+                    navigate("/home");
                     window.location.reload();
                 })
                 .catch(function (err) {
@@ -87,8 +87,9 @@ function Login() {
                         </Button>
                     </Box>
                     <ToastContainer />
-                    {((formik.touched.email && Boolean(formik.errors.email)) || (formik.touched.password && Boolean(formik.errors.password))) && window.location.reload()}
-                    <CustBox></CustBox>
+                    <CustBox>
+                        <Button sx={{opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': {opacity: 1}, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center'}} href="/home">Click on me to go back to the home page!</Button>
+                    </CustBox>
                 </LogBox>
             </LoginWrapper>
         </>
