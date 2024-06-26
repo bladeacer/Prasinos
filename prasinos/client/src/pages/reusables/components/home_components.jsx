@@ -20,7 +20,7 @@ export const Pain = styled(Box)({
 
 export const CustBannerText = styled(Typography)({
     position: 'relative',
-    left: '25%',
+    right: '-25%',
     transform: 'translate(-50%, -210px)',
     fontSize: '80px',
     width: '200vw',
@@ -31,14 +31,14 @@ export const TextBox1 = styled(Box)({
     postion: 'relative',
     maxWidth: '50%',
     textAlign: 'left',
-    margin: '-10px 90px 20px'
+    margin: '-10px 8vw 20px'
 })
 
 export const CustImg1 = styled(Box)({
     position: 'relative',
-    left: "36%",
-    maxWidth: '50%',
-    margin: '-200px 100px 0px'
+    right: "-40vw",
+    width: '25%',
+    margin: '-200px 0px 0px'
 })
 
 export const TextBox2 = styled(Box)({
@@ -50,7 +50,7 @@ export const TextBox2 = styled(Box)({
 
 export const CustImg2 = styled(Box)({
     position: 'relative',
-    right: "63%",
-    maxWidth: '50%',
+    right: "57vw",
+    width: '25%',
     margin: '-200px 140px 0px',
 })

@@ -11,7 +11,7 @@ export default function TopNavbarV2() {
 
     const logout = () => {
         localStorage.clear();
-        window.location = "/";
+        window.location = "/home";
     };
 
     function falseAll() {
@@ -22,37 +22,41 @@ export default function TopNavbarV2() {
 
     var is_accent = [true, false, false, false, false, false, false, false];
     var goof_check = false;
+    var is_accent = [true, false, false, false, false, false, false, false, false, false];
     if (window.location.pathname.toString() == "/home") {
-        falseAll();
-        is_accent[0] = true;
+      falseAll();
+      is_accent[0] = true;
     }
     else if (window.location.pathname.toString() == "/booking") {
-        falseAll();
-        is_accent[1] = true;
+      falseAll();
+      is_accent[1] = true;
     }
     else if (window.location.pathname.toString() == "/events") {
-        falseAll();
-        is_accent[2] = true;
+      falseAll();
+      is_accent[2] = true;
     }
     else if (window.location.pathname.toString() == "/rewards") {
-        falseAll();
-        is_accent[3] = true;
+      falseAll();
+      is_accent[3] = true;
     }
     else if (window.location.pathname.toString() == "/support") {
-        falseAll();
-        is_accent[4] = true;
+      falseAll();
+      is_accent[4] = true;
     }
     else if (window.location.pathname.toString() == "/login") {
-        is_accent[5] = true;
-        is_accent[6] = false;
+      is_accent[5] = true;
+      is_accent[6] = false;
     } else if (window.location.pathname.toString() == "/register") {
-        is_accent[6] = true;
-        is_accent[5] = false;
-    } else {
-        falseAll();
-        var goof_check = true;
+      is_accent[6] = true;
+      is_accent[5] = false;
+    } else if (window.location.pathname.toString() == "/settings") {
+      falseAll();
+      is_accent[7] = true;
     }
-    
+    else {
+        falseAll()
+        goof_check = true;
+    }
 
     return (
         <>
@@ -131,7 +135,7 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
-                                        <CustButton>{user.name}</CustButton>
+                                        <CustButton href="/settings">{user.name}</CustButton>
                                         <SignUpButton onClick={logout}>Logout</SignUpButton>
                                     </CustButtonsStack>
                                 </>

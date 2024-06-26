@@ -7,7 +7,7 @@ import http from '../http';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserContext from '../contexts/UserContext';
-import { LogBox, CustBox, LoginWrapper } from './reusables/components/login_components';
+import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/components/login_components';
 
 function Login() {
     const navigate = useNavigate();
@@ -88,8 +88,9 @@ function Login() {
                     </Box>
                     <ToastContainer />
                     <CustBox>
-                        <Button sx={{opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': {opacity: 1}, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center'}} href="/home">Click on me to go back to the home page!</Button>
+                        {/* <Button sx={{opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': {opacity: 1}, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center'}} href="/home">Click on me to go back to the home page!</Button> */}
                     </CustBox>
+                    <CloseButton href="/home">X</CloseButton>
                 </LogBox>
             </LoginWrapper>
         </>

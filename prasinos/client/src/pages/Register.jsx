@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import http from '../http';
 import { ToastContainer, toast } from 'react-toastify';
-import { LogBox, CustBox, LoginWrapper } from './reusables/components/login_components';
+import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/components/login_components';
 import 'react-toastify/dist/ReactToastify.css';
 
 function Register() {
@@ -37,15 +37,21 @@ function Register() {
                     "Password at least 1 letter and 1 number"),
             confirmPassword: yup.string().trim()
                 .required('Confirm password is required')
-                .oneOf([yup.ref('password')], 'Passwords must match')
+                .oneOf([yup.ref('password')], 'Passwords must match'),
+            phone: yup.string()
+                .required("Phone number is required")
+                .matches(/^\+65\s?([689]\d{7}|[1][-\s]\d{7}|[3]\d{3}[-\s]\d{4})$/, 
+                    "Express in the form '+65 81234567'")
         }),
         onSubmit: (data) => {
             data.name = data.name.trim();
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
+            data.phone = data.phone;
             http.post("/user/register", data)
                 .then((res) => {
                     navigate("/login");
+                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -60,7 +66,7 @@ function Register() {
                     <Typography sx={{ my: 2, fontSize: '1.7em' }}>
                         Get Started
                     </Typography>
-                    <Box component="form" sx={{ maxWidth: '500px'}}
+                    <Box component="form" sx={{ maxWidth: '500px' }}
                         onSubmit={formik.handleSubmit}>
 
                         <Typography variant='h6' sx={{ mt: 0 }}>Name</Typography>
@@ -75,7 +81,7 @@ function Register() {
                             helperText={formik.touched.name && formik.errors.name}
                         />
 
-                        <Typography variant='h6' sx={{ mt: 2 }}>Email address</Typography>
+                        <Typography variant='h6' sx={{ mt: 1 }}>Email address</Typography>
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Email"
@@ -87,7 +93,7 @@ function Register() {
                             helperText={formik.touched.email && formik.errors.email}
                         />
 
-                        <Typography variant='h6' sx={{ mt: 2 }}>Password</Typography>
+                        <Typography variant='h6' sx={{ mt: 1 }}>Password</Typography>
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Password"
@@ -99,7 +105,7 @@ function Register() {
                             helperText={formik.touched.password && formik.errors.password}
                         />
 
-                        <Typography variant='h6' sx={{ mt: 2 }}>Confirm Password</Typography>
+                        <Typography variant='h6' sx={{ mt: 1 }}>Confirm Password</Typography>
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Confirm Password"
@@ -111,13 +117,26 @@ function Register() {
                             helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                         />
 
-                        <Button fullWidth variant="contained" sx={{ mt: 2, backgroundColor: '#8ab78f' }}
+                        <Typography variant='h6' sx={{ mt: 1 }}>Mobile Number</Typography>
+                        <TextField
+                            fullWidth margin="dense" autoComplete="off"
+                            label="Phone number"
+                            name="phone" 
+                            value={formik.values.phone}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.phone && Boolean(formik.errors.phone)}
+                            helperText={formik.touched.phone && formik.errors.phone}
+                        />
+                        <Button fullWidth variant="contained" sx={{ mt: 1, backgroundColor: '#8ab78f' }}
                             type="submit">
                             Register
                         </Button>
+
                     </Box>
                     <ToastContainer />
                     <CustBox sx={{ bottom: { xs: '734px', sm: '662px', md: '629px', lg: '629px', xl: '629px' } }}></CustBox>
+                    <CloseButton href="/home">X</CloseButton>
                 </LogBox>
             </LoginWrapper>
         </>

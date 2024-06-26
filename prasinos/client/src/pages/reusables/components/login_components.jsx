@@ -6,15 +6,15 @@ export const CustBox = styled(Box)({
     imageRendering: 'optimizeQuality',
     backgroundSize: 'cover',
     position: 'fixed',
-    left: '48.4vw',
+    left: '49vw',
     width: '42vw',
-    maxWidth: {xs: 0, sm: 0, md: 1200, lg: 1050, xl: 1050 },
+    maxWidth: {xs: 0, sm: 0, md: 0, lg: 1050, xl: 1050 },
     height: '93vh',
-    maxHeight: {xs: 0, sm: 0, md: 450, lg: 662, xl: 850 },
+    maxHeight: {xs: 0, sm: 0, md: 0, lg: 662, xl: 850 },
     overflow: 'unset',
     overflow: 'unset',
     zIndex: 2,
-    top: '5.5%'
+    top: '4.4%'
 })
 
 export const LogBox = styled(Box)({
@@ -24,7 +24,7 @@ export const LogBox = styled(Box)({
     alignItems: 'left',
     maxWidth: '23vw',
     position: 'fixed',
-    left: '20%',
+    left: '17%',
     top: '3.5%',
     zIndex: 2
 })
@@ -40,6 +40,15 @@ export const LoginWrapper = styled(Box)({
 })
 
 export const CloseButton = styled(Button)({
-    content: 'X'
+    position: 'fixed',
+    height: '52px',
+    width: '52px',
+    zIndex: 3,
+    top: '14.3vh',
+    right: '10vw',
+    borderRadius: '50%',
+    color: 'black',
+    fontSize: '32px',
+    backgroundColor: 'white'
 })
 

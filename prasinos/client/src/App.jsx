@@ -13,7 +13,7 @@ import Events from './pages/Events'
 import Rewards from './pages/Rewards'
 import Support from './pages/Support'
 import SelectLogin from './pages/selectLogin';
-
+import Settings from './pages/Settings';
 
 function falseAll() {
   for (var i = 0; i < is_accent.length; i++) {
@@ -21,7 +21,7 @@ function falseAll() {
   };
 }
 
-var is_accent = [true, false, false, false, false, false, false, false];
+var is_accent = [true, false, false, false, false, false, false, false, false, false];
 if (window.location.pathname.toString() == "/home") {
   falseAll();
   is_accent[0] = true;
@@ -48,6 +48,12 @@ else if (window.location.pathname.toString() == "/login") {
 } else if (window.location.pathname.toString() == "/register") {
   is_accent[6] = true;
   is_accent[5] = false;
+} else if (window.location.pathname.toString() == "/settings") {
+  falseAll();
+  is_accent[7] = true;
+} else if (window.location.pathname.toString() == "/") {
+  falseAll();
+  is_accent[8] = true;
 }
 else (
   falseAll()
@@ -133,8 +139,31 @@ function RegisterWrapper() {
     </>
   )
 }
+function SettingsWrapper() {
+  return (
+    <>
+      {is_accent[7] && (
+        <>
+          <Settings></Settings>
+        </>
+      )}
+    </>
+  )
+}
+function SelectLogWrapper() {
+  return (
+    <>
+      {is_accent[8] && (
+        <>
+          <SelectLogin></SelectLogin>
+        </>
+      )}
+    </>
+  )
+}
 
 function EverythingWrapper() {
+  // Used in overlay effect
   return (
     <>
       {RegisterWrapper()}
@@ -144,6 +173,8 @@ function EverythingWrapper() {
       {EventWrapper()}
       {SupportWrapper()}
       {HomeWrapper()}
+      {SelectLogWrapper()}
+      {SettingsWrapper()}
     </>
   )
 }
@@ -167,9 +198,8 @@ export default function App() {
       <Router>
         <TopNavbarV2></TopNavbarV2>
 
-        {EverythingWrapper()}
         <Routes>
-          <Route path={"/"} element={SelectLogin()} />
+          <Route path={"/"} element={SelectLogWrapper()} />
           <Route path={"/home"} element={HomeWrapper()} />
           <Route path={"/booking"} element={BookingWrapper()} />
           <Route path={"/events"} element={EventWrapper()} />
@@ -179,6 +209,11 @@ export default function App() {
             <>
               <Route path={"/register"} element={EverythingWrapper()} />
               <Route path={"/login"} element={EverythingWrapper()} />
+            </>
+          )}
+          {user && (
+            <>
+              <Route path={"/settings"} element={EverythingWrapper()}></Route>
             </>
           )}
 

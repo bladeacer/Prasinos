@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { User } = require('../models');
+const { Staff } = require('../models');
 const yup = require("yup");
 const { sign } = require('jsonwebtoken');
 const { validateToken } = require('../middlewares/auth');
@@ -27,18 +27,18 @@ router.post("/register", async (req, res) => {
             { abortEarly: false });
 
         // Check email
-        let user = await User.findOne({
+        let staff = await Staff.findOne({
             where: { email: data.email }
         });
-        if (user) {
+        if (staff) {
             res.status(400).json({ message: "Email already exists." });
             return;
         }
 
         // Hash passowrd
         data.password = await bcrypt.hash(data.password, 10);
-        // Create user
-        let result = await User.create(data);
+        // Create staff
+        let result = await Staff.create(data);
         res.json({
             message: `Email ${result.email} was registered successfully.`
         });
@@ -61,31 +61,31 @@ router.post("/login", async (req, res) => {
 
         // Check email and password
         let errorMsg = "Email or password is not correct.";
-        let user = await User.findOne({
+        let staff = await Staff.findOne({
             where: { email: data.email }
         });
-        if (!user) {
+        if (!staff) {
             res.status(400).json({ message: errorMsg });
             return;
         }
-        let match = await bcrypt.compare(data.password, user.password);
+        let match = await bcrypt.compare(data.password, staff.password);
         if (!match) {
             res.status(400).json({ message: errorMsg });
             return;
         }
 
-        // Return user info
-        let userInfo = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            phone: user.phone
+        // Return staff info
+        let staffInfo = {
+            id: staff.id,
+            email: staff.email,
+            name: staff.name,
+            phone: staff.phone
         };
-        let accessToken = sign(userInfo, process.env.APP_SECRET,
+        let accessToken = sign(staffInfo, process.env.APP_SECRET,
             { expiresIn: process.env.TOKEN_EXPIRES_IN });
         res.json({
             accessToken: accessToken,
-            user: userInfo
+            staff: staffInfo
         });
     }
     catch (err) {
@@ -95,14 +95,14 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/auth", validateToken, (req, res) => {
-    let userInfo = {
-        id: req.user.id,
-        email: req.user.email,
-        name: req.user.name,
-        phone: req.user.phone
+    let staffInfo = {
+        id: req.staff.id,
+        email: req.staff.email,
+        name: req.staff.name,
+        phone: req.staff.phone
     };
     res.json({
-        user: userInfo
+        staff: staffInfo
     });
 });
 

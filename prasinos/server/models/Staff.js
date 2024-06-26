@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const User = sequelize.define("User", {
+    const Staff = sequelize.define("Staff", {
         name: {
             type: DataTypes.STRING(50),
             allowNull: false
@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         }
     }, {
-        tableName: 'users'
+        tableName: 'staff'
     });
 
     // User.associate = (models) => {
@@ -27,5 +27,5 @@ module.exports = (sequelize, DataTypes) => {
     //     });
     // };
 
-    return User;
+    return Staff;
 }

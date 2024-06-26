@@ -2,12 +2,14 @@
 Use `npm i` in the client and server directories' command line to installed required dependencies which are ignored by GitHub so repeated dependencies with a large size are not stored.
 
 ## Note to self
-Use `window.location.reload()` whenever the `useNavigate` hook is called
+Use `window.location.reload()` whenever the `useNavigate` hook is called for successful login
 
 Add Google Sign-In as an option
  - [ ]  TODO: https://blog.logrocket.com/guide-adding-google-login-react-app/ 
 
 Code user settings, page where they can see their details, danger zone
+- [x] TODO: Add phone number to user entity
+- [ ] TODO: Add other optional fields to user entity
  - [ ] TODO: Settings page (update account details) 
  - [ ] TODO: details page
  - [ ] danger zone (deleting and resetting account)
@@ -19,7 +21,7 @@ Code staff-facing user management page.
 **Do not include danger zone for staff facing site**
 
 Make register and login app route appear like an overlay menu
-- [ ] Add a X close button for login and register routes which navigates back to home route
+- [x] Add a X close button for login and register routes which navigates back to home route
 
 Make "clickable images" with (where custbox is a box with an image via url or an box component with image src), *do this for every image you see :D*:
 
