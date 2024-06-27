@@ -20,7 +20,7 @@ function UserRewards() {
   const { user } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState(0);
-  const [tier, setTier] = useState(1);
+  const [tier, setTier] = useState("Bronze");
   const [progress, setProgress] = useState(0);
   const [eligibleRewards, setEligibleRewards] = useState([]);
   const [pointsNeeded, setPointsNeeded] = useState(0);
@@ -52,10 +52,10 @@ function UserRewards() {
     // Calculate progress to next tier
     let pointsNeededToNextTier;
     switch (tier) {
-      case 1:
+      case "Bronze":
         pointsNeededToNextTier = 5000;
         break;
-      case 2:
+      case "Silver":
         pointsNeededToNextTier = 15000;
         break;
       default:
@@ -72,9 +72,21 @@ function UserRewards() {
     http
       .get(`/reward`)
       .then((res) => {
-        const eligible = res.data.filter(
-          (reward) => reward.tier_required <= tier
-        );
+        const eligible = res.data.filter((reward) => {
+          if (tier === "Bronze") return reward.tier_required === "Bronze";
+          if (tier === "Silver")
+            return (
+              reward.tier_required === "Bronze" ||
+              reward.tier_required === "Silver"
+            );
+          if (tier === "Gold")
+            return (
+              reward.tier_required === "Bronze" ||
+              reward.tier_required === "Silver" ||
+              reward.tier_required === "Gold"
+            );
+          return false;
+        });
         setEligibleRewards(eligible);
       })
       .catch((err) => {
@@ -113,23 +125,34 @@ function UserRewards() {
   };
 
   const handleSortByTierAsc = () => {
+    const tierOrder = { Bronze: 1, Silver: 2, Gold: 3 }; // Define tier order
     const sortedRewards = [...eligibleRewards].sort(
-      (a, b) => a.tier_required - b.tier_required
+      (a, b) => tierOrder[a.tier_required] - tierOrder[b.tier_required]
     );
     setEligibleRewards(sortedRewards);
     setSortOrder("tierAsc");
   };
 
   const handleSortByTierDesc = () => {
+    const tierOrder = { Bronze: 1, Silver: 2, Gold: 3 }; // Define tier order
     const sortedRewards = [...eligibleRewards].sort(
-      (a, b) => b.tier_required - a.tier_required
+      (a, b) => tierOrder[b.tier_required] - tierOrder[a.tier_required]
     );
     setEligibleRewards(sortedRewards);
     setSortOrder("tierDesc");
   };
 
   const handleResetSort = () => {
-    setEligibleRewards(eligibleRewards); // Reset to original order
+    // Re-fetch rewards in default order or maintain original order
+    http
+      .get(`/reward`)
+      .then((res) => {
+        setEligibleRewards(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching rewards:", err);
+        toast.error("Failed to fetch rewards.");
+      });
     setSortOrder("default");
   };
 
@@ -142,7 +165,7 @@ function UserRewards() {
       </Typography>
       <Box sx={{ my: 2 }}>
         <Typography variant="h5" sx={{ mb: 1 }}>
-          You are in Tier {tier}.
+          You are in the {tier} tier.
         </Typography>
         <Typography variant="body1" sx={{ mb: 1 }}>
           You have {points} points available to spend.
@@ -151,14 +174,14 @@ function UserRewards() {
       </Box>
 
       <Grid container spacing={2}>
-        {tier < 3 && (
+        {tier !== "Gold" && (
           <Grid item>
             <Typography variant="body2">
-              You need {pointsNeeded} points to reach Tier {tier + 1}.
+              You need {pointsNeeded} points to reach the next tier.
             </Typography>
           </Grid>
         )}
-        {tier === 3 && (
+        {tier === "Gold" && (
           <Grid item>
             <Typography variant="body2">
               You are in the highest tier!

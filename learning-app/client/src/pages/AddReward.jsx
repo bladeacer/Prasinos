@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Box, Typography, TextField, Button, Grid, MenuItem } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  MenuItem,
+} from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import http from "../http";
@@ -36,9 +43,8 @@ function AddReward() {
         .positive("Points needed must be a positive number")
         .required("Points needed is required"),
       tier_required: yup
-        .number()
-        .positive("Tier required must be a positive number")
-        .max(3, "Highest tier is 3")
+        .string()
+        .oneOf(["Bronze", "Silver", "Gold"], "Invalid tier")
         .required("Tier required is required"),
     }),
     onSubmit: (data) => {
@@ -116,8 +122,7 @@ function AddReward() {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={
-                formik.touched.description &&
-                Boolean(formik.errors.description)
+                formik.touched.description && Boolean(formik.errors.description)
               }
               helperText={
                 formik.touched.description && formik.errors.description
@@ -157,7 +162,7 @@ function AddReward() {
                 formik.touched.tier_required && formik.errors.tier_required
               }
             >
-              {[1, 2, 3].map((option) => (
+              {["Bronze", "Silver", "Gold"].map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
                 </MenuItem>

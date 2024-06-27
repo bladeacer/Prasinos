@@ -11,11 +11,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       points_needed: {
-        type: DataTypes.INTEGER, // Change type to INTEGER for integer values
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       tier_required: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.ENUM,
+        values: ["Bronze", "Silver", "Gold"],
         allowNull: false,
       },
       imageFile: {
@@ -33,5 +34,6 @@ module.exports = (sequelize, DataTypes) => {
       as: "user",
     });
   };
+
   return Reward;
 };

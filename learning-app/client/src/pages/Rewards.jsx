@@ -163,9 +163,7 @@ function Reward() {
           <MenuItem onClick={() => handleSortChange("name")}>
             Sort by Alphabetical Order
           </MenuItem>
-          <MenuItem onClick={() => handleSortChange("id")}>
-            Sort by ID
-          </MenuItem>
+          <MenuItem onClick={() => handleSortChange("id")}>Sort by ID</MenuItem>
         </Menu>
       </Box>
 
@@ -183,7 +181,9 @@ function Reward() {
                   <Box className="aspect-ratio-container">
                     <img
                       alt="reward"
-                      src={`${import.meta.env.VITE_FILE_BASE_URL}${reward.imageFile}`}
+                      src={`${import.meta.env.VITE_FILE_BASE_URL}${
+                        reward.imageFile
+                      }`}
                     ></img>
                   </Box>
                 )}

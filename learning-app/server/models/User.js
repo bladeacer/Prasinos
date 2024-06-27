@@ -19,8 +19,9 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
       tier: {
-        type: DataTypes.INTEGER,
-        defaultValue: 1,
+        type: DataTypes.ENUM,
+        values: ["Bronze", "Silver", "Gold"],
+        allowNull: false,
       },
     },
     {
