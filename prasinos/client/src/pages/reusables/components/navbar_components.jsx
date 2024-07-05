@@ -92,10 +92,14 @@ export const D9Background = styled(AppBar)({
 
 export const ImageBox = styled(Box)({
     maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 },
-    right: '78vw',
+    // right: '78vw',
+    right: '80vw',
     position: 'absolute',
     marginTop: '-12.75px',
     marginRight: '2vw',
     zIndex: '0',
-    top: '39px'
+    top: '30px',
+    // '&:hover': {
+    //     opacity: '0'
+    // }
 })

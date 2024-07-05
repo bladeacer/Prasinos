@@ -14,7 +14,7 @@ app.use(cors({
 
 // Simple Route
 app.get("/", (req, res) => {
-    res.send("Welcome to the learning space.");
+    res.send("Nuh uh.");
 });
 
 // Routes

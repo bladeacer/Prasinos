@@ -3,9 +3,9 @@ import { Box, Typography, styled } from '@mui/material';
 export const CustBanner = styled(Box)({
     position: 'relative',
     height: '277px',
-    width: '100vw',
+    width: '200vw',
     color: "#ffffff",
-    right: '50vw',
+    right: '7vw',
     imageRendering: 'optimizeQuality',
     backgroundSize: 'cover',
 })
@@ -14,13 +14,13 @@ export const Pain = styled(Box)({
     position: 'absolute',
     background: 'transparent',
     zIndex: '-1',
-    left: '0%',
+    right: '-107.5vw',
     top: '15%'
 })
 
 export const CustBannerText = styled(Typography)({
     position: 'relative',
-    right: '-25%',
+    right: '-45vw',
     transform: 'translate(-50%, -210px)',
     fontSize: '80px',
     width: '200vw',

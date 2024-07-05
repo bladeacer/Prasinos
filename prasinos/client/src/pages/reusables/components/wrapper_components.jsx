@@ -2,12 +2,13 @@ import { styled } from '@mui/material/styles';
 import { Container } from '@mui/material';
 
 export const CustomContainer = styled(Container)({
-    position: 'sticky',
-    marginTop: '100px',
-    right: '20vh',
+    position: 'absolute',
+    marginTop: '20vh',
     padding: 'unset',
-    width: '90vw',
+    height: '86vh',
     color: "#000000",
     // border: "1px solid black",
-    overflowX: 'hidden'
+    overflowX: 'hidden',
+    textAlign: 'center',
+    textTransform: 'unset'
 })

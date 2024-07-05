@@ -8,22 +8,25 @@ Add Google Sign-In as an option
  - [ ]  TODO: https://blog.logrocket.com/guide-adding-google-login-react-app/ 
 
 Code user settings, page where they can see their details, danger zone
-- [x] TODO: Add phone number to user entity
-- [ ] TODO: Add other optional fields to user entity
- - [ ] TODO: Settings page (update account details) 
- - [ ] TODO: details page
- - [ ] danger zone (deleting and resetting account)
+ - [] TODO: Account details in settings page (make some fields dynamic and add profile pic image)
+ - [ ] TODO: staff get put routes
+ - [ ] danger zone (deleting and updating account details)
+ - [ ] TODO: Add other optional fields to user entity
+ - [ ] Root page with nice links user and staff login (50% of screen one colour with gradient type aah)
+ - [ ] Two formiks one for reset password the other for changing other fields together
+ - [ ] Style user and staff sidebar later (add image and stuff to user sidebar)
+ - [ ] Tidy up your CSS and replace `marginLeft` with `ml` and stuff
+ - [ ] `top: {sm: 0, md: 0,. ...}` for responsive margin top and stuff like that
 
 Code staff-facing user management page.
-- [ ] TODO: Create working staff entity with routes
-- [ ] TODO: Manage user interface
+- [ ] TODO: Code front-end for staff entity with routes and test if working
+- [ ] TODO: Staff-facing interface to manage users
+- [ ] TODO: Staff-facing danger zone has opacity dimming and background page
+- [ ] TODO: Add funny text under the navbar image box to function as helper text
 
 **Do not include danger zone for staff facing site**
 
-Make register and login app route appear like an overlay menu
-- [x] Add a X close button for login and register routes which navigates back to home route
-
-Make "clickable images" with (where custbox is a box with an image via url or an box component with image src), *do this for every image you see :D*:
+Make "clickable images" with (where custbox is a box with an image via url or an box component with image src)
 
 ```jsx
 <CustBox>
@@ -35,6 +38,4 @@ Make "clickable images" with (where custbox is a box with an image via url or an
 
 ### Front-end stuff
 - [ ] Finish adding images and content in homepage and othere pages in styled Box with `component=img` type aah
-- [x] Screenshot directly from Figma for images smh
-- [x] Make "/" route into "/home", "/" contains pop up of user login or staff login
 - [ ] Update app icon in [index.html](prasinos/client/index.html)

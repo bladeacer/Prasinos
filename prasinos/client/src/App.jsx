@@ -1,225 +1,183 @@
 import './App.css';
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import http from './http';
-import UserContext from './contexts/UserContext';
+import { UserContext, StaffContext } from './contexts/Contexts';
 import TopNavbarV2 from './pages/reusables/top_navbarv2'
 
-import Register from './pages/Register'
-import Login from './pages/Login';
-import Home from './pages/Home';
-import Booking from './pages/Booking'
-import Events from './pages/Events'
-import Rewards from './pages/Rewards'
-import Support from './pages/Support'
-import SelectLogin from './pages/selectLogin';
 import Settings from './pages/Settings';
-
-function falseAll() {
-  for (var i = 0; i < is_accent.length; i++) {
-    is_accent[i] = false
-  };
-}
-
-var is_accent = [true, false, false, false, false, false, false, false, false, false];
-if (window.location.pathname.toString() == "/home") {
-  falseAll();
-  is_accent[0] = true;
-}
-else if (window.location.pathname.toString() == "/booking") {
-  falseAll();
-  is_accent[1] = true;
-}
-else if (window.location.pathname.toString() == "/events") {
-  falseAll();
-  is_accent[2] = true;
-}
-else if (window.location.pathname.toString() == "/rewards") {
-  falseAll();
-  is_accent[3] = true;
-}
-else if (window.location.pathname.toString() == "/support") {
-  falseAll();
-  is_accent[4] = true;
-}
-else if (window.location.pathname.toString() == "/login") {
-  is_accent[5] = true;
-  is_accent[6] = false;
-} else if (window.location.pathname.toString() == "/register") {
-  is_accent[6] = true;
-  is_accent[5] = false;
-} else if (window.location.pathname.toString() == "/settings") {
-  falseAll();
-  is_accent[7] = true;
-} else if (window.location.pathname.toString() == "/") {
-  falseAll();
-  is_accent[8] = true;
-}
-else (
-  falseAll()
-)
-
-
-
-function HomeWrapper() {
-  return (
-    <>
-      {is_accent[0] && (
-        <>
-          <Home></Home>
-        </>
-      )}
-    </>
-  )
-}
-function BookingWrapper() {
-  return (
-    <>
-      {is_accent[1] && (
-        <>
-          <Booking></Booking>
-        </>
-      )}
-    </>
-  )
-}
-function EventWrapper() {
-  return (
-    <>
-      {is_accent[2] && (
-        <>
-          <Events></Events>
-        </>
-      )}
-    </>
-  )
-}
-function RewardsWrapper() {
-  return (
-    <>
-      {is_accent[3] && (
-        <>
-          <Rewards></Rewards>
-        </>
-      )}
-    </>
-  )
-}
-function SupportWrapper() {
-  return (
-    <>
-      {is_accent[4] && (
-        <>
-          <Support></Support>
-        </>
-      )}
-    </>
-  )
-}
-function LoginWrapper() {
-  return (
-    <>
-      {is_accent[5] && (
-        <>
-          <Login></Login>
-        </>
-      )}
-    </>
-  )
-}
-
-function RegisterWrapper() {
-  return (
-    <>
-      {is_accent[6] && (
-        <>
-          <Register></Register>
-        </>
-      )}
-    </>
-  )
-}
-function SettingsWrapper() {
-  return (
-    <>
-      {is_accent[7] && (
-        <>
-          <Settings></Settings>
-        </>
-      )}
-    </>
-  )
-}
-function SelectLogWrapper() {
-  return (
-    <>
-      {is_accent[8] && (
-        <>
-          <SelectLogin></SelectLogin>
-        </>
-      )}
-    </>
-  )
-}
-
-function EverythingWrapper() {
-  // Used in overlay effect
-  return (
-    <>
-      {RegisterWrapper()}
-      {LoginWrapper()}
-      {BookingWrapper()}
-      {RewardsWrapper()}
-      {EventWrapper()}
-      {SupportWrapper()}
-      {HomeWrapper()}
-      {SelectLogWrapper()}
-      {SettingsWrapper()}
-    </>
-  )
-}
+import Unauthorized from './pages/Unauthorized';
+import DangerZone from './pages/dangerZone'
+import EditUser from './pages/EditUser';
+import ResetPassword from './pages/ResetPassword';
+import { is_accent } from './pages/reusables/accent_parser';
+import { HomeWrapper, BookingWrapper, EventWrapper, RewardsWrapper, SupportWrapper, SelectLogWrapper, EverythingWrapper } from './pages/reusables/wrappers';
+import RoutePlaceholder from './pages/reusables/route_placeholders';
+import StaffLogin from './pages/staffLogin';
+import StaffRegister from './pages/staffRegister';
+import StaffHome from './pages/staffHome';
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [staff, setStaff] = useState(null);
 
   useEffect(() => {
     if (localStorage.getItem("accessToken")) {
       http.get('/user/auth').then((res) => {
         setUser(res.data.user);
       });
+      http.get('/staff/auth').then((res) => {
+        setStaff(res.data.staff);
+      });
     }
   }, []);
-
 
   // Note to self: Make an everything wrapper 
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
-      <Router>
-        <TopNavbarV2></TopNavbarV2>
+    <>
+      <UserContext.Provider value={{ user, setUser }}>
+        <Router>
+          <TopNavbarV2></TopNavbarV2>
 
+          <Routes>
+            {RoutePlaceholder(false)}
+            <Route path={"/"} element={<></>}></Route>
+
+            <Route path={"/home"} element={HomeWrapper()} />
+            <Route path={"/booking"} element={BookingWrapper()} />
+            <Route path={"/events"} element={EventWrapper()} />
+            <Route path={"/rewards"} element={RewardsWrapper()} />
+            <Route path={"/support"} element={SupportWrapper()} />
+            <Route path={"/settings"} element={
+              <>
+                {is_accent[7] && user && (
+                  Settings(false, user)
+                )}
+                {is_accent[7] && !user && (
+                  Unauthorized(false)
+                )}
+              </>
+            } />
+            <Route path={"/dangerZone"} element={
+              <>
+                {is_accent[9] && !user && (
+                  Unauthorized(false)
+                )}
+                {is_accent[9] && user && (
+                  <>
+                    {Settings(true, user)}
+                    <DangerZone />
+                  </>
+                )}
+              </>
+            } />
+            <Route path={"/register"} element={
+              <>
+                {!user && (
+                  EverythingWrapper()
+                )}
+                {user && (
+                  Unauthorized(true)
+                )}
+              </>
+            } />
+            <Route path={"/login"} element={
+              <>
+                {!user && (
+                  EverythingWrapper()
+                )}
+                {user && (
+                  Unauthorized(true)
+                )}
+              </>
+            } />
+            <Route path={`/edit/:id`} element={
+              <>
+                {!user || (window.location.pathname != `/edit/${user.id}`) && (
+                  Unauthorized(-1)
+                )}
+                {user && (
+                  <EditUser />
+                )}
+              </>
+            } />
+            <Route path={`/reset/:id`} element={
+              <>
+                {!user || (window.location.pathname != `/reset/${user.id}`) && (
+                  Unauthorized(-1)
+                )}
+                {user && (
+                  <ResetPassword />
+                )}
+              </>
+            } />
+          </Routes>
+        </Router>
+      </UserContext.Provider>
+
+      <StaffContext.Provider value={{ staff, setStaff }}>
+        <Router>
+          <Routes>
+            {RoutePlaceholder(true)}
+            <Route path={"/"} element={<></>}></Route>
+
+            <Route path={"/staffLogin"} element={
+              <>
+                {!staff && (
+                  <StaffLogin />
+                )}
+                {staff && (
+                  Unauthorized(3)
+                )}
+              </>
+            } />
+            <Route path={"/staffRegister"} element={
+              <>
+                {!staff && (
+                  <StaffRegister />
+                )}
+                {staff && (
+                  Unauthorized(3)
+                )}
+              </>
+            } />
+            <Route path={"/staffHome"} element={
+              <>
+                {!staff && (
+                  Unauthorized(2)
+                )}
+                {staff && (
+                  <StaffHome />
+                )}
+              </>
+            } />
+
+          </Routes>
+        </Router>
+      </StaffContext.Provider>
+
+      <Router>
         <Routes>
-          <Route path={"/"} element={SelectLogWrapper()} />
-          <Route path={"/home"} element={HomeWrapper()} />
-          <Route path={"/booking"} element={BookingWrapper()} />
-          <Route path={"/events"} element={EventWrapper()} />
-          <Route path={"/rewards"} element={RewardsWrapper()} />
-          <Route path={"/support"} element={SupportWrapper()} />
-          {!user && (
+          {/* Apparently you can get usercontext values outside of the user context provider */}
+
+          {RoutePlaceholder(false)}
+          {RoutePlaceholder(true)}
+
+          <Route path={"/"} element={
             <>
-              <Route path={"/register"} element={EverythingWrapper()} />
-              <Route path={"/login"} element={EverythingWrapper()} />
+              {!user && !staff && (
+                SelectLogWrapper()
+              )}
+              {user || staff && (
+                Unauthorized(true)
+              )}
             </>
-          )}
-          {user && (
-            <>
-              <Route path={"/settings"} element={EverythingWrapper()}></Route>
-            </>
-          )}
+          } />
 
         </Routes>
 
       </Router>
-    </UserContext.Provider>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { Box, styled, Button} from '@mui/material';
+import { Box, styled, Button } from '@mui/material';
 
 
 export const CustBox = styled(Box)({
@@ -8,13 +8,13 @@ export const CustBox = styled(Box)({
     position: 'fixed',
     left: '49vw',
     width: '42vw',
-    maxWidth: {xs: 0, sm: 0, md: 0, lg: 1050, xl: 1050 },
+    maxWidth: { xs: 0, sm: 0, md: 0, lg: 1050, xl: 1050 },
     height: '93vh',
-    maxHeight: {xs: 0, sm: 0, md: 0, lg: 662, xl: 850 },
-    overflow: 'unset',
+    maxHeight: { xs: 0, sm: 0, md: 0, lg: 662, xl: 850 },
     overflow: 'unset',
     zIndex: 2,
-    top: '4.4%'
+    top: '5.4%',
+    borderRadius: '10px'
 })
 
 export const LogBox = styled(Box)({
@@ -36,7 +36,8 @@ export const LoginWrapper = styled(Box)({
     position: 'fixed',
     textAlign: 'left',
     top: '40px',
-    left: '6.5%'
+    left: '6.5%',
+    borderRadius: '10px'
 })
 
 export const CloseButton = styled(Button)({
@@ -44,11 +45,21 @@ export const CloseButton = styled(Button)({
     height: '52px',
     width: '52px',
     zIndex: 3,
-    top: '14.3vh',
-    right: '10vw',
+    top: '6vh',
+    right: '9vw',
     borderRadius: '50%',
     color: 'black',
     fontSize: '32px',
     backgroundColor: 'white'
 })
 
+export const DangerHeader = styled(Box) ({
+    position: 'fixed',
+    height: '175px',
+    width: '84.5vw',
+    right: '8.45%',
+    borderRadius: '30px',
+    backgroundColor: 'rgba(19, 57, 16, 0.85)',
+    textAlign: 'center',
+    color: 'white',
+})

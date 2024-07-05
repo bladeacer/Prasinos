@@ -1,74 +1,34 @@
 import * as React from 'react';
 import imgUrl from '../../assets/prasinos-logo.jpg';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
 import { useContext } from 'react';
-import UserContext from '../../contexts/UserContext';
+import { UserContext } from '../../contexts/Contexts';
 import url from '../../assets/dimmed-logo.png'
+import { SidebarData } from './SideBarData';
+import { useState } from 'react';
+import './sidebar.css'
+import { goof_check, is_accent } from './accent_parser';
+import { logout } from './logout';
 
 export default function TopNavbarV2() {
     const { user } = useContext(UserContext);
 
-    const logout = () => {
-        localStorage.clear();
-        window.location = "/home";
-    };
-
-    function falseAll() {
-        for (var i = 0; i < is_accent.length; i++) {
-            is_accent[i] = false
-        };
-    }
-
-    var is_accent = [true, false, false, false, false, false, false, false];
-    var goof_check = false;
-    var is_accent = [true, false, false, false, false, false, false, false, false, false];
-    if (window.location.pathname.toString() == "/home") {
-      falseAll();
-      is_accent[0] = true;
-    }
-    else if (window.location.pathname.toString() == "/booking") {
-      falseAll();
-      is_accent[1] = true;
-    }
-    else if (window.location.pathname.toString() == "/events") {
-      falseAll();
-      is_accent[2] = true;
-    }
-    else if (window.location.pathname.toString() == "/rewards") {
-      falseAll();
-      is_accent[3] = true;
-    }
-    else if (window.location.pathname.toString() == "/support") {
-      falseAll();
-      is_accent[4] = true;
-    }
-    else if (window.location.pathname.toString() == "/login") {
-      is_accent[5] = true;
-      is_accent[6] = false;
-    } else if (window.location.pathname.toString() == "/register") {
-      is_accent[6] = true;
-      is_accent[5] = false;
-    } else if (window.location.pathname.toString() == "/settings") {
-      falseAll();
-      is_accent[7] = true;
-    }
-    else {
-        falseAll()
-        goof_check = true;
-    }
+    const [sidebar, setSidebar] = useState(false);
+    const showSidebar = () => setSidebar(!sidebar);
 
     return (
         <>
             <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-                {!goof_check && !is_accent[5] && !is_accent[6] && (
+                {((!goof_check && !is_accent[5] && !is_accent[6] && !is_accent[9] && !is_accent[10] && !is_accent[11])) && (
                     <>
                         <ImageBox
                             component="img"
                             alt="Prasinos logo"
                             sx={{ maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 } }}
                             src={imgUrl}
+                            onClick={showSidebar}
                         />
                         <CustomAppBar position="sticky">
                             <CustNavStack spacing={4} direction="row">
@@ -124,6 +84,23 @@ export default function TopNavbarV2() {
                                 )}
 
                             </CustNavStack>
+
+                            <nav className={sidebar ? 'nav-menu active' : 'nav-menu'}>
+
+                                <ul className='nav-menu-items' onClick={showSidebar}>
+
+                                    {SidebarData.map((item, index) => {
+                                        return (
+                                            <li key={index} className={item.cName}>
+                                                <Button href={item.path}>
+                                                    <span>{item.title}</span>
+                                                </Button>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </nav>
+
                             {!user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
@@ -143,7 +120,7 @@ export default function TopNavbarV2() {
                         </CustomAppBar>
                     </>
                 )}
-                {!goof_check && (is_accent[5] || is_accent[6]) && (
+                {!goof_check && (is_accent[5] || is_accent[6] || is_accent[9] || is_accent[10] || is_accent[11]) && (
                     <>
                         <ImageBox
                             component="img"
@@ -208,22 +185,22 @@ export default function TopNavbarV2() {
                                     </>
                                 )}
                             </CustNavStack>
-                            <CustButtonsStack spacing={3} direction="row" sx={{ right: '200px', top: '40px' }}>
-                                {!user && (
-                                    <>
-                                        <SignInButton variant="contained">Sign In</SignInButton>
-                                        <SignUpButton variant="contained" sx={{ backgroundColor: '#007c48' }}> Sign Up</SignUpButton>
-                                    </>
-                                )}
-
-
-                                {user && (
-                                    <>
-                                        {is_accent[5] = false}
-                                        {is_accent[6] = false}
-                                    </>
-                                )}
-                            </CustButtonsStack>
+                            {!user && (
+                                <>
+                                    <CustButtonsStack spacing={3} direction="row">
+                                        <SignInButton href='/login' variant="contained">Sign In</SignInButton>
+                                        <SignUpButton href='/register' variant="contained"> Sign Up</SignUpButton>
+                                    </CustButtonsStack>
+                                </>
+                            )}
+                            {user && (
+                                <>
+                                    <CustButtonsStack spacing={3} direction="row">
+                                        <CustButton href="/settings">{user.name}</CustButton>
+                                        <SignUpButton onClick={logout}>Logout</SignUpButton>
+                                    </CustButtonsStack>
+                                </>
+                            )}
                         </D9Background>
                     </>
                 )}

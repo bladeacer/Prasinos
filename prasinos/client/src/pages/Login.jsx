@@ -6,8 +6,9 @@ import * as yup from 'yup';
 import http from '../http';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import UserContext from '../contexts/UserContext';
+import { UserContext, StaffContext } from '../contexts/Contexts';
 import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/components/login_components';
+
 
 function Login() {
     const navigate = useNavigate();
@@ -31,6 +32,9 @@ function Login() {
         onSubmit: (data) => {
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
+            if (localStorage.getItem("accessToken")) {
+                localStorage.clear();
+            }
             http.post("/user/login", data)
                 .then((res) => {
                     localStorage.setItem("accessToken", res.data.accessToken);
