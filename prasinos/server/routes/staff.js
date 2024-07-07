@@ -7,6 +7,7 @@ const { sign } = require('jsonwebtoken');
 const { validateToken } = require('../middlewares/auth');
 const dayjs = require('dayjs')
 require('dotenv').config();
+const { Op } = require("sequelize");
 
 router.post("/register", async (req, res) => {
     let data = req.body;
@@ -132,8 +133,7 @@ router.get("/", async (req, res) => {
 
     let list = await Staff.findAll({
         where: condition,
-        order: [['createdAt', 'DESC']],
-        include: { attributes: ['name', 'email', 'phone'] }
+        order: [['createdAt', 'DESC']]
     });
     res.json(list);
 });

@@ -13,7 +13,7 @@ function Tutorials() {
     const { user } = useContext(UserContext);
 
     const onSearchChange = (e) => {
-        setSearch(e.target.value);
+        setSearch(e.target.alue);
     };
 
     const getTutorials = () => {
