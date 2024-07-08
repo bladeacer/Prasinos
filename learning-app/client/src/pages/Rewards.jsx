@@ -192,13 +192,12 @@ function Reward() {
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
                       {reward.name}
                     </Typography>
-                    {user && user.id === reward.userId && (
-                      <Link to={`/editreward/${reward.id}`}>
-                        <IconButton color="primary" sx={{ padding: "4px" }}>
-                          <Edit />
-                        </IconButton>
-                      </Link>
-                    )}
+
+                    <Link to={`/editreward/${reward.id}`}>
+                      <IconButton color="primary" sx={{ padding: "4px" }}>
+                        <Edit />
+                      </IconButton>
+                    </Link>
                   </Box>
                   <Typography variant="body2" color="text.secondary">
                     ID: {reward.id}
@@ -248,7 +247,7 @@ function Reward() {
       </Grid>
 
       {sortedList.length > rewardsPerPage && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 4 }}>
           <Pagination
             count={Math.ceil(sortedList.length / rewardsPerPage)}
             page={page}

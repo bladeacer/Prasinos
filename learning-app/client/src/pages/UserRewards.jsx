@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, RouterLink } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -17,7 +17,8 @@ import {
   DialogContentText,
   DialogTitle,
   Input,
-  CardMedia, // New import for handling images
+  CardMedia,
+  Pagination,
 } from "@mui/material";
 import { Search, Clear, Done } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
@@ -41,6 +42,13 @@ function UserRewards() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [redeemOpen, setRedeemOpen] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const rewardsPerPage = 5;
+
+  const handleChangePage = (event, value) => {
+    setPage(value);
+  };
 
   useEffect(() => {
     if (userid) {
@@ -241,6 +249,10 @@ function UserRewards() {
     }, 0);
   });
 
+  const startIndex = (page - 1) * rewardsPerPage;
+  const endIndex = startIndex + rewardsPerPage;
+  const paginatedRewards = sortedRewards.slice(startIndex, endIndex);
+
   const tierTrophies = {
     Bronze: "🥉",
     Silver: "🥈",
@@ -285,7 +297,7 @@ function UserRewards() {
         {tier !== "Gold" && (
           <Grid item>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Points: <b>{points}</b> | Points needed to next tier:{" "}
+              Current Points: <b>{points}</b> | Points needed to next tier:{" "}
               <b>{pointsNeeded}</b>
             </Typography>
           </Grid>
@@ -361,85 +373,122 @@ function UserRewards() {
         </Menu>
       </Box>
 
-      <Grid container spacing={2}>
-        {sortedRewards.map((reward) => (
-          <Grid item key={reward.id} xs={12}>
-            <Card
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                borderRadius: "10px",
-              }}
+      <Typography variant="h5" sx={{ my: 2 }}>
+        Eligible Rewards
+      </Typography>
+
+      <Typography variant="body1" sx={{ mb: 2 }}>
+        Showing {startIndex + 1} - {Math.min(endIndex, sortedRewards.length)}{" "}
+        out of {sortedRewards.length}
+      </Typography>
+
+      <Box>
+        {sortedRewards.length === 0 ? (
+          <Box sx={{ textAlign: "center", mt: 2 }}>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              You do not have any eligible rewards available at the moment.
+              Participate in events to earn points.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              component={RouterLink}
+              to="/events"
             >
-              {reward.imageFile ? (
-                <CardMedia
-                  component="img"
-                  height="150"
-                  image={`${import.meta.env.VITE_FILE_BASE_URL}${
-                    reward.imageFile
-                  }`}
-                  alt={reward.name}
-                  sx={{
-                    flex: "0 0 40%",
-                    borderRadius: "10px",
-                    marginLeft: "2%",
-                  }}
-                />
-              ) : (
-                <Box
-                  sx={{
-                    flex: "0 0 40%",
-                    border: "1px solid black",
-                    borderRadius: "10px",
-                    marginLeft: "2%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "150px",
-                  }}
-                >
-                  <Typography>No Image</Typography>
-                </Box>
-              )}
-              <CardContent
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  flexGrow: 1,
-                  paddingRight: "5%",
-                }}
-              >
-                <Typography variant="h6" component="div" sx={{ mb: 1 }}>
-                  {reward.name}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ wordBreak: "break-word", mb: 1 }}
-                >
-                  {reward.description}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1 }}
-                >
-                  Tier: {reward.tier_required}
-                </Typography>
-                <Box sx={{ marginLeft: "auto", marginTop: "auto" }}>
-                  <Button
-                    onClick={() => handleClickOpen(reward)}
-                    variant="contained"
-                    color="primary"
+              Explore Events
+            </Button>
+          </Box>
+        ) : (
+          <Box>
+            <Grid container spacing={2}>
+              {paginatedRewards.map((reward) => (
+                <Grid item key={reward.id} xs={12}>
+                  <Card
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      borderRadius: "10px",
+                    }}
                   >
-                    {reward.points_needed} Points
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                    {reward.imageFile ? (
+                      <CardMedia
+                        component="img"
+                        height="150"
+                        image={`${import.meta.env.VITE_FILE_BASE_URL}${
+                          reward.imageFile
+                        }`}
+                        alt={reward.name}
+                        sx={{
+                          flex: "0 0 40%",
+                          borderRadius: "10px",
+                          marginLeft: "2%",
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          flex: "0 0 40%",
+                          border: "1px solid black",
+                          borderRadius: "10px",
+                          marginLeft: "2%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "150px",
+                        }}
+                      >
+                        <Typography>No Image</Typography>
+                      </Box>
+                    )}
+                    <CardContent
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flexGrow: 1,
+                        paddingRight: "5%",
+                      }}
+                    >
+                      <Typography variant="h6" component="div" sx={{ mb: 1 }}>
+                        {reward.name}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ wordBreak: "break-word", mb: 1 }}
+                      >
+                        {reward.description}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
+                        Tier: {reward.tier_required}
+                      </Typography>
+                      <Box sx={{ marginLeft: "auto", marginTop: "auto" }}>
+                        <Button
+                          onClick={() => handleClickOpen(reward)}
+                          variant="contained"
+                          color="primary"
+                        >
+                          {reward.points_needed} Points
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Pagination
+              sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 4 }}
+              count={Math.ceil(sortedRewards.length / rewardsPerPage)}
+              page={page}
+              onChange={handleChangePage}
+            />
+          </Box>
+        )}
+      </Box>
 
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Confirm Purchase</DialogTitle>

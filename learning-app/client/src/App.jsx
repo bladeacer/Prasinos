@@ -19,6 +19,7 @@ import Reward from "./pages/Rewards"; // Staff
 import EditReward from "./pages/EditReward"; // Staff
 
 import UserRewards from "./pages/UserRewards"; // User
+import ClaimedRewards from "./pages/ClaimedRewards"; // User
 
 import Homepage from "./pages/Homepage";
 import Register from "./pages/Register";
@@ -91,6 +92,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
               <Route path="/user-rewards/:userid" element={<UserRewards />} />
+              <Route path="/claimed-rewards/:userid" element={<ClaimedRewards />} />
             </Routes>
           </Container>
         </ThemeProvider>

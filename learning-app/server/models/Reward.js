@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM,
         values: ["Bronze", "Silver", "Gold"],
         allowNull: false,
-      },
+      },      
       imageFile: {
         type: DataTypes.STRING(20),
       },
