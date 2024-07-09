@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, RouterLink } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -42,6 +42,15 @@ function UserRewards() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [redeemOpen, setRedeemOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleNavigate = () => {
+    if (userid) {
+      navigate(`/claimed-rewards/${userid}`);
+    } else {
+      console.error("User ID is not available");
+    }
+  };
 
   const [page, setPage] = useState(1);
   const rewardsPerPage = 5;
@@ -265,6 +274,12 @@ function UserRewards() {
     Gold: points >= 30000,
   };
 
+  const tierBenefits = {
+    Bronze: "Earn x1.25 points for every event",
+    Silver: "Earn x1.5 points for every event",
+    Gold: "Earn x2 points for every event",
+  };
+
   const trophyIcon = tierTrophies[tier];
   const hasReachedTier = tierCheck[tier];
 
@@ -319,6 +334,16 @@ function UserRewards() {
       >
         Details
       </Button>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleNavigate}
+        sx={{ mr: 2 }}
+      >
+        View Claimed Rewards
+      </Button>
+
       <Box sx={{ display: "flex", alignItems: "center", mb: 2, width: "100%" }}>
         <Box sx={{ flexGrow: 1 }} />
         <Input
@@ -372,6 +397,32 @@ function UserRewards() {
           </MenuItem>
         </Menu>
       </Box>
+      <Typography variant="h5" sx={{ my: 2 }}>
+        Tier Benefits for {tier}
+      </Typography>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              borderRadius: 2,
+              p: 2,
+              border: "4px solid green",
+            }}
+          >
+            <CardContent>
+              <Typography variant="h6">🎉{tier} Tier</Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                {tierBenefits[tier]}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       <Typography variant="h5" sx={{ my: 2 }}>
         Eligible Rewards
@@ -494,12 +545,28 @@ function UserRewards() {
         <DialogTitle>Confirm Purchase</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to redeem "{selectedReward?.name}" for{" "}
-            {selectedReward?.points_needed} points?
+            Are you sure you want to redeem "
+            <Typography
+              component="span"
+              variant="body1"
+              sx={{ fontWeight: "bold" }}
+            >
+              {selectedReward?.name}
+            </Typography>
+            " for{" "}
+            <Typography
+              component="span"
+              variant="body1"
+              sx={{ fontWeight: "bold" }}
+            >
+              {selectedReward?.points_needed} points?
+            </Typography>{" "}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose} sx={{ color: "red" }}>
+            Cancel
+          </Button>
           <Button
             onClick={handlePurchaseReward}
             variant="contained"
@@ -511,7 +578,7 @@ function UserRewards() {
       </Dialog>
 
       <Dialog open={detailsOpen} onClose={handleDetailsClose}>
-        <DialogTitle>Details</DialogTitle>
+        <DialogTitle>Tier Details</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Additional details about rewards go here.

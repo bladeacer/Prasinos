@@ -48,6 +48,24 @@ const yup = require("yup");
 const express = require("express");
 const router = express.Router();
 
+router.get("/claimed-rewards/:userid", async (req, res) => {
+  const userid = req.params.userid;
+
+  try {
+    // Fetch claimed rewards for the specified user
+    const claimedRewards = await Reward.findAll({
+      where: { userId: userid },
+      order: [["createdAt", "DESC"]],
+      include: { model: User, as: "user", attributes: ["name"] }, // Include user information if needed
+    });
+
+    res.json(claimedRewards);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Create a reward
 router.post("/", validateToken, async (req, res) => {
   let data = req.body;
