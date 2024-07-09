@@ -78,7 +78,6 @@ export default function StaffHome() {
 
     return (
         <>
-            {/* <Typography>{staff.name} {staff.createdAt} {staff.email} {staff.phone}</Typography> */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 5 }}>
 
                 <CustButtonsStack sx={{display: 'unset', right: '20vw'}}>
@@ -97,9 +96,6 @@ export default function StaffHome() {
                     onClick={onClickClear}>
                     <Clear />
                 </IconButton>
-
-
-
             </Box>
 
             {EnhancedTable(userData)}

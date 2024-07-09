@@ -91,9 +91,7 @@ export function SelectLogWrapper() {
     return (
         <>
             {is_accent[8] && (
-                <>
-                    <SelectLogin></SelectLogin>
-                </>
+                SelectLogin()
             )}
         </>
     )

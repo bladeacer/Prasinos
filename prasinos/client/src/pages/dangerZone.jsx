@@ -1,10 +1,18 @@
 import { LoginWrapper, LogBox, CloseButton, DangerHeader } from "./reusables/components/login_components"
 import { Box, Typography, Button } from "@mui/material"
 import { UserContext } from "../contexts/Contexts";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 
 export default function DangerZone() {
     const { user } = useContext(UserContext);
+    const [uuid, setUUID] = useState(null);
+    useEffect(() => {
+        if (!sessionStorage.getItem("resetURL")) {
+            sessionStorage.setItem("resetURL", crypto.randomUUID())
+        }
+        setUUID(sessionStorage.getItem("resetURL"))
+    })
+
     return (
         <>
             <LoginWrapper sx={{ borderRadius: '30px' }}>
@@ -25,7 +33,7 @@ export default function DangerZone() {
                         <Button href={`/edit/${user.id}`} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Edit Details</Button>
                     </Box>
                     <Box sx={{ positon: 'absolute', mt: -4.75, ml: 95, width: '35vw' }}>
-                        <Button href={`reset/${user.id}`} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
+                        <Button href={`/resethandler/${user.id}/${uuid}`} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
                     </Box>
                 </LogBox>
             </LoginWrapper>

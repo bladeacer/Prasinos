@@ -226,7 +226,7 @@ router.put("/reset/:id", validateToken, async (req, res) => {
         return;
     }
     let data = req.body;
-    data.password = await bcrypt.hash(data.password, 10);   
+    data.password = await bcrypt.hash(data.password, 10);
 
     let validationSchema = yup.object({
         password: yup.string().trim().min(8).required()

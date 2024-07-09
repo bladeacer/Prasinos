@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import http from './http';
 import { UserContext, StaffContext } from './contexts/Contexts';
-import TopNavbarV2 from './pages/reusables/top_navbarv2'
+import TopNavbarV2 from './pages/reusables/top_navbarv2';
 
 import Settings from './pages/Settings';
 import Unauthorized from './pages/Unauthorized';
@@ -16,10 +16,12 @@ import RoutePlaceholder from './pages/reusables/route_placeholders';
 import StaffLogin from './pages/staffLogin';
 import StaffRegister from './pages/staffRegister';
 import StaffHome from './pages/staffHome';
+import ResetEndpoint from './pages/ResetEndpoints';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [staff, setStaff] = useState(null);
+  const [uuid, setUUID] = useState("");
 
   useEffect(() => {
     if (localStorage.getItem("accessToken")) {
@@ -30,8 +32,11 @@ export default function App() {
         setStaff(res.data.staff);
       });
     }
+    if (!sessionStorage.getItem("resetURL")) {
+      sessionStorage.setItem("resetURL", crypto.randomUUID())
+    }
+    setUUID(sessionStorage.getItem("resetURL"))
   }, []);
-
   // Note to self: Make an everything wrapper 
 
   return (
@@ -42,6 +47,16 @@ export default function App() {
 
           <Routes>
             {RoutePlaceholder(false)}
+            <Route path="/resethandler/:id/:uuid" element={
+              <>
+                {!user && (
+                  Unauthorized(false)
+                )}
+                {user && (
+                  ResetEndpoint()
+                )}
+              </>} />
+
             <Route path={"/"} element={<></>}></Route>
 
             <Route path={"/home"} element={HomeWrapper()} />
@@ -102,9 +117,9 @@ export default function App() {
                 )}
               </>
             } />
-            <Route path={`/reset/:id`} element={
+            <Route path={`/reset/:id/:uuid`} element={
               <>
-                {!user || (window.location.pathname != `/reset/${user.id}`) && (
+                {!user || (window.location.pathname != `/reset/${user.id}/${uuid}`) && (
                   Unauthorized(-1)
                 )}
                 {user && (
@@ -120,7 +135,8 @@ export default function App() {
         <Router>
           <Routes>
             {RoutePlaceholder(true)}
-            <Route path={"/"} element={<></>}></Route>
+            <Route path="/resethandler/:id/:uuid" element={<></>} />
+            <Route path={"/"} element={<></>} />
 
             <Route path={"/staffLogin"} element={
               <>
@@ -163,6 +179,7 @@ export default function App() {
 
           {RoutePlaceholder(false)}
           {RoutePlaceholder(true)}
+          <Route path="/resethandler/:id/:uuid" element={<></>} />
 
           <Route path={"/"} element={
             <>

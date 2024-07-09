@@ -15,7 +15,7 @@ export default function RoutePlaceholder(is_user_placeholder) {
                     <Route path={"/register"} element={<></>} />
                     <Route path={"/login"} element={<></>} />
                     <Route path={`/edit/:id`} element={<></>} />
-                    <Route path={`/reset/:id`} element={<></>} />
+                    <Route path={`/reset/:id/:uuid`} element={<></>} />
                 </>
             )}
             {!is_user_placeholder && (
