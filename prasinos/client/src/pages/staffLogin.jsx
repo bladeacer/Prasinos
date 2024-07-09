@@ -32,12 +32,12 @@ export default function StaffLogin() {
         onSubmit: (data) => {
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
-            if (localStorage.getItem("accessToken")) {
-                localStorage.clear();
+            if (sessionStorage.getItem("accessToken")) {
+                sessionStorage.removeItem("accessToken");
             }
             http.post("/staff/login", data)
                 .then((res) => {
-                    localStorage.setItem("accessToken", res.data.accessToken);
+                    sessionStorage.setItem("accessToken", res.data.accessToken);
                     setStaff(res.data.staff);
                     navigate("/staffHome");
                     window.location.reload();

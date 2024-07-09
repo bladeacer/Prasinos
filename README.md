@@ -10,10 +10,10 @@ Add Google Sign-In as an option
 Code user settings, page where they can see their details, danger zone
  - [] TODO: Account details in settings page (make some fields dynamic and add profile pic image)
  - [ ] TODO: staff get put routes
- - [] danger zone (deleting and updating account details)
+ - [] danger zone (delete account)
  - [ ] TODO: Add fields to user entity such as profile pic, events joined, points, tier, company
  - [ ] Root page with nice links user and staff login (50% of screen one colour with gradient type aah)
- - [x] Two formiks one for reset password the other for changing other fields together
+
  - [ ] Style user and staff sidebar later (add image and stuff to user sidebar)
  - [ ] Tidy up your CSS and replace `marginLeft` with `ml` and stuff
  - [ ] `top: {sm: 0, md: 0,. ...}` for responsive margin top and stuff like that

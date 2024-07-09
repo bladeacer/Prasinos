@@ -8,7 +8,6 @@ import { toast } from 'react-toastify';
 
 export default function ResetPassword() {
     const { id } = useParams();
-
     const formik = useFormik({
         initialValues: {
             oldPassword: "",
@@ -32,7 +31,7 @@ export default function ResetPassword() {
             http.put(`/user/reset/${id}`, data)
                 .then((res) => {
                     window.location = "/home";
-                    localStorage.clear();
+                    sessionStorage.clear();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -78,9 +77,6 @@ export default function ResetPassword() {
                             <Button variant="contained" type="submit">
                                 Save
                             </Button>
-                            <Typography variant="h5" sx={{ my: 2 }}>
-                                Note: Logout to reflect changes
-                            </Typography>
                         </Box>
                     </>
                 </LogBox>

@@ -24,7 +24,7 @@ export default function App() {
   const [uuid, setUUID] = useState("");
 
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) {
+    if (sessionStorage.getItem("accessToken")) {
       http.get('/user/auth').then((res) => {
         setUser(res.data.user);
       });
@@ -49,10 +49,10 @@ export default function App() {
             {RoutePlaceholder(false)}
             <Route path="/resethandler/:id/:uuid" element={
               <>
-                {!user && (
-                  Unauthorized(false)
+                {!user || (window.location.pathname != `/resethandler/${user.id}/${uuid}`) && (
+                  Unauthorized(-1)
                 )}
-                {user && (
+                {user && window.location.pathname == `/resethandler/${user.id}/${uuid}` && (
                   ResetEndpoint()
                 )}
               </>} />
@@ -119,10 +119,11 @@ export default function App() {
             } />
             <Route path={`/reset/:id/:uuid`} element={
               <>
-                {!user || (window.location.pathname != `/reset/${user.id}/${uuid}`) && (
+                {(!user || window.location.pathname != `/reset/${user.id}/${uuid}` || document.referrer.slice(21) != `/resethandler/${user.id}/${uuid}`) && (
                   Unauthorized(-1)
                 )}
-                {user && (
+                {/* Replace check with reset handler where one is referred from gmail or some other email */}
+                {user && document.referrer.slice(21) == `/resethandler/${user.id}/${uuid}` && (
                   <ResetPassword />
                 )}
               </>

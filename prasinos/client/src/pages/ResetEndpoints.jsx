@@ -8,6 +8,7 @@ export default function ResetEndpoint() {
     return (
         <>
             <Button href={`/reset/${id}/${uuid}`}>Reset password here</Button>
+            {/* Enter current password formik here */}
         </>
     )
 }

@@ -32,12 +32,12 @@ function Login() {
         onSubmit: (data) => {
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
-            if (localStorage.getItem("accessToken")) {
-                localStorage.clear();
+            if (sessionStorage.getItem("accessToken")) {
+                sessionStorage.removeItem("accessToken");
             }
             http.post("/user/login", data)
                 .then((res) => {
-                    localStorage.setItem("accessToken", res.data.accessToken);
+                    sessionStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
                     navigate("/home");
                     window.location.reload();

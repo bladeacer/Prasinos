@@ -106,16 +106,19 @@ router.post("/login", async (req, res) => {
 
 router.get("/auth", validateToken, async (req, res) => {
     let staff = await Staff.findByPk(req.user.id);
-    let staffInfo = {
-        id: staff.id,
-        email: staff.email,
-        name: staff.name,
-        phone: staff.phone,
-        createdAt: dayjs(staff.createdAt.toString()).format("DD MMM YYYY").toString()
-    };
-    res.json({
-        staff: staffInfo
-    });
+    if (staff) {
+        let staffInfo = {
+            id: staff && staff.id,
+            email: staff && staff.email,
+            name: staff && staff.name,
+            phone: staff && staff.phone,
+            createdAt: dayjs(staff && staff.createdAt.toString()).format("DD MMM YYYY").toString()
+        };
+        res.json({
+            staff: staffInfo
+        });
+    }
+
 });
 
 router.get("/", async (req, res) => {
@@ -211,7 +214,7 @@ router.put("/reset/:id", validateToken, async (req, res) => {
         return;
     }
     let data = req.body;
-    data.password = await bcrypt.hash(data.password, 10);   
+    data.password = await bcrypt.hash(data.password, 10);
 
     let validationSchema = yup.object({
         password: yup.string().trim().min(8).required()

@@ -18,6 +18,7 @@ export default function StaffHome() {
 
     const onSearchChange = (e) => {
         setSearch(e.target.value);
+        handleUserData(e.target);
     };
 
     function createData(id, user_id, name, join_date, points, tier) {

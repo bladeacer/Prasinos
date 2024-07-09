@@ -112,7 +112,7 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
-                                        <CustButton href="/settings">{user.name}</CustButton>
+                                        <CustButton href="/settings">{user.name.slice(0, 8)}..</CustButton>
                                         <SignUpButton onClick={logout}>Logout</SignUpButton>
                                     </CustButtonsStack>
                                 </>
