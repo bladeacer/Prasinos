@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Typography, Grid, Card, CardContent, Input, IconButton, Button } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Input, IconButton, Button, Divider } from '@mui/material';
 import { AccountCircle, AccessTime, Search, Clear, Edit } from '@mui/icons-material';
 import http from '../http';
 import dayjs from 'dayjs';
@@ -12,6 +12,7 @@ function Bookings() {
     const [search, setSearch] = useState('');
     const { user } = useContext(UserContext);
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedBooking, setSelectedBooking] = useState(null);
     const bookingsPerPage = 10; // Number of bookings per page
 
     const onSearchChange = (e) => {
@@ -42,7 +43,7 @@ function Bookings() {
 
     const onClickSearch = () => {
         searchBookings();
-    }
+    };
 
     const onClickClear = () => {
         setSearch('');
@@ -104,11 +105,29 @@ function Bookings() {
                 }
             </Box>
 
+            {selectedBooking && (
+                <Box sx={{ mb: 4 }}>
+                    <Typography variant="h6">{selectedBooking.title}</Typography>
+                    <Typography variant="subtitle1">Ref Code: {selectedBooking.refCode}</Typography>
+                    <Typography variant="subtitle1">By {selectedBooking.organization}</Typography>
+                    <Typography variant="body1">Date: {dayjs(selectedBooking.date).format('DD/MM/YYYY')}</Typography>
+                    <Typography variant="body1">Time: {selectedBooking.time}</Typography>
+                    <Typography variant="body1">Description: {selectedBooking.description}</Typography>
+                    <Typography variant="body1">Pax: {selectedBooking.quantity}</Typography>
+                    {selectedBooking.imageFile && (
+                        <Box sx={{ mt: 2 }}>
+                            <img alt="Event" src={`${import.meta.env.VITE_FILE_BASE_URL}${selectedBooking.imageFile}`} style={{ maxWidth: '100%' }} />
+                        </Box>
+                    )}
+                    <Divider sx={{ my: 2 }} />
+                </Box>
+            )}
+
             <Grid container spacing={2}>
                 {
                     currentBookings.map((booking, i) => (
-                        <Grid item xs={12} md={6} lg={4} key={booking.id}>
-                            <Card>
+                        <Grid item xs={12} key={booking.id}>
+                            <Card onClick={() => setSelectedBooking(booking)}>
                                 {
                                     booking.imageFile && (
                                         <Box className="aspect-ratio-container">
