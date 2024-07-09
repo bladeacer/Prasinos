@@ -127,17 +127,15 @@ function Bookings() {
                 {
                     currentBookings.map((booking, i) => (
                         <Grid item xs={12} key={booking.id}>
-                            <Card onClick={() => setSelectedBooking(booking)}>
+                            <Card onClick={() => setSelectedBooking(booking)} sx={{ display: 'flex', minHeight: '200px', maxHeight: '400px', overflow: 'auto' }}>
                                 {
                                     booking.imageFile && (
-                                        <Box className="aspect-ratio-container">
-                                            <img alt="booking"
-                                                src={`${import.meta.env.VITE_FILE_BASE_URL}${booking.imageFile}`}>
-                                            </img>
+                                        <Box sx={{ width: '30%', height: '100%', overflow: 'hidden' }}>
+                                            <img alt="booking" src={`${import.meta.env.VITE_FILE_BASE_URL}${booking.imageFile}`} style={{ width: '100%', height: 'auto' }} />
                                         </Box>
                                     )
                                 }
-                                <CardContent>
+                                <CardContent sx={{ width: '70%' }}>
                                     <Box sx={{ display: 'flex', mb: 1 }}>
                                         <Typography variant="h6" sx={{ flexGrow: 1 }}>
                                             {booking.title}
