@@ -124,23 +124,21 @@ function UserRewards() {
     http
       .get(`/reward`)
       .then((res) => {
-        const eligible = res.data
-          .filter((reward) => {
-            if (tier === "Bronze") return reward.tier_required === "Bronze";
-            if (tier === "Silver")
-              return (
-                reward.tier_required === "Bronze" ||
-                reward.tier_required === "Silver"
-              );
-            if (tier === "Gold")
-              return (
-                reward.tier_required === "Bronze" ||
-                reward.tier_required === "Silver" ||
-                reward.tier_required === "Gold"
-              );
-            return false;
-          })
-          .filter((reward) => points >= reward.points_needed); // Filter rewards based on points
+        const eligible = res.data.filter((reward) => {
+          if (tier === "Bronze") return reward.tier_required === "Bronze";
+          if (tier === "Silver")
+            return (
+              reward.tier_required === "Bronze" ||
+              reward.tier_required === "Silver"
+            );
+          if (tier === "Gold")
+            return (
+              reward.tier_required === "Bronze" ||
+              reward.tier_required === "Silver" ||
+              reward.tier_required === "Gold"
+            );
+          return false;
+        });
         setEligibleRewards(eligible);
       })
       .catch((err) => {

@@ -12,7 +12,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Select,
   MenuItem,
   Alert,
 } from "@mui/material";
@@ -29,27 +28,26 @@ function EditReward() {
     name: "",
     description: "",
     points_needed: "",
-    tier_required: "", // Change to string for dropdown value
+    tier_required: "",
   });
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchReward = async () => {
       try {
         const response = await http.get(`/reward/${id}`);
         setImageFile(response.data.imageFile);
         setReward(response.data);
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching reward:", error);
+      } catch (err) {
         setError(true);
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchReward();
   }, [id]);
 
   const formik = useFormik({
@@ -78,16 +76,21 @@ function EditReward() {
         .required("Tier required is required"),
     }),
     onSubmit: async (data) => {
-      if (imageFile) {
-        data.imageFile = imageFile;
-      }
-      data.name = data.name.trim();
-      data.description = data.description.trim();
-
       try {
-        await http.put(`/reward/${id}`, data);
-        navigate("/rewards");
+        if (imageFile) {
+          data.imageFile = imageFile;
+        }
+        data.name = data.name.trim();
+        data.description = data.description.trim();
+        const response = await http.put(`/reward/${id}`, data);
+        if (response.status === 200) {
+          toast.success("Reward updated successfully!");
+          navigate("/rewards");
+        } else {
+          toast.error("Failed to update reward.");
+        }
       } catch (error) {
+        toast.error("Failed to update reward.");
         console.error("Error updating reward:", error);
       }
     },

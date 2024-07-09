@@ -150,13 +150,6 @@ router.put("/:id", validateToken, async (req, res) => {
       return;
     }
 
-    // Check request user id
-    let userId = req.user.id;
-    if (reward.userId !== userId) {
-      res.sendStatus(403);
-      return;
-    }
-
     let data = req.body;
 
     // Validate request body
@@ -168,21 +161,18 @@ router.put("/:id", validateToken, async (req, res) => {
         .string()
         .oneOf(["Bronze", "Silver", "Gold"])
         .required(),
+      imageFile: yup.string().nullable(),
     });
 
-    data = await validationSchema.validate(data, { abortEarly: false });
+    await validationSchema.validate(data);
 
-    // Process valid data
-    let num = await Reward.update(data, { where: { id: id } });
+    // Update reward
+    await reward.update(data);
 
-    if (num == 1) {
-      res.json({ message: "Reward was updated successfully." });
-    } else {
-      res.status(400).json({ message: `Cannot update reward with id ${id}.` });
-    }
+    res.sendStatus(200);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    console.error("Error updating reward:", error);
+    res.sendStatus(500);
   }
 });
 
