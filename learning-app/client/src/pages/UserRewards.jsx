@@ -67,7 +67,13 @@ function UserRewards() {
         .then((res) => {
           console.log("Received data:", res.data);
           setPoints(res.data.points);
-          setTier(res.data.tier);
+          if (res.data.points >= 15000) {
+            setTier("Gold");
+          } else if (res.data.points >= 5000) {
+            setTier("Silver");
+          } else {
+            setTier("Bronze");
+          }
           setLoading(false);
         })
         .catch((err) => {
@@ -90,14 +96,25 @@ function UserRewards() {
       case "Silver":
         pointsNeededToNextTier = 15000;
         break;
+      case "Gold":
+        pointsNeededToNextTier = 0; // Already at highest tier
+        break;
       default:
         pointsNeededToNextTier = 0;
     }
 
-    const nextTierProgress = (points / pointsNeededToNextTier) * 100;
+    const nextTierProgress =
+      tier === "Gold" ? 100 : (points / pointsNeededToNextTier) * 100;
+
     setProgress(nextTierProgress > 100 ? 100 : nextTierProgress);
-    setPointsNeeded(pointsNeededToNextTier - points);
+    setPointsNeeded(tier === "Gold" ? 0 : pointsNeededToNextTier - points);
   }, [points, tier]);
+
+  const tierCheck = {
+    Bronze: points >= 5000,
+    Silver: points >= 15000,
+    Gold: points >= 15000, // Once Gold is reached, stay in Gold
+  };
 
   useEffect(() => {
     fetchEligibleRewards();
@@ -268,16 +285,10 @@ function UserRewards() {
     Gold: "🥇",
   };
 
-  const tierCheck = {
-    Bronze: points >= 5000,
-    Silver: points >= 15000,
-    Gold: points >= 30000,
-  };
-
   const tierBenefits = {
-    Bronze: "Earn x1.25 points for every event",
-    Silver: "Earn x1.5 points for every event",
-    Gold: "Earn x2 points for every event",
+    Bronze: "Earn x1.25 points for every event that you participate in!",
+    Silver: "Earn x1.5 points for every event that you participate in!",
+    Gold: "Earn x2 points for every event that you participate in!",
   };
 
   const trophyIcon = tierTrophies[tier];
@@ -412,11 +423,7 @@ function UserRewards() {
           >
             <CardContent>
               <Typography variant="h6">🎉{tier} Tier</Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 2 }}
-              >
+              <Typography variant="body2" color="text.secondary">
                 {tierBenefits[tier]}
               </Typography>
             </CardContent>
