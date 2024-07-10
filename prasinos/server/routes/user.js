@@ -8,6 +8,7 @@ const { validateToken } = require('../middlewares/auth');
 const dayjs = require('dayjs')
 require('dotenv').config();
 const { Op } = require("sequelize");
+const emailjs = require('@emailjs/nodejs');
 
 router.post("/register", async (req, res) => {
     let data = req.body;
@@ -140,31 +141,13 @@ router.get("/", async (req, res) => {
     res.json(list);
 });
 
-// Call get by id on loading of settings page
-// (user-facing)
-// router.get("/:id", validateToken, async (req, res) => {
-//     let id = req.params.id;
-//     let user = await User.findByPk(id);
-//     // Check id not found
-//     if (!user) {
-//         res.sendStatus(404);
-//         return;
-//     }
-//     res.json({user});
-// });
 
-router.put("/edit/:id", validateToken, async (req, res) => {
-    let id = req.params.id;
+router.put("/edit", validateToken, async (req, res) => {
+    let id = req.user.id;
     // Check id not found
     let user = await User.findByPk(id);
     if (!user) {
         res.sendStatus(404);
-        return;
-    }
-
-    // Check request user id
-    if (id != user.id) {
-        res.sendStatus(403);
         return;
     }
 
@@ -210,8 +193,8 @@ router.put("/edit/:id", validateToken, async (req, res) => {
     }
 });
 
-router.put("/reset/:id", validateToken, async (req, res) => {
-    let id = req.params.id;
+router.put("/reset", validateToken, async (req, res) => {
+    let id = req.user.id;
 
     let user = await User.findByPk(id);
     if (!user) {
@@ -219,12 +202,6 @@ router.put("/reset/:id", validateToken, async (req, res) => {
         return;
     }
 
-    // Check request user id
-    let userId = req.user.id;
-    if (user.id != userId) {
-        res.sendStatus(403);
-        return;
-    }
     let data = req.body;
     data.password = await bcrypt.hash(data.password, 10);
 
@@ -259,5 +236,72 @@ router.put("/reset/:id", validateToken, async (req, res) => {
 });
 
 // Implement delete account (used in danger zone)
+
+router.post("/resethandler", validateToken, async (req, res) => {
+    let id = req.user.id;
+    let user = await User.findByPk(id);
+    if (!user) {
+        res.sendStatus(404);
+        return;
+    }
+
+    let data = req.body;
+
+    let validationSchema = yup.object({
+        password: yup.string().trim().min(8)
+            .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
+                "password at least 1 letter and 1 number")
+    });
+    data = await validationSchema.validate(data,
+        { abortEarly: false });
+
+    if (!(bcrypt.compare(data.password, user.password))) {
+        console.log(data.password);
+        console.log(user.password);
+        res.status(400).json({
+            message: `Cannot verify user with id ${id}.`
+        });
+        return;
+    }
+    res.json({
+        message: "User was verified successfully."
+    });
+
+});
+
+router.post("/sendResetEmail", validateToken, async (req, res) => {
+    try {
+        let id = req.user.id;
+        let user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
+        const message_url = process.env.CLIENT_URL;
+        const serviceId = "service_tr6rahq";
+        const templateId = "template_vspy2hi";
+        var templateParams = {
+            to_name: `${user.name}`,
+            message: `To continue with resetting your password, use the following link: <br> ${message_url}/reset `,
+            reply_to: `${user.email}`,
+            subject: "Prasinos: Reset Password"
+        };
+        await emailjs.send(serviceId, templateId, templateParams, {publicKey: publicKey});
+    }
+    catch (error) {
+        res.status(500).send('Internal server error');
+    }
+});
+
+
+// const serviceId = "service_tr6rahq";
+// const templateId = "template_vspy2hi";
+// var templateParams = {
+//     to_name: `${user.name}`,
+//     message: `To continue with resetting your password, use the following link: <br>${message_url} `,
+//     reply_to: `${user.email}`,
+//     subject: "Prasinos: Reset Password",
+// };
+
 
 module.exports = router;

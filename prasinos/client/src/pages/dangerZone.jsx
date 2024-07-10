@@ -30,10 +30,10 @@ export default function DangerZone() {
                     </Box>
 
                     <Box sx={{ positon: 'absolute', mt: -25.75, ml: 95, mb: 19, width: '35vw' }}>
-                        <Button href={`/edit/${user.id}`} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Edit Details</Button>
+                        <Button href={"/edit"} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Edit Details</Button>
                     </Box>
                     <Box sx={{ positon: 'absolute', mt: -4.75, ml: 95, width: '35vw' }}>
-                        <Button href={`/resethandler/${user.id}/${uuid}`} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
+                        <Button href={`/${uuid}`} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
                     </Box>
                 </LogBox>
             </LoginWrapper>

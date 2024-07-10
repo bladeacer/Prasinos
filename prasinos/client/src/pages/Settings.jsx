@@ -11,7 +11,7 @@ export default function Settings(is_overlay, user) {
 
                         <Box sx={{ width: '44.5%', height: '200px', border: '1px solid #d9d9d9', borderRadius: '15px' }}>
                             <Typography sx={{ marginLeft: '15px', fontSize: '35px' }}>Total Points</Typography>
-                            <Typography sx={{ marginLeft: '12.5px', fontSize: '60px' }}>10000</Typography>
+                            <Typography sx={{ marginLeft: '12.5px', fontSize: '60px' }}>1000</Typography>
                         </Box>
                         <Box sx={{ position: 'relative', height: '200px', right: '-47.5%', top: {xs: '-15.8vh', sm: '-15.8vh', md: '-15.8vh', lg: '-27.45vh', xl: '-22vh'}, width: '44.5%', border: '1px solid #d9d9d9', borderRadius: '15px' }}>
                             <Typography sx={{ marginLeft: '15px', fontSize: '35px' }}>Earned Since</Typography>

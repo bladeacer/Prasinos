@@ -8,6 +8,7 @@ Add Google Sign-In as an option
  - [ ]  TODO: https://blog.logrocket.com/guide-adding-google-login-react-app/ 
 
 Code user settings, page where they can see their details, danger zone
+- [ ] TODO: Reset password directs to reset handler route user inputs password formik submit then redirect to reset route. Verify email, email change prompts verification process again when logging in (update user field for verified).
  - [] TODO: Account details in settings page (make some fields dynamic and add profile pic image)
  - [ ] TODO: staff get put routes
  - [] danger zone (delete account)

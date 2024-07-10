@@ -28,7 +28,7 @@ export default function ResetPassword() {
         }),
         onSubmit: (data) => {
             data.password = data.password.trim();
-            http.put(`/user/reset/${id}`, data)
+            http.put("/user/reset", data)
                 .then((res) => {
                     window.location = "/home";
                     sessionStorage.clear();

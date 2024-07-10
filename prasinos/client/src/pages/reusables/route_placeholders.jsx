@@ -14,8 +14,8 @@ export default function RoutePlaceholder(is_user_placeholder) {
                     <Route path={"/dangerZone"} element={<></>} />
                     <Route path={"/register"} element={<></>} />
                     <Route path={"/login"} element={<></>} />
-                    <Route path={`/edit/:id`} element={<></>} />
-                    <Route path={`/reset/:id/:uuid`} element={<></>} />
+                    <Route path={`/edit`} element={<></>} />
+                    <Route path={`/reset`} element={<></>} />
                 </>
             )}
             {!is_user_placeholder && (

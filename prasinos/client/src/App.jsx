@@ -47,13 +47,13 @@ export default function App() {
 
           <Routes>
             {RoutePlaceholder(false)}
-            <Route path="/resethandler/:id/:uuid" element={
+            <Route path="/:uuid" element={
               <>
-                {!user || (window.location.pathname != `/resethandler/${user.id}/${uuid}`) && (
+                {!user && (
                   Unauthorized(-1)
                 )}
-                {user && window.location.pathname == `/resethandler/${user.id}/${uuid}` && (
-                  ResetEndpoint()
+                {user && (
+                  <ResetEndpoint />
                 )}
               </>} />
 
@@ -107,9 +107,9 @@ export default function App() {
                 )}
               </>
             } />
-            <Route path={`/edit/:id`} element={
+            <Route path={"/edit"} element={
               <>
-                {!user || (window.location.pathname != `/edit/${user.id}`) && (
+                {!user && (
                   Unauthorized(-1)
                 )}
                 {user && (
@@ -117,13 +117,13 @@ export default function App() {
                 )}
               </>
             } />
-            <Route path={`/reset/:id/:uuid`} element={
+            <Route path={"/reset"} element={
               <>
-                {(!user || window.location.pathname != `/reset/${user.id}/${uuid}` || document.referrer.slice(21) != `/resethandler/${user.id}/${uuid}`) && (
+                {(!user || document.referrer.slice(21) != "/dangerZone") && (
                   Unauthorized(-1)
                 )}
                 {/* Replace check with reset handler where one is referred from gmail or some other email */}
-                {user && document.referrer.slice(21) == `/resethandler/${user.id}/${uuid}` && (
+                {user && document.referrer.slice(21) == "/dangerZone" && (
                   <ResetPassword />
                 )}
               </>
@@ -136,7 +136,7 @@ export default function App() {
         <Router>
           <Routes>
             {RoutePlaceholder(true)}
-            <Route path="/resethandler/:id/:uuid" element={<></>} />
+            <Route path="/:uuid" element={<></>} />
             <Route path={"/"} element={<></>} />
 
             <Route path={"/staffLogin"} element={
@@ -180,14 +180,14 @@ export default function App() {
 
           {RoutePlaceholder(false)}
           {RoutePlaceholder(true)}
-          <Route path="/resethandler/:id/:uuid" element={<></>} />
+          <Route path="/:uuid" element={<></>} />
 
           <Route path={"/"} element={
             <>
               {!user && !staff && (
                 SelectLogWrapper()
               )}
-              {user || staff && (
+              {(user || staff) && (
                 Unauthorized(true)
               )}
             </>

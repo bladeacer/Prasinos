@@ -49,7 +49,7 @@ export default function EditUser() {
             data.email = data.email.trim().toLowerCase();
             data.password = user.password;
             data.phone = data.phone;
-            http.put(`/user/edit/${id}`, data)
+            http.put("/user/edit", data)
                 .then((res) => {
                     navigate("/settings");
                     window.location.reload();
