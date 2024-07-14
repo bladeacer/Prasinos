@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false
             },
             participationFee: {
-                type: DataTypes.FLOAT,
+                type: DataTypes.DECIMAL,
                 allowNull: false
             },
             eventActivity: {
@@ -87,6 +87,18 @@ module.exports = (sequelize, DataTypes) => {
             eventImage: {
                 type: DataTypes.STRING, // Ensure this matches the field type in your database
                 allowNull: true // or false if eventImage is required
+            },
+            adminComment: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
+            eventStatus: {
+                type: DataTypes.ENUM("Pending Review", "Approved","Rejected","Action Needed","Draft"),
+                allowNull: false
+            },
+            requestChangefields: {
+                type: DataTypes.JSON,
+                allowNull: true
             }
         }, {
             tableName: 'events'

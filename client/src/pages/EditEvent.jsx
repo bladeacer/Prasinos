@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid, Checkbox, FormControl, FormLabel, FormControlLabel, FormGroup, RadioGroup, Radio, InputLabel, Select, MenuItem, IconButton, Link } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Box, Typography, TextField, Button, Grid, Checkbox, FormControl, FormLabel, FormControlLabel, FormGroup, RadioGroup, Radio, InputLabel, Select, MenuItem, IconButton, Link, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
+import { Add, Delete, Upload } from '@mui/icons-material';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import http from '../http';
@@ -14,7 +17,12 @@ function EditEvent() {
     const [eventImage, setImageFile] = useState(null);
     const [supportingDocs, setSupportingDocs] = useState([]);
     const [imagePreview, setImagePreview] = useState(null);
+    const [eventStatus, checkEventStatus] = useState(null);
+    const [originalData, setOriginalData] = useState({});
     const [loading, setLoading] = useState(true);
+    const [suggestions, setSuggestions] = useState([]);
+    const [deleteFromServer, setDeleteFromServer] = useState(false); // Add a state to track if the image should be deleted from the server
+    const [apiKey] = useState('AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE');
 
     const formik = useFormik({
         initialValues: {
@@ -28,6 +36,7 @@ function EditEvent() {
             fundingRequests: [],
             participationFee: 0,
             eventActivity: "",
+            otherEventActivity: "",
             eventName: "",
             eventOrganizerType: "",
             eventOrganizerName: "",
@@ -36,24 +45,26 @@ function EditEvent() {
             eventStartDate: "",
             eventEndDate: "",
             eventStartTime: "",
-            eventEndTime: ""
+            eventEndTime: "",
+            eventStatus: ""
         },
 
         validationSchema: yup.object({
             email: yup.string().email('Invalid email format').required('Email is required'),
-            contactNumber: yup.string().required('Contact number is required'),
+            contactNumber: yup.string().matches(/^\d+$/, 'Contact number must be digits only').required('Contact number is required'),
             consentApproved: yup.boolean().oneOf([true], 'Consent is required'),
             termsApproved: yup.boolean().oneOf([true], 'You must accept the terms and conditions'),
             eventLocation: yup.string().required('Event location is required'),
-            eventDescription: yup.string().required('Event description is required'),
+            eventDescription: yup.string().trim().min(3, 'Event description must be at least 3 characters long').max(900, 'Event description must be at most 500 characters long').required('Event description is required'),
             eventActivity: yup.string().required('Event activity is required'),
-            eventName: yup.string().required('Event name is required'),
+            otherEventActivity: yup.string().notRequired(),
+            eventName: yup.string().trim().min(3, 'Event name must be at least 3 characters long').max(100, 'Event name must be at most 100 characters long').required('Event name is required'),
             eventOrganizerType: yup.string().required('Event organizer type is required'),
             eventOrganizerName: yup.string().required('Event organizer name is required'),
             eventScope: yup.string().required('Event scope is required'),
             expectedAttendance: yup.number().required('Expected attendance is required').min(1, 'At least one attendee is required'),
-            eventStartDate: yup.date().required('Event start date is required'),
-            eventEndDate: yup.date().required('Event end date is required'),
+            eventStartDate: yup.date().required('Event start date is required').min(new Date(), "Event can't start from the past"),
+            eventEndDate: yup.date().required('Event end date is required').min(yup.ref('eventStartDate'), 'Event must end on or after event start date'),
             eventStartTime: yup.string().required('Event start time is required'),
             eventEndTime: yup.string().required('Event end time is required'),
             participationFee: yup.number().min(0, 'Participation fee cannot be negative')
@@ -64,15 +75,38 @@ function EditEvent() {
                 data.eventImage = eventImage;
             }
             data.supportingDocs = supportingDocs;
+            data.eventStatus = "Pending Review"
+
             try {
                 const response = await http.put(`/event/${id}`, data);
                 console.log('Response:', response.data);
+                if (deleteFromServer == true) { // Check if handleDeleteImage function is available
+                    handleDeleteImage(); // Call handleDeleteImage function
+                }
                 navigate('/events'); // Use navigate from react-router-dom to redirect
             } catch (error) {
                 console.error('Error:', error);
             }
-        }
+
+        },
+
     });
+
+
+
+    const discardChanges = async () => {
+        // Example sanitization function (adjust according to your needs)
+        const formData = { originalData }; // Ensure formData is correctly structured
+
+        try {
+            const response = await http.put(`/event/${id}`, formData);
+            console.log('Response:', response.data);
+            window.location.href = 'http://localhost:3000/events';
+        } catch (error) {
+            console.error('Error:', error);
+            // Optionally, handle specific errors differently
+        }
+    };
 
     useEffect(() => {
         const fetchEventData = async () => {
@@ -86,7 +120,9 @@ function EditEvent() {
                 setImageFile(eventData.eventImage);
                 setImagePreview(eventData.imagePreview);
                 setSupportingDocs(eventData.supportingDocs);
+                checkEventStatus(eventData.eventStatus);
                 setLoading(false);
+                setOriginalData(eventData);
             } catch (error) {
                 console.error('Error fetching event:', error);
                 setLoading(false);
@@ -96,11 +132,50 @@ function EditEvent() {
         fetchEventData();
     }, [id]);
 
+    const saveAsDraft = async () => {
+        const formData = { ...formik.values, eventStatus: "Draft" };
+        try {
+            // Ensure imageFile is set if it exists
+            if (eventImage) {
+                formData.eventImage = eventImage;
+            }
+            // Ensure supportingDocs is set
+            formData.supportingDocs = supportingDocs;
+            const response = await http.put(`/event/${id}`, formData);
+            // Redirect or give feedback on success
+            window.location.href = 'http://localhost:3000/events';
+        } catch (error) {
+            console.error('Error:', error.config);
+            // Handle error
+        }
+    };
+
     const handleEventActivityChange = (event) => {
         formik.handleChange(event);
         if (event.target.value !== 'others') {
             formik.setFieldValue('otherEventActivity', '');
         }
+    };
+
+    const handleClickOpen = async () => {
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length === 0 && formik.dirty) {
+            setOpen(true);
+        } else {
+            // Manually set all fields as touched to show errors without interfering
+            formik.setTouched(
+                Object.keys(formik.values).reduce((acc, key) => ({ ...acc, [key]: true }), {})
+            );
+        }
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleConfirm = async () => {
+        await formik.handleSubmit();
+        setOpen(false);
     };
 
     const handleDeleteRequest = (index) => {
@@ -110,6 +185,17 @@ function EditEvent() {
 
     const handleTermsClick = () => {
         window.open('/src/Prasinos_termsandconditions.pdf', '_blank');
+    };
+
+    const isEditableBasedOnStatus = (field) => {
+        const editableInDraft = ['email', 'contactNumber', 'eventLocation', 'eventDescription', 'eventActivity', 'otherEventActivity', 'eventName', 'eventOrganizerType', 'eventOrganizerName', 'eventScope', 'expectedAttendance', 'eventStartDate', 'eventEndDate', 'eventStartTime', 'eventEndTime', 'participationFee', 'useAccountInfo', 'supportingDocuments', 'eventImage'];
+        const editableInPendingReview = ['eventDescription', 'eventStartDate', 'eventEndDate', 'eventStartTime', 'eventEndTime', 'participationFee', 'eventScope'];
+        if (eventStatus === 'Draft') {
+            return editableInDraft.includes(field);
+        } else if (eventStatus === 'Pending Review') {
+            return editableInPendingReview.includes(field);
+        }
+        return false;
     };
 
     const handleSupportingDocChange = async (e, index) => {
@@ -154,9 +240,24 @@ function EditEvent() {
         setSupportingDocs(updatedDocs);
     };
 
-    const handleDeleteSupportingDoc = (index) => {
-        const updatedDocs = supportingDocs.filter((_, i) => i !== index);
-        setSupportingDocs(updatedDocs);
+    const handleDeleteSupportingDoc = async (index) => {
+        const docToDelete = supportingDocs[index];
+        if (docToDelete && docToDelete.filename) {
+            try {
+                const response = await http.delete(`file/delete/${encodeURIComponent(docToDelete.filename)}`);
+                console.log('Response:', response);
+                if (response.status === 200) {
+                    console.log('Supporting document deleted successfully:', response.data.message);
+                    // Remove the document from the state after successful deletion
+                    const updatedDocs = supportingDocs.filter((_, i) => i !== index);
+                    setSupportingDocs(updatedDocs);
+                } else {
+                    console.error('Error deleting supporting document: Server responded with status', response.status);
+                }
+            } catch (error) {
+                console.error('Error deleting supporting document:', error);
+            }
+        }
     };
 
     const handleAddSupportingDoc = () => {
@@ -190,6 +291,7 @@ function EditEvent() {
                 if (isEventImage) {
                     setImageFile(response.data.filename);
                     setImagePreview(URL.createObjectURL(file));
+                    setDeleteFromServer(false)
                 } else {
                     const newSupportingDocs = [...supportingDocs];
                     newSupportingDocs[index] = {
@@ -212,18 +314,74 @@ function EditEvent() {
         return <div>Loading...</div>;
     }
 
-const onDeleteEvent = (eventId) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-        http.delete(`/event/${eventId}`)
-            .then(() => {
-                console.log('Event deleted successfully');
-                window.location.href = '/';
-            })
-            .catch(error => {
-                console.error('Error deleting event:', error);
-            });
-    }
-};
+
+    const onDeleteEvent = (eventId) => {
+        if (window.confirm('Are you sure you want to delete this event?')) {
+            http.delete(`/event/${eventId}`)
+                .then(() => {
+                    console.log('Event deleted successfully');
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    console.error('Error deleting event:', error);
+                });
+        }
+    };
+    const fetchLocationSuggestions = async (input) => {
+        if (!input) return;
+        const apiUrl = `/maps/api/place/autocomplete/json?input=${input}&types=geocode&region=sg&key=${apiKey}`;
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                console.error(`HTTP error: ${response.status} ${response.statusText}`);
+                return;
+            }
+            const contentType = response.headers.get("Content-Type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.error("Received non-JSON response:", await response.text());
+                return;
+            }
+            const data = await response.json();
+            setSuggestions(data.predictions);
+        } catch (error) {
+            console.error('Error fetching location suggestions:', error);
+        }
+    };
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        formik.setFieldValue(name, value);
+        fetchLocationSuggestions(value);
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        formik.setFieldValue('eventLocation', suggestion.description);
+        setSuggestions([]); // Clear suggestions after selection
+    };
+
+    const handleDeleteImage = async () => {
+        if (eventImage) {
+            try {
+                const response = await http.delete(`file/delete/${encodeURIComponent(eventImage)}`);
+                console.log('Response:', response);
+                if (response.status === 200) {
+                    const data = response.data;
+                    console.log('Image deleted successfully:', data.message);
+                } else {
+                    console.error('Error deleting image: Server responded with status', response.status);
+                }
+            } catch (error) {
+                console.error('Error deleting image:', error);
+            }
+        }
+
+    };
+
+    const handleSubmitforEventImage = async () => {
+        setImageFile(null);
+        setImagePreview(null);
+        setDeleteFromServer(true);
+    };
 
     return (
         <Box>
@@ -243,10 +401,10 @@ const onDeleteEvent = (eventId) => {
                                 onBlur={formik.handleBlur}
                                 row
                             >
-                                <FormControlLabel value="treePlanting" control={<Radio />} label="Tree Planting" disabled={true} />
-                                <FormControlLabel value="beachRecycling" control={<Radio />} label="Beach Recycling" disabled={true} />
-                                <FormControlLabel value="pickingUpLitter" control={<Radio />} label="Picking Up Litter" disabled={true} />
-                                <FormControlLabel value="others" control={<Radio />} label="Others (Please specify)" disabled={true} />
+                                <FormControlLabel value="treePlanting" control={<Radio />} label="Tree Planting" disabled={!isEditableBasedOnStatus('eventActivity')} />
+                                <FormControlLabel value="beachRecycling" control={<Radio />} label="Beach Recycling" disabled={!isEditableBasedOnStatus('eventActivity')} />
+                                <FormControlLabel value="pickingUpLitter" control={<Radio />} label="Picking Up Litter" disabled={!isEditableBasedOnStatus('eventActivity')} />
+                                <FormControlLabel value="others" control={<Radio />} label="Others (Please specify)" disabled={!isEditableBasedOnStatus('eventActivity')} />
                             </RadioGroup>
                             {formik.values.eventActivity === 'others' && (
                                 <TextField
@@ -258,7 +416,7 @@ const onDeleteEvent = (eventId) => {
                                     value={formik.values.otherEventActivity}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
-                                    disabled={true}
+                                    disabled={!isEditableBasedOnStatus('otherEventActivity')}
                                     error={formik.touched.otherEventActivity && Boolean(formik.errors.otherEventActivity)}
                                     helperText={formik.touched.otherEventActivity && formik.errors.otherEventActivity}
                                 />
@@ -273,7 +431,7 @@ const onDeleteEvent = (eventId) => {
                             fullWidth margin="dense" autoComplete="off"
                             label="Event Name"
                             name="eventName"
-                            disabled
+                            disabled={!isEditableBasedOnStatus('eventName')}
                             value={formik.values.eventName}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -288,7 +446,7 @@ const onDeleteEvent = (eventId) => {
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 error={formik.touched.eventOrganizerType && Boolean(formik.errors.eventOrganizerType)}
-                                disabled={true}
+                                disabled={!isEditableBasedOnStatus('eventOrganizerType')}
                             >
                                 <MenuItem value="individual">Individual</MenuItem>
                                 <MenuItem value="organization">Organization</MenuItem>
@@ -305,7 +463,7 @@ const onDeleteEvent = (eventId) => {
                             fullWidth margin="dense" autoComplete="off"
                             label="Event Organizer Name"
                             name="eventOrganizerName"
-                            disabled
+                            disabled={!isEditableBasedOnStatus('eventOrganizerName')}
                             value={formik.values.eventOrganizerName}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
@@ -391,15 +549,26 @@ const onDeleteEvent = (eventId) => {
                             helperText={formik.touched.eventEndTime && formik.errors.eventEndTime}
                         />
                         <TextField
-                            fullWidth margin="dense" autoComplete="off"
+                            fullWidth
+                            margin="dense"
+                            autoComplete="on"
                             label="Event Location"
                             name="eventLocation"
                             value={formik.values.eventLocation}
-                            onChange={formik.handleChange}
+                            onChange={handleInputChange}
                             onBlur={formik.handleBlur}
                             error={formik.touched.eventLocation && Boolean(formik.errors.eventLocation)}
                             helperText={formik.touched.eventLocation && formik.errors.eventLocation}
                         />
+                        {Array.isArray(suggestions) && suggestions.length > 0 && (
+                            <List>
+                                {suggestions.map((suggestion) => (
+                                    <ListItem button key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
+                                        <ListItemText primary={suggestion.description} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Event Description"
@@ -485,7 +654,7 @@ const onDeleteEvent = (eventId) => {
                             value={formik.values.contactNumber}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            disabled
+                            disabled={!isEditableBasedOnStatus('contactNumber')}
                             error={formik.touched.contactNumber && Boolean(formik.errors.contactNumber)}
                             helperText={formik.touched.contactNumber && formik.errors.contactNumber}
                         />
@@ -496,7 +665,7 @@ const onDeleteEvent = (eventId) => {
                             value={formik.values.email}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            disabled
+                            disabled={!isEditableBasedOnStatus('email')}
                             error={formik.touched.email && Boolean(formik.errors.email)}
                             helperText={formik.touched.email && formik.errors.email}
                         />
@@ -504,13 +673,18 @@ const onDeleteEvent = (eventId) => {
                     <Grid item xs={12} md={6} lg={4}>
                         <Box>
                             {eventImage ? (
-                                <img
-                                    src={`${import.meta.env.VITE_FILE_BASE_URL}${eventImage}`}
-                                    alt="Preview"
-                                    style={{ width: '100%', maxHeight: '350px', objectFit: 'cover', marginBottom: '10px' }}
-                                />
+                                <>
+                                    <img
+                                        src={`${import.meta.env.VITE_FILE_BASE_URL}${eventImage}`}
+                                        alt="Preview"
+                                        style={{ width: '100%', maxHeight: '350px', objectFit: 'cover', marginBottom: '10px' }}
+                                    />
+                                    <IconButton onClick={handleSubmitforEventImage} aria-label="delete" color="error" disabled={!isEditableBasedOnStatus('eventImage')}>
+                                        <Delete />
+                                    </IconButton>
+                                </>
                             ) : null}
-                            <Button variant="contained" component="label">
+                            <Button variant="contained" component="label" disabled={!isEditableBasedOnStatus('eventImage')}>
                                 Upload Event Image
                                 <input type="file" hidden onChange={(e) => onFileChange(e, null, true)} />
                             </Button>
@@ -518,36 +692,62 @@ const onDeleteEvent = (eventId) => {
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                             {supportingDocs.map((doc, index) => (
-                                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Button variant="contained" component="label">
-                                        Upload Document
-                                        <input type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx" onChange={(e) => handleSupportingDocChange(e, index)} />
-                                    </Button>
-                                    {doc.filename && (
-                                        <>
-                                            <Typography variant="body2">Uploaded File: {doc.actualfilename}</Typography>
-                                            {doc.file && typeof doc.file.type === 'string' && doc.file.type.startsWith('image/') ? (
-                                                <img src={`${import.meta.env.VITE_FILE_BASE_URL}${doc.filename}`} alt={doc.filename} style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
-                                            ) : (
-                                                <a href={`${import.meta.env.VITE_FILE_BASE_URL}${doc.filename}`} target="_blank" rel="noopener noreferrer" style={{ marginTop: '8px' }}>
-                                                    Preview File
-                                                </a>
-                                            )}
-                                        </>
-                                    )}
-                                    <TextField
-                                        fullWidth
-                                        margin="dense"
-                                        label="Notes"
-                                        value={doc.notes}
-                                        onChange={(e) => handleSupportingDocNotesChange(index, e.target.value)}
-                                    />
-                                    <IconButton color="error" onClick={() => handleDeleteSupportingDoc(index)}>
-                                        <Delete />
-                                    </IconButton>
+                                <Box key={index} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <IconButton
+                                            component="label"
+                                            disabled={!isEditableBasedOnStatus('supportingDocuments')}
+                                        >
+                                            <Upload />
+                                            <input
+                                                type="file"
+                                                hidden
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx"
+                                                onChange={(e) => handleSupportingDocChange(e, index)}
+                                            />
+                                        </IconButton>
+                                        <TextField
+                                            fullWidth
+                                            margin="dense"
+                                            label="Notes"
+                                            value={doc.notes}
+                                            onChange={(e) => handleSupportingDocNotesChange(index, e.target.value)}
+                                            sx={{ flexGrow: 1 }}
+                                        />
+                                        {doc.filename && (
+                                            <>
+                                                <Typography variant="body2">
+                                                    Uploaded File: {doc.actualfilename.length > 20 ? `${doc.actualfilename.substring(0, 20)}...` : doc.actualfilename}
+                                                </Typography>
+                                                {doc.file && typeof doc.file.type === 'string' && doc.file.type.startsWith('image/') ? (
+                                                    <img
+                                                        src={`${import.meta.env.VITE_FILE_BASE_URL}${doc.filename}`}
+                                                        alt={doc.filename}
+                                                        style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }}
+                                                    />
+                                                ) : (
+                                                    <a
+                                                        href={`${import.meta.env.VITE_FILE_BASE_URL}${doc.filename}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ marginTop: '8px' }}
+                                                    >
+                                                        Preview File
+                                                    </a>
+                                                )}
+                                                <IconButton
+                                                    color="error"
+                                                    onClick={() => handleDeleteSupportingDoc(index)}
+                                                    disabled={!isEditableBasedOnStatus('supportingDocuments')}
+                                                >
+                                                    <Delete />
+                                                </IconButton>
+                                            </>
+                                        )}
+                                    </Box>
                                 </Box>
                             ))}
-                            <Button variant="contained" onClick={handleAddSupportingDoc}>
+                            <Button variant="contained" disabled={!isEditableBasedOnStatus('supportingDocuments')} onClick={handleAddSupportingDoc}>
                                 <Add /> Add Supporting Document
                             </Button>
                         </Box>
@@ -561,7 +761,7 @@ const onDeleteEvent = (eventId) => {
                                     checked={formik.values.useAccountInfo}
                                     onChange={formik.handleChange}
                                     name="useAccountInfo"
-                                    disabled
+                                    disabled={!isEditableBasedOnStatus('useAccountInfo')}
                                 />
                             }
                             label="Use account information"
@@ -602,12 +802,63 @@ const onDeleteEvent = (eventId) => {
                         />
                     </FormGroup>
                 </Grid>
-                <Button type="submit" variant="contained" color="primary" sx={{ mt: 2, mr: 2 }}>
-                    Update Event
-                </Button>
-                <Button variant="contained" color="error" sx={{ mt: 2 }} onClick={() => onDeleteEvent(id)}>
-                    Delete Event
-                </Button>
+                {/* <Box mt={2} display="flex" justifyContent="flex-end" width="100%" pr={2}>
+                    <Button type="submit" variant="contained" color="primary" sx={{ mt: 2, mr: 2 }}>
+                        Submit Event
+                    </Button>
+                    <Button variant="outlined" color="primary" type="button" sx={{ mt: 2, mr: 2 }} onClick={saveAsDraft}>
+                        Update and Save as Draft
+                    </Button>
+                    <Button variant="contained" color="error" sx={{ mt: 2 }} onClick={() => onDeleteEvent(id)}>
+                        Delete Event
+                    </Button>
+                </Box> */}
+                <Box mt={2} display="flex" justifyContent="flex-end" width="100%" pr={2}>
+                    {eventStatus === "Pending Review" ? (
+                        <>
+                            <Button type="submit" variant="contained" color="primary" sx={{ mt: 2, mr: 2 }}>
+                                Update Submitted Event
+                            </Button>
+                            <Button variant="outlined" sx={{ mt: 2 }} onClick={discardChanges}>
+                                Discard Changes
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <div>
+                                <Button variant="contained" type="button" sx={{ mr: 2 }} onClick={handleClickOpen}>
+                                    Submit Event
+                                </Button>
+                                <Dialog
+                                    open={open}
+                                    onClose={handleClose}
+                                    aria-labelledby="alert-dialog-title"
+                                    aria-describedby="alert-dialog-description"
+                                >
+                                    <DialogTitle id="alert-dialog-title">{"Submit Event"}</DialogTitle>
+                                    <DialogContent>
+                                        <DialogContentText id="alert-dialog-description">
+                                            Are you sure you want to submit the event? This cannot be undone. You can save as draft if you are not ready to submit yet. You can only edit limited fields after submission.
+                                        </DialogContentText>
+                                    </DialogContent>
+                                    <DialogActions>
+                                        <Button onClick={handleClose}>Cancel</Button>
+                                        <Button onClick={handleConfirm} autoFocus>
+                                            Confirm
+                                        </Button>
+                                    </DialogActions>
+                                </Dialog>
+                            </div>
+                            <Button variant="outlined" color="primary" type="button" sx={{ mt: 2, mr: 2 }} onClick={saveAsDraft}>
+                                Update and Save as Draft
+                            </Button>
+                            <Button variant="contained" color="error" sx={{ mt: 2 }} onClick={() => onDeleteEvent(id)}>
+                                Delete Event
+                            </Button>
+                        </>
+                    )}
+                </Box>
+                <Box mt={2}>     </Box>
             </Box>
             <ToastContainer />
         </Box>

@@ -6,6 +6,9 @@ const theme = createTheme({
         primary: {
             main: '#388e3c',
         },
+        navbar:{
+            main: '#ffffff',
+        },
         secondary: {
             main: '#f4511e',
         }

@@ -24,6 +24,8 @@ const userRoute = require('./routes/user');
 app.use("/user", userRoute);
 const fileRoute = require('./routes/file');
 app.use("/file", fileRoute);
+const adminRoute = require('./routes/admin');
+app.use("/admin", adminRoute);
 
 const db = require('./models');
 db.sequelize.sync({ alter: true })

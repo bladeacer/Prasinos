@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Box, Typography, TextField, Button } from '@mui/material';
+import { Box, Typography, TextField, Button, FormControl, RadioGroup, FormLabel, FormControlLabel, Radio } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -15,7 +15,8 @@ function Login() {
     const formik = useFormik({
         initialValues: {
             email: "",
-            password: ""
+            password: "",
+            role: "user"
         },
         validationSchema: yup.object({
             email: yup.string().trim()
@@ -30,11 +31,21 @@ function Login() {
         onSubmit: (data) => {
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
-            http.post("/user/login", data)
+
+            console.log(data.role);
+
+            // Determine the endpoint based on a condition, e.g., isAdmin flag
+            const endpoint = data.role === "admin" ? "/admin/login" : "/user/login";
+
+            http.post(endpoint, data)
                 .then((res) => {
                     localStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
-                    navigate("/");
+                    if (data.role === 'admin') {
+                        navigate("/reviewevent");
+                    } else {
+                        navigate("/");
+                    }
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -74,8 +85,20 @@ function Login() {
                     error={formik.touched.password && Boolean(formik.errors.password)}
                     helperText={formik.touched.password && formik.errors.password}
                 />
-                <Button fullWidth variant="contained" sx={{ mt: 2 }}
-                    type="submit">
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">Role</FormLabel>
+                    <RadioGroup
+                        row
+                        aria-label="role"
+                        name="role"
+                        value={formik.values.role}
+                        onChange={formik.handleChange} // Ensure handleChange updates formik state
+                    >
+                        <FormControlLabel value="user" control={<Radio />} label="User" />
+                        <FormControlLabel value="admin" control={<Radio />} label="Admin" />
+                    </RadioGroup>
+                </FormControl>
+                <Button fullWidth variant="contained" sx={{ mt: 2 }} type="submit">
                     Login
                 </Button>
             </Box>

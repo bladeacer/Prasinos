@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid, Checkbox, FormControl, FormLabel, FormControlLabel, FormGroup, RadioGroup, Radio, InputLabel, Select, MenuItem, IconButton, Link } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Box, Typography, TextField, Button, Grid, Checkbox, FormControl, FormLabel, FormControlLabel, FormHelperText, FormGroup, RadioGroup, Radio, InputLabel, Select, MenuItem, IconButton, Link, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
+import { Add, Delete, Upload } from '@mui/icons-material';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import http from '../http';
@@ -10,13 +13,26 @@ import { useContext } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserContext from '../contexts/UserContext';
+import axios from 'axios';
 
 function AddEvent() {
     const { user } = useContext(UserContext);
-    const navigate = useNavigate();
     const [imageFile, setImageFile] = useState(null);
     const [supportingDocs, setSupportingDocs] = useState([]);
     const [imagePreview, setImagePreview] = useState(null);
+    const [suggestions, setSuggestions] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [apiKey] = useState('AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE');
+
+    const validate = values => {
+        const errors = {};
+
+        if (values.eventActivity === 'others' && !values.otherEventActivity) {
+            errors.otherEventActivity = 'Please specify the activity';
+        }
+
+        return errors;
+    };
 
     const formik = useFormik({
         initialValues: {
@@ -30,6 +46,7 @@ function AddEvent() {
             fundingRequests: [],
             participationFee: 0,
             eventActivity: "",
+            otherEventActivity: "",
             eventName: "",
             eventOrganizerType: "",
             eventOrganizerName: "",
@@ -38,30 +55,35 @@ function AddEvent() {
             eventStartDate: "",
             eventEndDate: "",
             eventStartTime: "",
-            eventEndTime: ""
+            eventEndTime: "",
+            eventStatus: "",
         },
 
-        validationSchema: yup.object({
+        validationSchema: yup.object().shape({
             email: yup.string().email('Invalid email format').required('Email is required'),
-            contactNumber: yup.string().required('Contact number is required'),
+            contactNumber: yup.string().matches(/^\d+$/, 'Contact number must be digits only').required('Contact number is required'),
             consentApproved: yup.boolean().oneOf([true], 'Consent is required'),
             termsApproved: yup.boolean().oneOf([true], 'You must accept the terms and conditions'),
             eventLocation: yup.string().required('Event location is required'),
-            eventDescription: yup.string().required('Event description is required'),
+            eventDescription: yup.string().trim().min(3, 'Event description must be at least 3 characters long').max(900, 'Event description must be at most 500 characters long').required('Event description is required'),
             eventActivity: yup.string().required('Event activity is required'),
-            eventName: yup.string().required('Event name is required'),
+            otherEventActivity: yup.string().notRequired(),
+            eventName: yup.string().trim().min(3, 'Event name must be at least 3 characters long').max(100, 'Event name must be at most 100 characters long').required('Event name is required'),
             eventOrganizerType: yup.string().required('Event organizer type is required'),
             eventOrganizerName: yup.string().required('Event organizer name is required'),
             eventScope: yup.string().required('Event scope is required'),
-            expectedAttendance: yup.number().required('Expected attendance is required').min(2, 'At least two attendee is required').positive("Expected attendance must be a positive number or zero"),
-            eventStartDate: yup.date().required('Event start date is required'),
-            eventEndDate: yup.date().required('Event end date is required'),
+            expectedAttendance: yup.number().required('Expected attendance is required').min(2, 'At least two attendees are required').positive('Expected attendance must be a positive number or zero'),
+            eventStartDate: yup.date().required('Event start date is required').min(new Date(), "Event can't start today or from the past"),
+            eventEndDate: yup.date().required('Event end date is required').min(yup.ref('eventStartDate'), 'Event must end on or after event start date'),
             eventStartTime: yup.string().required('Event start time is required'),
             eventEndTime: yup.string().required('Event end time is required'),
             participationFee: yup.number().min(0, 'Participation fee cannot be negative')
         }),
 
+        validate,
+
         onSubmit: async (data) => {
+
             try {
                 // Ensure imageFile is set if it exists
                 if (imageFile) {
@@ -70,6 +92,7 @@ function AddEvent() {
 
                 // Ensure supportingDocs is set
                 data.supportingDocs = supportingDocs;
+                data.eventStatus = "Pending Review"
 
                 const response = await http.post('/event/events', data);
 
@@ -84,16 +107,34 @@ function AddEvent() {
 
     });
 
+    const saveAsDraft = async () => {
+        const formData = { ...formik.values, eventStatus: "Draft" };
+        try {
+            // Ensure imageFile is set if it exists
+            if (imageFile) {
+                formData.eventImage = imageFile;
+            }
+            // Ensure supportingDocs is set
+            formData.supportingDocs = supportingDocs;
+            const response = await http.post('/event/events', formData);
+            // Redirect or give feedback on success
+            window.location.href = 'http://localhost:3000/events';
+        } catch (error) {
+            console.error('Error:', error.config);
+            // Handle error
+        }
+    };
+
     useEffect(() => {
         if (formik.values.useAccountInfo) {
             formik.setFieldValue('email', user.email);
             formik.setFieldValue('contactNumber', user.phoneNumber);
         } else {
             formik.setFieldValue('email', '');
-            formik.setFieldValue('contactNumber', ''); 
+            formik.setFieldValue('contactNumber', '');
         }
     }, [formik.values.useAccountInfo, user]);
-    
+
 
     const handleEventActivityChange = (event) => {
         formik.handleChange(event);
@@ -101,6 +142,78 @@ function AddEvent() {
             formik.setFieldValue('otherEventActivity', '');
         }
     };
+    const handleClickOpen = async () => {
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length === 0 && formik.dirty) {
+            setOpen(true);
+        } else {
+            // Manually set all fields as touched to show errors without interfering
+            formik.setTouched(
+                Object.keys(formik.values).reduce((acc, key) => ({ ...acc, [key]: true }), {})
+            );
+        }
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleConfirm = async () => {
+        await formik.handleSubmit();
+        setOpen(false);
+    };
+
+    const handleDeleteImage = async () => {
+        if (imageFile) {
+            try {
+                const response = await http.delete(`file/delete/${encodeURIComponent(imageFile)}`);
+                console.log('Response:', response);
+                if (response.status === 200) {
+                    const data = response.data;
+                    console.log('Image deleted successfully:', data.message);
+                } else {
+                    console.error('Error deleting image: Server responded with status', response.status);
+                }
+            } catch (error) {
+                console.error('Error deleting image:', error);
+            }
+        }
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
+    // const validateLocation = async (location) => {
+    //     const geocodeUrl = `/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${apiKey}`;
+    //     console.log('Validating location with URL:', geocodeUrl);
+
+    //     try {
+    //         const geocodeResponse = await axios.get(geocodeUrl);
+    //         console.log('Geocode response:', geocodeResponse);
+
+    //         const geocodeResults = geocodeResponse.data.results;
+    //         if (geocodeResults) {
+    //             const locationData = geocodeResults[0];
+    //             const country = locationData.address_components.find(component =>
+    //                 component.types.includes('country')
+    //             );
+
+    //             if (country && country.short_name === 'SG') {
+    //                 setIsLocationValid(true);
+    //                 return true;
+    //             } else {
+    //                 setIsLocationValid(false);
+    //                 return false;
+    //             }
+    //         } else {
+    //             setIsLocationValid(false);
+    //             return false;
+    //         }
+    //     } catch (error) {
+    //         console.error('Error validating location:', error);
+    //         setIsLocationValid(false);
+    //         return false;
+    //     }
+    // };
 
     const handleDeleteRequest = (index) => {
         const updatedRequests = formik.values.fundingRequests.filter((_, i) => i !== index);
@@ -128,6 +241,11 @@ function AddEvent() {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+
+                if (file.size > 1024 * 1024) {
+                    toast.error('Maximum file size is 1MB');
+                    return;
+                }
                 const updatedDocs = [...supportingDocs];
                 const previewUrl = URL.createObjectURL(file);
                 updatedDocs[index] = {
@@ -145,7 +263,7 @@ function AddEvent() {
             }
         }
     };
-    
+
 
     const handleSupportingDocNotesChange = (index, value) => {
         const updatedDocs = [...supportingDocs];
@@ -153,9 +271,24 @@ function AddEvent() {
         setSupportingDocs(updatedDocs);
     };
 
-    const handleDeleteSupportingDoc = (index) => {
-        const updatedDocs = supportingDocs.filter((_, i) => i !== index);
-        setSupportingDocs(updatedDocs);
+    const handleDeleteSupportingDoc = async (index) => {
+        const docToDelete = supportingDocs[index];
+        if (docToDelete && docToDelete.filename) {
+            try {
+                const response = await http.delete(`file/delete/${encodeURIComponent(docToDelete.filename)}`);
+                console.log('Response:', response);
+                if (response.status === 200) {
+                    console.log('Supporting document deleted successfully:', response.data.message);
+                    // Remove the document from the state after successful deletion
+                    const updatedDocs = supportingDocs.filter((_, i) => i !== index);
+                    setSupportingDocs(updatedDocs);
+                } else {
+                    console.error('Error deleting supporting document: Server responded with status', response.status);
+                }
+            } catch (error) {
+                console.error('Error deleting supporting document:', error);
+            }
+        }
     };
 
     const handleAddSupportingDoc = () => {
@@ -193,6 +326,38 @@ function AddEvent() {
         }
     };
 
+    const fetchLocationSuggestions = async (input) => {
+        if (!input) return;
+        const apiUrl = `/maps/api/place/autocomplete/json?input=${input}&types=geocode&region=sg&key=${apiKey}`;
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                console.error(`HTTP error: ${response.status} ${response.statusText}`);
+                return;
+            }
+            const contentType = response.headers.get("Content-Type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.error("Received non-JSON response:", await response.text());
+                return;
+            }
+            const data = await response.json();
+            setSuggestions(data.predictions);
+        } catch (error) {
+            console.error('Error fetching location suggestions:', error);
+        }
+    };
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        formik.setFieldValue(name, value);
+        fetchLocationSuggestions(value);
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        formik.setFieldValue('eventLocation', suggestion.description);
+        setSuggestions([]); // Clear suggestions after selection
+    };
+
 
     return (
         <Box>
@@ -223,7 +388,7 @@ function AddEvent() {
                                     margin="dense"
                                     autoComplete="off"
                                     label="Please specify"
-                                    name="EventActivity"
+                                    name="otherEventActivity"
                                     value={formik.values.otherEventActivity}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
@@ -248,7 +413,13 @@ function AddEvent() {
                             helperText={formik.touched.eventName && formik.errors.eventName}
                         />
                         <FormControl fullWidth margin="dense">
-                            <InputLabel>Event Organizer Type</InputLabel>
+                            <InputLabel
+                                style={{
+                                    color: formik.touched.eventOrganizerType && formik.errors.eventOrganizerType ? '#d42f2f' : '#666666'
+                                }}
+                            >
+                                Event Organizer Type
+                            </InputLabel>
                             <Select
                                 name="eventOrganizerType"
                                 value={formik.values.eventOrganizerType}
@@ -262,7 +433,7 @@ function AddEvent() {
                                 <MenuItem value="government agency">Government Agency</MenuItem>
                             </Select>
                             {formik.touched.eventOrganizerType && formik.errors.eventOrganizerType && (
-                                <Typography color="error">{formik.errors.eventOrganizerType}</Typography>
+                                <FormHelperText error>{formik.errors.eventOrganizerType}</FormHelperText>
                             )}
                         </FormControl>
                         <TextField
@@ -311,7 +482,9 @@ function AddEvent() {
                             }}
                         />
                         <TextField
-                            fullWidth margin="dense" autoComplete="off"
+                            fullWidth
+                            margin="dense"
+                            autoComplete="off"
                             type="date"
                             label="Event Start Date"
                             name="eventStartDate"
@@ -323,7 +496,9 @@ function AddEvent() {
                             helperText={formik.touched.eventStartDate && formik.errors.eventStartDate}
                         />
                         <TextField
-                            fullWidth margin="dense" autoComplete="off"
+                            fullWidth
+                            margin="dense"
+                            autoComplete="off"
                             type="date"
                             label="Event End Date"
                             name="eventEndDate"
@@ -335,7 +510,9 @@ function AddEvent() {
                             helperText={formik.touched.eventEndDate && formik.errors.eventEndDate}
                         />
                         <TextField
-                            fullWidth margin="dense" autoComplete="off"
+                            fullWidth
+                            margin="dense"
+                            autoComplete="off"
                             type="time"
                             label="Event Start Time"
                             name="eventStartTime"
@@ -347,7 +524,9 @@ function AddEvent() {
                             helperText={formik.touched.eventStartTime && formik.errors.eventStartTime}
                         />
                         <TextField
-                            fullWidth margin="dense" autoComplete="off"
+                            fullWidth
+                            margin="dense"
+                            autoComplete="off"
                             type="time"
                             label="Event End Time"
                             name="eventEndTime"
@@ -359,15 +538,26 @@ function AddEvent() {
                             helperText={formik.touched.eventEndTime && formik.errors.eventEndTime}
                         />
                         <TextField
-                            fullWidth margin="dense" autoComplete="off"
+                            fullWidth
+                            margin="dense"
+                            autoComplete="on"
                             label="Event Location"
                             name="eventLocation"
                             value={formik.values.eventLocation}
-                            onChange={formik.handleChange}
+                            onChange={handleInputChange}
                             onBlur={formik.handleBlur}
                             error={formik.touched.eventLocation && Boolean(formik.errors.eventLocation)}
                             helperText={formik.touched.eventLocation && formik.errors.eventLocation}
                         />
+                        {Array.isArray(suggestions) && suggestions.length > 0 && (
+                            <List>
+                                {suggestions.map((suggestion) => (
+                                    <ListItem button key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
+                                        <ListItemText primary={suggestion.description} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             multiline minRows={2}
@@ -497,17 +687,24 @@ function AddEvent() {
                         {supportingDocs.map((doc, index) => (
                             <Box key={index} display="flex" flexDirection="column" mb={2}>
                                 <Box display="flex" alignItems="center">
-                                    <Button variant="contained" component="label">
-                                        Upload Document
-                                        <input type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx" onChange={(e) => handleSupportingDocChange(e, index)} />
-                                    </Button>
+                                    <IconButton
+                                        component="label"
+                                    >
+                                        <Upload />
+                                        <input
+                                            type="file"
+                                            hidden
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx"
+                                            onChange={(e) => handleSupportingDocChange(e, index)}
+                                        />
+                                    </IconButton>
                                     <IconButton onClick={() => handleDeleteSupportingDoc(index)}>
                                         <Delete />
                                     </IconButton>
                                 </Box>
                                 {doc.filename && (
                                     <>
-                                        <Typography variant="body2" mt={1}>Uploaded File: {doc.actualfilename}</Typography>
+                                        <Typography variant="body2" mt={1}>Uploaded File: {doc.actualfilename.length > 20 ? `${doc.actualfilename.substring(0, 20)}...` : doc.actualfilename}</Typography>
                                         {doc.file.type.startsWith('image/') ? (
                                             <img src={doc.preview} alt={doc.filename} style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
                                         ) : (
@@ -539,6 +736,9 @@ function AddEvent() {
                                 <>
                                     <Typography variant="caption" display="block">Image uploaded</Typography>
                                     <img src={imagePreview} alt="Event Cover" style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
+                                    <IconButton onClick={handleDeleteImage} aria-label="delete" color="error">
+                                        <Delete />
+                                    </IconButton>
                                 </>
                             )}
                         </Box>
@@ -564,6 +764,11 @@ function AddEvent() {
                             }
                             label="By submitting this proposal, you understand that all activities are subject to approval and will only be delivered when approved"
                         />
+                        {formik.touched.consentApproved && formik.errors.consentApproved && (
+                            <Typography variant="caption" color="error">
+                                {formik.errors.consentApproved}
+                            </Typography>
+                        )}
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -576,7 +781,6 @@ function AddEvent() {
                                 <>
                                     I have read and agreed to the{' '}
                                     <Link
-                                        component="button"
                                         onClick={handleTermsClick}
                                         style={{ color: 'blue', textDecoration: 'underline' }}
                                     >
@@ -585,15 +789,48 @@ function AddEvent() {
                                 </>
                             }
                         />
+                        {formik.touched.termsApproved && formik.errors.termsApproved && (
+                            <Typography variant="caption" color="error">
+                                {formik.errors.termsApproved}
+                            </Typography>
+                        )}
                     </FormGroup>
                 </Grid>
-                <Box mt={2}>
-                    <Button variant="contained" type="submit">Submit</Button>
+                <Box mt={2} display="flex" justifyContent="flex-end" width="100%" pr={2}>
+                    <div>
+                        <Button variant="contained" type="button" sx={{ mr: 2 }} onClick={handleClickOpen}>
+                            Submit Event
+                        </Button>
+                        <Dialog
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                        >
+                            <DialogTitle id="alert-dialog-title">{"Submit Event"}</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText id="alert-dialog-description">
+                                    Are you sure you want to submit the event? This cannot be undone. You can save as draft if you are not ready to submit yet. You can only edit limited fields after submission.
+                                </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleClose}>Cancel</Button>
+                                <Button onClick={handleConfirm} autoFocus>
+                                    Confirm
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </div>
+                    <Button variant="outlined" color="primary" type="button" onClick={saveAsDraft}>
+                        Save as Draft
+                    </Button>
                 </Box>
             </Box>
+            <Box mt={2}>     </Box>
             <ToastContainer />
         </Box>
     );
 }
 
 export default AddEvent;
+// AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE

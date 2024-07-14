@@ -3,21 +3,23 @@ const router = express.Router();
 const { Event, User } = require('../models');
 const { validateToken } = require('../middlewares/auth');
 const yup = require('yup');
+const { Op } = require('sequelize');
 
 // POST /events - Create a new event
 router.post("/events", validateToken, async (req, res) => {
     let data = req.body;
     data.userId = req.user.id;
 
-    const validationSchema = yup.object({
+    const validationSchema = yup.object().shape({
         eventName: yup.string().trim().min(3).max(100).required(),
-        eventDescription: yup.string().trim().min(3).max(500).required(),
+        eventDescription: yup.string().trim().min(3).max(900).required(),
         eventLocation: yup.string().trim().required(),
         eventStartDate: yup.string().trim().required(),
         eventEndDate: yup.string().trim().required(),
         eventStartTime: yup.string().trim().required(),
         eventEndTime: yup.string().trim().required(),
         eventActivity: yup.string().trim().required(),
+        otherEventActivity: yup.string().notRequired(),
         eventOrganizerType: yup.string().trim().required(),
         eventOrganizerName: yup.string().trim().required(),
         eventScope: yup.string().trim().required(),
@@ -50,12 +52,28 @@ router.post("/events", validateToken, async (req, res) => {
 
 // GET /events - Retrieve all events
 router.get('/', async (req, res) => {
+    const { search } = req.query;
+    let whereCondition = {};
+
+    // If search query is provided, construct the where condition
+    if (search) {
+        whereCondition = {
+            [Op.or]: [
+                { eventName: { [Op.like]: `%${search}%` } }, // Case-insensitive search for event name
+                { eventOrganizerName: { [Op.like]: `%${search}%` } } // Case-insensitive search for organizer name
+                // Add more fields as needed for searching
+            ]
+        };
+    }
+
     try {
         let events = await Event.findAll({
+            where: whereCondition,
             include: { model: User, as: "user", attributes: ['name'] }
         });
         res.json(events);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Failed to fetch events', error: err.message });
     }
 });
