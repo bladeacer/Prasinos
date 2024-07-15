@@ -70,36 +70,43 @@ router.post("/login", async (req, res) => {
         if (!user) {
             res.status(400).json({ message: errorMsg });
             return;
-        }
+        };
         let match = await bcrypt.compare(data.password, user.password);
         if (!match) {
             res.status(400).json({ message: errorMsg });
             return;
-        }
-
-        // Return user info
-        let userInfo = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            phone: user.phone,
-            createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString()
-            // return with nice date format
         };
-        let staffInfo = {
-            id: null,
-            email: null,
-            name: null,
-            phone: null,
-            createdAt: null
+        let verified = user.verified == true;
+        if (!verified) {
+            res.status(400).json({ message: errorMsg });
+            // Redirect to verify route
+            return;
         }
-        let accessToken = sign(userInfo, process.env.APP_SECRET,
-            { expiresIn: process.env.TOKEN_EXPIRES_IN });
-        res.json({
-            accessToken: accessToken,
-            user: userInfo,
-            staff: staffInfo
-        });
+        else {
+            // Return user info
+            let userInfo = {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                phone: user.phone,
+                createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString(),
+                // return with nice date format
+            };
+            let staffInfo = {
+                id: null,
+                email: null,
+                name: null,
+                phone: null,
+                createdAt: null
+            }
+            let accessToken = sign(userInfo, process.env.APP_SECRET,
+                { expiresIn: process.env.TOKEN_EXPIRES_IN });
+            res.json({
+                accessToken: accessToken,
+                user: userInfo,
+                staff: staffInfo
+            });
+        }
     }
     catch (err) {
         res.status(400).json({ errors: err.errors });
@@ -278,30 +285,21 @@ router.post("/sendResetEmail", validateToken, async (req, res) => {
         }
         const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
         const message_url = process.env.CLIENT_URL;
-        const serviceId = "service_tr6rahq";
-        const templateId = "template_vspy2hi";
+        const serviceId = process.env.EMAIL_JS_SERVICE_ID;
+        const templateId = process.env.EMAIL_JS_TEMPLATE_ID;
         var templateParams = {
             to_name: `${user.name}`,
-            message: `To continue with resetting your password, use the following link: <br> ${message_url}/reset `,
+            message: `To continue with resetting your password, use the following link:  ${message_url}/reset `,
             reply_to: `${user.email}`,
             subject: "Prasinos: Reset Password"
         };
-        await emailjs.send(serviceId, templateId, templateParams, {publicKey: publicKey});
+        await emailjs.send(serviceId, templateId, templateParams, { publicKey: publicKey });
     }
     catch (error) {
         res.status(500).send('Internal server error');
     }
 });
 
-
-// const serviceId = "service_tr6rahq";
-// const templateId = "template_vspy2hi";
-// var templateParams = {
-//     to_name: `${user.name}`,
-//     message: `To continue with resetting your password, use the following link: <br>${message_url} `,
-//     reply_to: `${user.email}`,
-//     subject: "Prasinos: Reset Password",
-// };
-
+router.put("/verify")
 
 module.exports = router;

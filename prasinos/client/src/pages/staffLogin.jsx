@@ -39,8 +39,7 @@ export default function StaffLogin() {
                 .then((res) => {
                     sessionStorage.setItem("accessToken", res.data.accessToken);
                     setStaff(res.data.staff);
-                    navigate("/staffHome");
-                    window.location.reload();
+                    navigate("/staffHome", { replace: true });
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

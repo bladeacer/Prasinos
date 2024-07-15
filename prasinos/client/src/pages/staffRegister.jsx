@@ -51,8 +51,7 @@ export default function StaffRegister() {
             data.phone = data.phone;
             http.post("/staff/register", data)
                 .then((res) => {
-                    navigate("/staffLogin");
-                    window.location.reload();
+                    navigate("/staffLogin", { replace: true });
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

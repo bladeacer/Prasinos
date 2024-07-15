@@ -12,11 +12,11 @@ import EditUser from './pages/EditUser';
 import ResetPassword from './pages/ResetPassword';
 import { is_accent } from './pages/reusables/accent_parser';
 import { HomeWrapper, BookingWrapper, EventWrapper, RewardsWrapper, SupportWrapper, SelectLogWrapper, EverythingWrapper } from './pages/reusables/wrappers';
-import RoutePlaceholder from './pages/reusables/route_placeholders';
 import StaffLogin from './pages/staffLogin';
 import StaffRegister from './pages/staffRegister';
 import StaffHome from './pages/staffHome';
 import ResetEndpoint from './pages/ResetEndpoints';
+import Verify from './pages/Verify';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -43,10 +43,9 @@ export default function App() {
     <>
       <UserContext.Provider value={{ user, setUser }}>
         <Router>
-          <TopNavbarV2></TopNavbarV2>
+          <TopNavbarV2 />
 
           <Routes>
-            {RoutePlaceholder(false)}
             <Route path="/:uuid" element={
               <>
                 {!user && (
@@ -60,8 +59,26 @@ export default function App() {
             <Route path={"/"} element={<></>}></Route>
 
             <Route path={"/home"} element={HomeWrapper()} />
-            <Route path={"/booking"} element={BookingWrapper()} />
-            <Route path={"/events"} element={EventWrapper()} />
+            <Route path={"/booking"} element={
+              <>
+                {is_accent[1] && user && (
+                  BookingWrapper()
+                )}
+                {is_accent[1] && !user && (
+                  Unauthorized(false)
+                )}
+              </>
+            } />
+            <Route path={"/events"} element={
+              <>
+                {is_accent[2] && user && (
+                  EventWrapper()
+                )}
+                {is_accent[2] && user && (
+                  Unauthorized (false)
+                )}
+              </>
+            } />
             <Route path={"/rewards"} element={RewardsWrapper()} />
             <Route path={"/support"} element={SupportWrapper()} />
             <Route path={"/settings"} element={
@@ -119,15 +136,22 @@ export default function App() {
             } />
             <Route path={"/reset"} element={
               <>
-                {(!user || document.referrer.slice(21) != "/dangerZone") && (
+                {/* 
+                  Replace check with reset handler where one is referred from gmail or some other email
+                  Abuse is_accent[x] once again, or we make another variable?
+                */}
+
+                {!user && (
                   Unauthorized(-1)
                 )}
-                {/* Replace check with reset handler where one is referred from gmail or some other email */}
-                {user && document.referrer.slice(21) == "/dangerZone" && (
+                {user && (
                   <ResetPassword />
                 )}
               </>
             } />
+            {/* Catch-all route */}
+            <Route path="*" element={Unauthorized(-1)} />
+
           </Routes>
         </Router>
       </UserContext.Provider>
@@ -135,7 +159,6 @@ export default function App() {
       <StaffContext.Provider value={{ staff, setStaff }}>
         <Router>
           <Routes>
-            {RoutePlaceholder(true)}
             <Route path="/:uuid" element={<></>} />
             <Route path={"/"} element={<></>} />
 
@@ -169,6 +192,7 @@ export default function App() {
                 )}
               </>
             } />
+            <Route path="*" element={Unauthorized(-1)} />
 
           </Routes>
         </Router>
@@ -177,9 +201,6 @@ export default function App() {
       <Router>
         <Routes>
           {/* Apparently you can get usercontext values outside of the user context provider */}
-
-          {RoutePlaceholder(false)}
-          {RoutePlaceholder(true)}
           <Route path="/:uuid" element={<></>} />
 
           <Route path={"/"} element={
@@ -192,9 +213,9 @@ export default function App() {
               )}
             </>
           } />
+          <Route path="*" element={Unauthorized(-1)} />
 
         </Routes>
-
       </Router>
     </>
   );

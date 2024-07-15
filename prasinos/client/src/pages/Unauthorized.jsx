@@ -25,7 +25,7 @@ export default function Unauthorized(is_in) {
                 )}
                 {is_in == -1 && (
                     <>
-                        <Typography variant="h3" sx={{ mb: 3 }}>Access Denied :(</Typography>
+                        <Typography variant="h3" sx={{ mb: 3 }}>404 Not Found</Typography>
                         <Typography sx={{ fontSize: '20px' }}>This page does not exist, or you do not have the required permissions to view it.</Typography>
                         <Button href="/home">Click here to homepage.</Button>
                     </>

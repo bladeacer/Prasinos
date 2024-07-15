@@ -50,8 +50,7 @@ function Register() {
             data.phone = data.phone;
             http.post("/user/register", data)
                 .then((res) => {
-                    navigate("/login");
-                    window.location.reload();
+                    navigate("/login", { replace: true });
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

@@ -39,8 +39,7 @@ function Login() {
                 .then((res) => {
                     sessionStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
-                    navigate("/home");
-                    window.location.reload();
+                    navigate("/home", { replace: true });
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

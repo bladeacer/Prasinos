@@ -51,8 +51,7 @@ export default function EditUser() {
             data.phone = data.phone;
             http.put("/user/edit", data)
                 .then((res) => {
-                    navigate("/settings");
-                    window.location.reload();
+                    navigate("/settings", { replace: true });
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

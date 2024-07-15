@@ -13,7 +13,7 @@ export function HomeWrapper() {
         <>
             {is_accent[0] && (
                 <>
-                    <Home></Home>
+                    <Home/>
                 </>
             )}
         </>
@@ -24,7 +24,7 @@ export function BookingWrapper() {
         <>
             {is_accent[1] && (
                 <>
-                    <Booking></Booking>
+                    <Booking/>
                 </>
             )}
         </>
@@ -35,7 +35,7 @@ export function EventWrapper() {
         <>
             {is_accent[2] && (
                 <>
-                    <Events></Events>
+                    <Events/>
                 </>
             )}
         </>
@@ -46,7 +46,7 @@ export function RewardsWrapper() {
         <>
             {is_accent[3] && (
                 <>
-                    <Rewards></Rewards>
+                    <Rewards/>
                 </>
             )}
         </>
@@ -57,7 +57,7 @@ export function SupportWrapper() {
         <>
             {is_accent[4] && (
                 <>
-                    <Support></Support>
+                    <Support/>
                 </>
             )}
         </>
@@ -68,7 +68,7 @@ function LoginWrapper() {
         <>
             {is_accent[5] && (
                 <>
-                    <Login></Login>
+                    <Login/>
                 </>
             )}
         </>
@@ -80,7 +80,7 @@ function RegisterWrapper() {
         <>
             {is_accent[6] && (
                 <>
-                    <Register></Register>
+                    <Register/>
                 </>
             )}
         </>
@@ -91,7 +91,9 @@ export function SelectLogWrapper() {
     return (
         <>
             {is_accent[8] && (
-                SelectLogin()
+                <>
+                    <SelectLogin/>
+                </>
             )}
         </>
     )

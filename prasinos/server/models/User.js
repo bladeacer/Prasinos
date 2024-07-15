@@ -15,9 +15,14 @@ module.exports = (sequelize, DataTypes) => {
         phone: {
             type: DataTypes.STRING(20),
             allowNull: false
+        },
+        verified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
+        // Add verified field
     }, {
-        tableName: 'users'
+        tableName: 'users',
     });
 
     // User.associate = (models) => {

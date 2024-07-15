@@ -2,18 +2,19 @@
 Use `npm i` in the client and server directories' command line to installed required dependencies which are ignored by GitHub so repeated dependencies with a large size are not stored.
 
 ## Note to self
-Use `window.location.reload()` whenever the `useNavigate` hook is called for successful login
+Use `{ replace: true }` whenever the `useNavigate` hook is called.
 
 Add Google Sign-In as an option
  - [ ]  TODO: https://blog.logrocket.com/guide-adding-google-login-react-app/ 
 
 Code user settings, page where they can see their details, danger zone
-- [ ] TODO: Reset password directs to reset handler route user inputs password formik submit then redirect to reset route. Verify email, email change prompts verification process again when logging in (update user field for verified).
+- [ ] TODO: Reset password directs to reset handler route user inputs password (needs security token to access reset password in the email url as params). Verify email, email change prompts verification process again when logging in (update user field for verified).
  - [] TODO: Account details in settings page (make some fields dynamic and add profile pic image)
  - [ ] TODO: staff get put routes
- - [] danger zone (delete account)
+ - [ ] danger zone (delete account)
+ - [ ] Loading state lobotomy
+ - [ ] Write a wrapper function for repetitive code like {`is_accent[x] && user && (...)`} that takes params `x, function_to_run_if_true, function_to_run_if_false` 
  - [ ] TODO: Add fields to user entity such as profile pic, events joined, points, tier, company
- - [ ] Root page with nice links user and staff login (50% of screen one colour with gradient type aah)
 
  - [ ] Style user and staff sidebar later (add image and stuff to user sidebar)
  - [ ] Tidy up your CSS and replace `marginLeft` with `ml` and stuff
