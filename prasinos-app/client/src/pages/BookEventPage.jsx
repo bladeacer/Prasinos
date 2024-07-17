@@ -5,8 +5,9 @@ import http from '../http';
 import dayjs from 'dayjs';
 
 const BookEventPage = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
+    const { id } = useParams();     // Retrieve ID from URL Params
+    const navigate = useNavigate(); // Use Navigate for redirection 
+    
     const [eventDetails, setEventDetails] = useState(null);
     const [formData, setFormData] = useState({
         firstName: '',
@@ -14,7 +15,7 @@ const BookEventPage = () => {
         email: '',
         pax: '',
         phoneNumber: '',
-        bookingDateTime: dayjs().format('YYYY-MM-DD HH:mm'),
+        bookingDateTime: dayjs().format('YYYY-MM-DD HH:mm'),    // Current date and time
     });
 
     useEffect(() => {
