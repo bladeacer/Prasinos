@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Box, Typography, TextField, Button, FormControl, RadioGroup, FormControlLabel, Radio, Grid, Divider } from '@mui/material';
+import InputMask from 'react-input-mask';
 import axios from './axiosConfig';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -58,12 +59,18 @@ const PaymentPage = () => {
             return;
         }
         try {
-            const response = await axios.post('/api/payment', formData);
+            const response = await axios.post('/payment', formData);
             if (response.status === 200) {
                 navigate('/payment-success', { state: { ...formData } });
             }
         } catch (error) {
-            console.error('Error submitting the payment', error);
+            if (error.response) {
+                // Error response from server
+                setErrors({ form: error.response.data.message });
+            } else {
+                console.error('Error submitting the payment', error);
+                setErrors({ form: 'An unexpected error occurred' });
+            }
         }
     };
 
@@ -135,17 +142,26 @@ const PaymentPage = () => {
                         />
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            required
-                            name="expiryDate"
-                            label="Expiry Date (MM/YY)"
+                        <InputMask
+                            mask="99/99"
                             value={formData.expiryDate}
                             onChange={handleChange}
-                            inputRef={expiryDateRef}
-                            error={!!errors.expiryDate}
-                            helperText={errors.expiryDate}
-                        />
+                        >
+                            {(inputProps) => (
+                                <TextField
+                                    {...inputProps}
+                                    fullWidth
+                                    required
+                                    name="expiryDate"
+                                    label="Expiry Date (MM/YY)"
+                                    value={formData.expiryDate}
+                                    onChange={handleChange}
+                                    inputRef={expiryDateRef}
+                                    error={!!errors.expiryDate}
+                                    helperText={errors.expiryDate}
+                                />
+                            )}
+                        </InputMask>
                     </Grid>
                     <Grid item xs={12} sm={6}>
                         <TextField
@@ -166,6 +182,11 @@ const PaymentPage = () => {
                         />
                     </Grid>
                 </Grid>
+                {errors.form && (
+                    <Typography color="error" sx={{ mt: 2 }}>
+                        {errors.form}
+                    </Typography>
+                )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
                     <Button variant="contained" onClick={() => window.history.back()}>
                         Back

@@ -10,6 +10,29 @@ module.exports = (sequelize, DataTypes) => {
         },
         imageFile: {
             type: DataTypes.STRING(20)
+        },
+        date: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+        time: {
+            type: DataTypes.TIME,
+            allowNull: false
+        },
+        pax: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        userId: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        eventId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'events',
+                key: 'id',
+            }
         }
     }, {
         tableName: 'bookings'
@@ -19,6 +42,10 @@ module.exports = (sequelize, DataTypes) => {
         Booking.belongsTo(models.User, {
             foreignKey: "userId",
             as: 'user'
+        });
+        Booking.belongsTo(models.Event, {
+            foreignKey: "eventId",
+            as: 'event'
         });
     };
 

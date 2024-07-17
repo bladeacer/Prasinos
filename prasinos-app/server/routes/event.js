@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User, Booking, Event } = require('../models');
+const { User, Event } = require('../models');
 const { Op } = require("sequelize");
 const yup = require("yup");
 const { validateToken } = require('../middlewares/auth');
@@ -8,19 +8,21 @@ const { validateToken } = require('../middlewares/auth');
 router.post("/", validateToken, async (req, res) => {
     let data = req.body;
     data.userId = req.user.id;
+
     // Validate request body
     let validationSchema = yup.object({
-        title: yup.string().trim().min(3).max(100).required(),
-        description: yup.string().trim().min(3).max(500).required(),
-        pax: yup.number().required(),
+        eventName: yup.string().trim().min(3).max(100).required(),
+        refCode: yup.string().trim().min(3).max(50).required(),
+        organization: yup.string().trim().min(3).max(100).required(),
         date: yup.date().required(),
         time: yup.string().trim().required(),
-        eventId: yup.number().required()
+        description: yup.string().trim().min(3).max(500).required(),
+        imageUrl: yup.string().trim()
     });
     try {
         data = await validationSchema.validate(data,
             { abortEarly: false });
-        let result = await Booking.create(data);
+        let result = await Event.create(data);
         res.json(result);
     }
     catch (err) {
@@ -31,89 +33,72 @@ router.post("/", validateToken, async (req, res) => {
 router.get("/", async (req, res) => {
     let condition = {};
     let search = req.query.search;
-    let eventId = req.query.eventId;
-
     if (search) {
         condition[Op.or] = [
-            { title: { [Op.like]: `%${search}%` } },
-            { description: { [Op.like]: `%${search}%` } }
+            { eventName: { [Op.like]: `%${search}%` } },
+            { description: { [Op.like]: `%{search}%` } }
         ];
     }
-    // You can add condition for other columns here
-    // e.g. condition.columnName = value;
 
-    if (eventId) {
-        condition.eventId = eventId;
-    }
-
-    let list = await Booking.findAll({
+    let list = await Event.findAll({
         where: condition,
         order: [['createdAt', 'DESC']],
-        include: [
-            { model: User, as: "user", attributes: ['name'] },
-            { model: Event, as: "event", attributes: ['eventName'] }
-        ]
+        include: { model: User, as: "user", attributes: ['name'] }
     });
     res.json(list);
 });
 
 router.get("/:id", async (req, res) => {
     let id = req.params.id;
-    let booking = await Booking.findByPk(id, {
-        include: [
-            { model: User, as: "user", attributes: ['name'] },
-            { model: Event, as: "event", attributes: ['eventName'] }
-        ]
+    let event = await Event.findByPk(id, {
+        include: { model: User, as: "user", attributes: ['name'] }
     });
 
-    // Check id not found
-    if (!booking) {
+    if (!event) {
         res.sendStatus(404);
         return;
     }
-    res.json(booking);
+    res.json(event);
 });
 
 router.put("/:id", validateToken, async (req, res) => {
     let id = req.params.id;
-    // Check id not found
-    let booking = await Booking.findByPk(id);
-    if (!booking) {
+    let event = await Event.findByPk(id);
+    if (!event) {
         res.sendStatus(404);
         return;
     }
 
-    // Check request user id
     let userId = req.user.id;
-    if (booking.userId != userId) {
+    if (event.userId != userId) {
         res.sendStatus(403);
         return;
     }
 
     let data = req.body;
-    // Validate request body
     let validationSchema = yup.object({
-        title: yup.string().trim().min(3).max(100),
-        description: yup.string().trim().min(3).max(500),
-        pax: yup.number(),
+        eventName: yup.string().trim().min(3).max(100),
+        refCode: yup.string().trim().min(3).max(50),
+        organization: yup.string().trim().min(3).max(100),
         date: yup.date(),
-        time: yup.string().trim()
+        time: yup.string().trim(),
+        description: yup.string().trim().min(3).max(500),
+        imageUrl: yup.string().trim()
     });
     try {
         data = await validationSchema.validate(data,
             { abortEarly: false });
 
-        let num = await Booking.update(data, {
+        let num = await Event.update(data, {
             where: { id: id }
         });
         if (num == 1) {
             res.json({
-                message: "Booking was updated successfully."
+                message: "Event was updated successfully."
             });
-        }
-        else {
+        } else {
             res.status(400).json({
-                message: `Cannot update booking with id ${id}.`
+                message: `Cannot update event with id ${id}.`
             });
         }
     }
@@ -124,31 +109,29 @@ router.put("/:id", validateToken, async (req, res) => {
 
 router.delete("/:id", validateToken, async (req, res) => {
     let id = req.params.id;
-    // Check id not found
-    let booking = await Booking.findByPk(id);
-    if (!booking) {
+    let event = await Event.findByPk(id);
+    if (!event) {
         res.sendStatus(404);
         return;
     }
 
-    // Check request user id
     let userId = req.user.id;
-    if (booking.userId != userId) {
+    if (event.userId != userId) {
         res.sendStatus(403);
         return;
     }
 
-    let num = await Booking.destroy({
+    let num = await Event.destroy({
         where: { id: id }
-    })
+    });
     if (num == 1) {
         res.json({
-            message: "Booking was deleted successfully."
+            message: "Event was deleted successfully."
         });
     }
     else {
         res.status(400).json({
-            message: `Cannot delete booking with id ${id}.`
+            message: `Cannot delete event with id ${id}.`
         });
     }
 });

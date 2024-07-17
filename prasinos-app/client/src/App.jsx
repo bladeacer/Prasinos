@@ -45,7 +45,7 @@ function App() {
                     Learning
                   </Typography>
                 </Link>
-                <Link to="/bookings"><Typography>Bookings</Typography></Link>
+                <Link to="/bookings"><Typography>Bookings - Staff</Typography></Link>
                 <Link to="/eventlistpage"><Typography>Events</Typography></Link>
                 <Box sx={{ flexGrow: 1 }}></Box>
                 {user && (

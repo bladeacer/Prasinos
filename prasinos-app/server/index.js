@@ -21,7 +21,7 @@ app.use(cors({
 
 // Simple Route
 app.get("/", (req, res) => {
-    res.send("Welcome Prasinos.");
+    res.send("Welcome to Prasinos.");
 });
 
 // Routes
@@ -32,7 +32,9 @@ app.use("/user", userRoute);
 const fileRoute = require('./routes/file');
 app.use("/file", fileRoute);
 const paymentRoute = require('./routes/payment');
-app.use("/api/payment", paymentRoute);
+app.use("/payment", paymentRoute);
+const eventRoute = require('./routes/event');
+app.use("/event", eventRoute);
 
 // Global error handler
 app.use((err, req, res, next) => {

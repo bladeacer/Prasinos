@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { Box, Typography, Grid, Card, CardContent, Input, IconButton, Button, Divider } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Input, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import { AccountCircle, AccessTime, Search, Clear, Edit } from '@mui/icons-material';
 import http from '../http';
 import dayjs from 'dayjs';
@@ -8,12 +7,12 @@ import UserContext from '../contexts/UserContext';
 import global from '../global';
 
 function Bookings() {
+    const [eventList, setEventList] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
     const [bookingList, setBookingList] = useState([]);
     const [search, setSearch] = useState('');
+    const [editBooking, setEditBooking] = useState(null);
     const { user } = useContext(UserContext);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [selectedBooking, setSelectedBooking] = useState(null);
-    const bookingsPerPage = 10; // Number of bookings per page
 
     const onSearchChange = (e) => {
         setSearch(e.target.value);
@@ -25,177 +24,208 @@ function Bookings() {
         });
     };
 
+    const getEvents = () => {
+        http.get('/event').then((res) => {
+            setEventList(res.data);
+        }).catch(error => {
+            console.error("Error fetching events", error);
+        });
+    };
+
     const searchBookings = () => {
         http.get(`/booking?search=${search}`).then((res) => {
             setBookingList(res.data);
         });
     };
 
+    const searchEvents = () => {
+        http.get(`/event?search=${search}`).then((res) => {
+            setEventList(res.data);
+        }).catch(error => {
+            console.error("Error searching events", error);
+        });
+    };
+
+    const getBookingsForEvent = (eventId) => {
+        http.get(`/booking?eventId=${eventId}`).then((res) => {
+            setBookingList(res.data);
+            const selectedEvent = eventList.find(event => event.id === eventId);
+            setSelectedEvent(selectedEvent);
+        }).catch(error => {
+            console.error("Error fetching bookings for event", error);
+        });
+    };
+
     useEffect(() => {
-        getBookings();
+        getEvents();
     }, []);
 
     const onSearchKeyDown = (e) => {
         if (e.key === "Enter") {
-            searchBookings();
+            searchEvents();
         }
     };
 
     const onClickSearch = () => {
-        searchBookings();
-    };
+        searchEvents();
+    }
 
     const onClickClear = () => {
         setSearch('');
-        getBookings();
+        getEvents();
     };
 
-    // Calculate total pages based on number of bookings
-    const totalPages = Math.ceil(bookingList.length / bookingsPerPage);
-
-    // Pagination control handlers
-    const goToPage = (page) => {
-        setCurrentPage(page);
+    const handleEditBooking = (booking) => {
+        setEditBooking(booking);
     };
 
-    const nextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
+    const handleSaveBooking = () => {
+        http.put(`/booking/${editBooking.id}`, editBooking).then((res) => {
+            setEditBooking(null);
+            getBookingsForEvent(selectedEvent.id);
+        }).catch(error => {
+            console.error("Error saving booking", error);
+        });
     };
 
-    const prevPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
+    const handleEditChange = (e) => {
+        setEditBooking({ ...editBooking, [e.target.name]: e.target.value });
     };
-
-    // Calculate which bookings to display based on current page
-    const indexOfLastBooking = currentPage * bookingsPerPage;
-    const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
-    const currentBookings = bookingList.slice(indexOfFirstBooking, indexOfLastBooking);
 
     return (
         <Box>
             <Typography variant="h5" sx={{ my: 2 }}>
-                Bookings
+                Bookings - Staff
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Input value={search} placeholder="Search"
                     onChange={onSearchChange}
                     onKeyDown={onSearchKeyDown} />
-                <IconButton color="primary"
-                    onClick={onClickSearch}>
+                <IconButton color="primary" onClick={onClickSearch}>
                     <Search />
                 </IconButton>
-                <IconButton color="primary"
-                    onClick={onClickClear}>
+                <IconButton color="primary" onClick={onClickClear}>
                     <Clear />
                 </IconButton>
-                <Box sx={{ flexGrow: 1 }} />
-                {
-                    user && (
-                        <Link to="/addbooking">
-                            <Button variant='contained'>
-                                Add
-                            </Button>
-                        </Link>
-                    )
-                }
             </Box>
 
-            {selectedBooking && (
-                <Box sx={{ mb: 4 }}>
-                    <Typography variant="h6">{selectedBooking.title}</Typography>
-                    <Typography variant="subtitle1">Ref Code: {selectedBooking.refCode}</Typography>
-                    <Typography variant="subtitle1">By {selectedBooking.organization}</Typography>
-                    <Typography variant="body1">Date: {dayjs(selectedBooking.date).format('DD/MM/YYYY')}</Typography>
-                    <Typography variant="body1">Time: {selectedBooking.time}</Typography>
-                    <Typography variant="body1">Description: {selectedBooking.description}</Typography>
-                    <Typography variant="body1">Pax: {selectedBooking.quantity}</Typography>
-                    {selectedBooking.imageFile && (
-                        <Box sx={{ mt: 2 }}>
-                            <img alt="Event" src={`${import.meta.env.VITE_FILE_BASE_URL}${selectedBooking.imageFile}`} style={{ maxWidth: '100%' }} />
-                        </Box>
-                    )}
-                    <Divider sx={{ my: 2 }} />
-                </Box>
-            )}
-
             <Grid container spacing={2}>
-                {
-                    currentBookings.map((booking, i) => (
-                        <Grid item xs={12} key={booking.id}>
-                            <Card onClick={() => setSelectedBooking(booking)} sx={{ display: 'flex', minHeight: '200px', maxHeight: '400px', overflow: 'auto' }}>
-                                {
-                                    booking.imageFile && (
-                                        <Box sx={{ width: '30%', height: '100%', overflow: 'hidden' }}>
-                                            <img alt="booking" src={`${import.meta.env.VITE_FILE_BASE_URL}${booking.imageFile}`} style={{ width: '100%', height: 'auto' }} />
-                                        </Box>
-                                    )
-                                }
-                                <CardContent sx={{ width: '70%' }}>
-                                    <Box sx={{ display: 'flex', mb: 1 }}>
-                                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                                            {booking.title}
-                                        </Typography>
-                                        {
-                                            user && user.id === booking.userId && (
-                                                <Link to={`/editbooking/${booking.id}`}>
-                                                    <IconButton color="primary" sx={{ padding: '4px' }}>
-                                                        <Edit />
-                                                    </IconButton>
-                                                </Link>
-                                            )
-                                        }
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <AccountCircle sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {booking.user?.name}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <AccessTime sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {dayjs(booking.createdAt).format(global.datetimeFormat)}
-                                        </Typography>
-                                    </Box>
-                                    <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-                                        {booking.description}
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))
-                }
+                {eventList.map((event) => (
+                    <Grid item xs={12} key={event.id}>
+                        <Card onClick={() => getBookingsForEvent(event.id)}>
+                            {event.imageFile && (
+                                <Box className="aspect-ratio-container">
+                                    <img alt="event" src={`${import.meta.env.VITE_FILE_BASE_URL}${event.imageFile}`} />
+                                </Box>
+                            )}
+                            <CardContent>
+                                <Typography variant="h6">{event.title}</Typography>
+                                <Typography>{event.description}</Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
             </Grid>
 
-            {/* Pagination controls */}
-            {totalPages > 1 && (
-                <Box sx={{ mt: 4, textAlign: 'center' }}>
-                    <Button onClick={() => goToPage(1)} disabled={currentPage === 1}>
-                        {'<<'}
-                    </Button>
-                    <Button onClick={prevPage} disabled={currentPage === 1}>
-                        {'<'}
-                    </Button>
-                    {[...Array(totalPages).keys()].map(page => (
-                        <Button key={page + 1} onClick={() => goToPage(page + 1)} disabled={currentPage === page + 1}>
-                            {page + 1}
-                        </Button>
-                    ))}
-                    <Button onClick={nextPage} disabled={currentPage === totalPages}>
-                        {'>'}
-                    </Button>
-                    <Button onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages}>
-                        {'>>'}
-                    </Button>
+            {selectedEvent && (
+                <Box sx={{ mt: 4 }}>
+                    <Typography variant="h5" sx={{ my: 2 }}>
+                        {selectedEvent.eventName}
+                    </Typography>
+                    <Typography variant="body1">{selectedEvent.description}</Typography>
+                    <Typography variant="body2" color="textSecondary">Date: {dayjs(selectedEvent.date).format(global.dateFormat)}</Typography>
+                    <Typography variant="body2" color="textSecondary">Time: {selectedEvent.time}</Typography>
+                    <Typography variant="body2" color="textSecondary">Organization: {selectedEvent.organization}</Typography>
+                    <Typography variant="body2" color="textSecondary">Reference Code: {selectedEvent.refCode}</Typography>
+
+                    <Typography variant="h6" sx={{ mt: 4 }}>
+                        Bookings for {selectedEvent.eventName}
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {bookingList.map((booking) => (
+                            <Grid item xs={12} key={booking.id}>
+                                <Card>
+                                    <CardContent>
+                                        <Box sx={{ display: 'flex', mb: 1 }}>
+                                            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                                                {booking.title}
+                                            </Typography>
+                                            <IconButton color="primary" sx={{ padding: '4px' }} onClick={() => handleEditBooking(booking)}>
+                                                <Edit />
+                                            </IconButton>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }} color="text.secondary">
+                                            <AccountCircle sx={{ mr: 1 }} />
+                                            <Typography>{booking.user?.name}</Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }} color="text.secondary">
+                                            <AccessTime sx={{ mr: 1 }} />
+                                            <Typography>{dayjs(booking.createdAt).format(global.datetimeFormat)}</Typography>
+                                        </Box>
+                                        <Typography sx={{ whiteSpace: 'pre-wrap' }}>{booking.description}</Typography>
+                                        <Typography>Pax: {booking.pax}</Typography>
+                                        <Typography>Date: {dayjs(booking.date).format(global.dateFormat)}</Typography>
+                                        <Typography>Time: {booking.time}</Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
                 </Box>
             )}
+
+            <Dialog open={!!editBooking} onClose={() => setEditBooking(null)}>
+                <DialogTitle>Edit Booking</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        margin="dense"
+                        label="Title"
+                        name="title"
+                        fullWidth
+                        value={editBooking?.title || ''}
+                        onChange={handleEditChange}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Description"
+                        name="description"
+                        fullWidth
+                        multiline
+                        rows={4}
+                        value={editBooking?.description || ''}
+                        onChange={handleEditChange}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Pax"
+                        name="pax"
+                        fullWidth
+                        value={editBooking?.pax || ''}
+                        onChange={handleEditChange}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Date"
+                        name="date"
+                        fullWidth
+                        value={editBooking?.date || ''}
+                        onChange={handleEditChange}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Time"
+                        name="time"
+                        fullWidth
+                        value={editBooking?.time || ''}
+                        onChange={handleEditChange}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEditBooking(null)}>Cancel</Button>
+                    <Button onClick={handleSaveBooking} color="primary">Save</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
