@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { EventFeedback } = require('../models');
+const { User, EventFeedback } = require('../models');
 const { Op } = require("sequelize");
 const yup = require("yup");
+const { validateToken } = require('../middlewares/auth');
 
 // Validation Schema
 const validationSchema = yup.object({
@@ -11,8 +12,9 @@ const validationSchema = yup.object({
     rating: yup.number().min(0).max(5).required('Rating is required')
 });
 
-router.post("/", async (req, res) => {
+router.post("/", validateToken, async (req, res) => {
     let data = req.body;
+    data.userId = req.user.id;
     try {
         data = await validationSchema.validate(data, { abortEarly: false });
         let result = await EventFeedback.create(data);
@@ -34,14 +36,17 @@ router.get("/", async (req, res) => {
     }
     let list = await EventFeedback.findAll({
         where: condition,
-        order: [['createdAt', 'DESC']]
+        order: [['createdAt', 'DESC']],
+        include: { model: User, as: "user", attributes: ['name'] }
     });
     res.json(list);
 });
 
 router.get("/:id", async (req, res) => {
     let id = req.params.id;
-    let eventfeedback = await EventFeedback.findByPk(id);
+    let eventfeedback = await EventFeedback.findByPk(id, {
+        include: { model: User, as: "user", attributes: ['name'] }
+    });
     if (!eventfeedback) {
         res.sendStatus(404);
         return;
@@ -49,11 +54,17 @@ router.get("/:id", async (req, res) => {
     res.json(eventfeedback);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", validateToken, async (req, res) => {
     let id = req.params.id;
     let eventfeedback = await EventFeedback.findByPk(id);
     if (!eventfeedback) {
         res.sendStatus(404);
+        return;
+    }
+    // Check request user id
+    let userId = req.user.id;
+    if (eventfeedback.userId != userId) {
+        res.sendStatus(403);
         return;
     }
     let data = req.body;

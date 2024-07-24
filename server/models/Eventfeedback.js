@@ -27,6 +27,12 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         tableName: 'EventFeedback'
     });
+    EventFeedback.associate = (models) => {
+        EventFeedback.belongsTo(models.User, {
+            foreignKey: "userId",
+            as: 'user'
+        });
+    };
 
     return EventFeedback;
 };

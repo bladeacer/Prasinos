@@ -12,6 +12,10 @@ const validationSchema = yup.object({
     elaboration: yup.string().trim().min(3).max(500).required('Elaboration is required')
 });
 
+const statusSchema = yup.object({
+    status: yup.string().oneOf(['Pending', 'In Progress', 'Resolved'], 'Invalid status').required('Status is required')
+});
+
 router.post("/", async (req, res) => {
     let data = req.body;
     try {
@@ -28,10 +32,12 @@ router.get("/", async (req, res) => {
     let search = req.query.search;
     if (search) {
         condition[Op.or] = [
+            { id: { [Op.like]: `%${search}%` } },
             { name: { [Op.like]: `%${search}%` } },
             { email: { [Op.like]: `%${search}%` } },
             { reporttype: { [Op.like]: `%${search}%` } },
-            { elaboration: { [Op.like]: `%${search}%` } }
+            { elaboration: { [Op.like]: `%${search}%` } },
+            { status: { [Op.like]: `%${search}%` } }
         ];
     }
     let list = await WebsiteFeedback.findAll({
@@ -68,6 +74,29 @@ router.put("/:id", async (req, res) => {
             res.json({ message: "Event Feedback was updated successfully." });
         } else {
             res.status(400).json({ message: `Cannot update Event Feedback with id ${id}.` });
+        }
+    } catch (err) {
+        res.status(400).json({ errors: err.errors });
+    }
+});
+
+router.patch("/:id/status", async (req, res) => {
+    let id = req.params.id;
+    let websitefeedback = await WebsiteFeedback.findByPk(id);
+    if (!websitefeedback) {
+        res.sendStatus(404);
+        return;
+    }
+    let data = req.body;
+    try {
+        data = await statusSchema.validate(data, { abortEarly: false });
+        let num = await WebsiteFeedback.update(data, {
+            where: { id: id }
+        });
+        if (num == 1) {
+            res.json({ message: "Status was updated successfully." });
+        } else {
+            res.status(400).json({ message: `Cannot update status with id ${id}.` });
         }
     } catch (err) {
         res.status(400).json({ errors: err.errors });

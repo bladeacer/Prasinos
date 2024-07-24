@@ -4,6 +4,8 @@ require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'));
 
 // Enable CORS
 app.use(cors({
@@ -21,6 +23,12 @@ app.use("/eventfb", eventfbRoute);
 
 const websitefbRoute = require('./routes/websitefeedback');
 app.use("/websitefb", websitefbRoute);
+
+const fileRoute = require('./routes/file');
+app.use("/file", fileRoute);
+
+const userRoute = require('./routes/user');
+app.use("/user", userRoute);
 
 const db = require('./models');
 db.sequelize.sync({ alter: true })

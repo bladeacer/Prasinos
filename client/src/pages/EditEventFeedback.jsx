@@ -42,7 +42,7 @@ function EditEventFeedback() {
         http.delete(`/eventfb/${id}`)
             .then((res) => {
                 console.log(res.data);
-                navigate("/eventfeedback");
+                navigate("/retrieveeventfb");
             });
     }
 
@@ -58,19 +58,19 @@ function EditEventFeedback() {
                         http.put(`/eventfb/${id}`, values)
                             .then((res) => {
                                 console.log(res.data);
-                                navigate("/eventfeedback");
+                                navigate("/retrieveeventfb");
                             });
                         handleClose();
                     }}
                 >
                     {({ handleSubmit, setFieldValue }) => (
-                        <Modal show={show} onHide={handleClose} centered>
+                        <Modal show={show} onHide={() => navigate('/retrieveeventfb')} centered>
                             <Modal.Header closeButton>
                                 <Modal.Title style={{ marginLeft: "auto" }}>Event Feedback</Modal.Title>
                             </Modal.Header>
                             <Modal.Body>
                                 <FormikForm>
-                                    <Container>
+                                    <Container fluid>
                                         <Form.Group controlId="formRating" className="text-center">
                                             <Form.Label>Please rate your Experience Below</Form.Label>
                                             <div className="d-flex justify-content-center" style={{ marginTop: "-15px" }}>

@@ -28,10 +28,25 @@ module.exports = (sequelize, DataTypes) => {
                 notEmpty: true,
                 len: [3, 500]
             }
+        },
+        status: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+            defaultValue: 'Unresolved'
+        },
+        imageFile: {
+            type: DataTypes.STRING(20)
         }
     }, {
-        tableName: 'WebsiteFeedback'
+        tableName: 'WebsiteFeedback',
     });
+
+    WebsiteFeedback.associate = (models) => {
+        WebsiteFeedback.belongsTo(models.User, {
+            foreignKey: "userId",
+            as: 'user'
+        });
+    };
 
     return WebsiteFeedback;
 };
