@@ -185,7 +185,7 @@ function RetrieveWebsiteFbS() {
           <Clear />
         </IconButton>
       </Box>
-      <Box sx={{ height: 550, width: '100%' }}>
+      <Box sx={{ height: 550, width: '100%', marginTop: "10px" }}>
         <DataGrid
           rows={websitefblist}
           style={{ }}

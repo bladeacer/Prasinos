@@ -187,3 +187,11 @@
   .modal-width {
     min-width: 600px !important;
   }
+
+.MuiTablePagination-displayedRows.css-levciy-MuiTablePagination-displayedRows{
+    margin-bottom: 0px;
+}
+
+.MuiTablePagination-selectLabel.css-pdct74-MuiTablePagination-selectLabel{
+    margin-bottom: 2px
+}
