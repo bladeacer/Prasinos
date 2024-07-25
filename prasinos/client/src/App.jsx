@@ -14,19 +14,25 @@ import { is_accent } from './pages/reusables/accent_parser';
 import { HomeWrapper, BookingWrapper, EventWrapper, RewardsWrapper, SupportWrapper, SelectLogWrapper, EverythingWrapper } from './pages/reusables/wrappers';
 import StaffLogin from './pages/staffLogin';
 import StaffRegister from './pages/staffRegister';
-import StaffHome from './pages/staffHome';
+import StaffHome from './pages/staffHomev2';
 import ResetEndpoint from './pages/ResetEndpoints';
 import Verify from './pages/Verify';
+import VerifyHandler from './pages/Verifyhandler';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [staff, setStaff] = useState(null);
   const [uuid, setUUID] = useState("");
 
+  // UseEffect if current window location is not home
   useEffect(() => {
     if (sessionStorage.getItem("accessToken")) {
       http.get('/user/auth').then((res) => {
         setUser(res.data.user);
+        if (res.data.status === 301) {
+          window.history.pushState({}, document.title, "/verify");
+          window.location.href = window.location.href;
+        }
       });
       http.get('/staff/auth').then((res) => {
         setStaff(res.data.staff);
@@ -37,7 +43,6 @@ export default function App() {
     }
     setUUID(sessionStorage.getItem("resetURL"))
   }, []);
-  // Note to self: Make an everything wrapper 
 
   return (
     <>
@@ -51,7 +56,7 @@ export default function App() {
                 {!user && (
                   Unauthorized(-1)
                 )}
-                {user && (
+                {user && user.verified && !staff && (
                   <ResetEndpoint />
                 )}
               </>} />
@@ -61,7 +66,7 @@ export default function App() {
             <Route path={"/home"} element={HomeWrapper()} />
             <Route path={"/booking"} element={
               <>
-                {is_accent[1] && user && (
+                {is_accent[1] && user && user.verified && (
                   BookingWrapper()
                 )}
                 {is_accent[1] && !user && (
@@ -71,11 +76,11 @@ export default function App() {
             } />
             <Route path={"/events"} element={
               <>
-                {is_accent[2] && user && (
+                {is_accent[2] && user && user.verified && (
                   EventWrapper()
                 )}
                 {is_accent[2] && user && (
-                  Unauthorized (false)
+                  Unauthorized(false)
                 )}
               </>
             } />
@@ -83,7 +88,7 @@ export default function App() {
             <Route path={"/support"} element={SupportWrapper()} />
             <Route path={"/settings"} element={
               <>
-                {is_accent[7] && user && (
+                {is_accent[7] && user && user.verified && (
                   Settings(false, user)
                 )}
                 {is_accent[7] && !user && (
@@ -96,7 +101,7 @@ export default function App() {
                 {is_accent[9] && !user && (
                   Unauthorized(false)
                 )}
-                {is_accent[9] && user && (
+                {is_accent[9] && user && user.verified && (
                   <>
                     {Settings(true, user)}
                     <DangerZone />
@@ -109,7 +114,7 @@ export default function App() {
                 {!user && (
                   EverythingWrapper()
                 )}
-                {user && (
+                {user && user.verified && (
                   Unauthorized(true)
                 )}
               </>
@@ -119,7 +124,7 @@ export default function App() {
                 {!user && (
                   EverythingWrapper()
                 )}
-                {user && (
+                {user && user.verified && (
                   Unauthorized(true)
                 )}
               </>
@@ -129,7 +134,7 @@ export default function App() {
                 {!user && (
                   Unauthorized(-1)
                 )}
-                {user && (
+                {user && user.verified && (
                   <EditUser />
                 )}
               </>
@@ -144,14 +149,35 @@ export default function App() {
                 {!user && (
                   Unauthorized(-1)
                 )}
-                {user && (
+                {user && user.verified && (
                   <ResetPassword />
                 )}
               </>
             } />
-            {/* Catch-all route */}
-            <Route path="*" element={Unauthorized(-1)} />
-
+            <Route path={"/verify"} element={
+              <>
+                {user && !user.verified && (
+                  <>
+                    <Verify />
+                  </>
+                )}
+                {((user && user.verified) || !user) && (
+                  Unauthorized(-1)
+                )}
+              </>
+            } />
+            <Route path={"/verifyhandler"} element={
+              <>
+                {user && !user.verified && (
+                  <>
+                    <VerifyHandler />
+                  </>
+                )}
+                {user && user.verified && (
+                  Unauthorized(-1)
+                )}
+              </>
+            } />
           </Routes>
         </Router>
       </UserContext.Provider>
@@ -159,9 +185,6 @@ export default function App() {
       <StaffContext.Provider value={{ staff, setStaff }}>
         <Router>
           <Routes>
-            <Route path="/:uuid" element={<></>} />
-            <Route path={"/"} element={<></>} />
-
             <Route path={"/staffLogin"} element={
               <>
                 {!staff && (
@@ -184,16 +207,14 @@ export default function App() {
             } />
             <Route path={"/staffHome"} element={
               <>
-                {!staff && (
-                  Unauthorized(2)
-                )}
                 {staff && (
                   <StaffHome />
                 )}
+                {is_accent[15] && !staff && (
+                  Unauthorized(-2)
+                )}
               </>
             } />
-            <Route path="*" element={Unauthorized(-1)} />
-
           </Routes>
         </Router>
       </StaffContext.Provider>
@@ -201,20 +222,11 @@ export default function App() {
       <Router>
         <Routes>
           {/* Apparently you can get usercontext values outside of the user context provider */}
-          <Route path="/:uuid" element={<></>} />
-
           <Route path={"/"} element={
             <>
-              {!user && !staff && (
-                SelectLogWrapper()
-              )}
-              {(user || staff) && (
-                Unauthorized(true)
-              )}
+              {SelectLogWrapper()}
             </>
           } />
-          <Route path="*" element={Unauthorized(-1)} />
-
         </Routes>
       </Router>
     </>

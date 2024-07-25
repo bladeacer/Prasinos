@@ -30,8 +30,8 @@ export default function ResetPassword() {
             data.password = data.password.trim();
             http.put("/user/reset", data)
                 .then((res) => {
-                    window.location = "/home";
-                    sessionStorage.clear();
+                    sessionStorage.removeItem("accessToken");
+                    window.location = "/hoem"
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

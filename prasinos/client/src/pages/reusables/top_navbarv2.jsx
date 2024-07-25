@@ -2,7 +2,7 @@ import * as React from 'react';
 import imgUrl from '../../assets/prasinos-logo.jpg';
 import { Box, Button } from '@mui/material';
 import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { UserContext } from '../../contexts/Contexts';
 import url from '../../assets/dimmed-logo.png'
 import { SidebarData } from './SideBarData';
@@ -13,7 +13,6 @@ import { logout } from './logout';
 
 export default function TopNavbarV2() {
     const { user } = useContext(UserContext);
-
     const [sidebar, setSidebar] = useState(false);
     const showSidebar = () => setSidebar(!sidebar);
 
@@ -21,7 +20,7 @@ export default function TopNavbarV2() {
         <>
             <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-                {((!goof_check && !is_accent[5] && !is_accent[6] && !is_accent[9] && !is_accent[10] && !is_accent[11])) && (
+                {!goof_check && !is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[10] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && (
                     <>
                         <ImageBox
                             component="img"

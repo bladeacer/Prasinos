@@ -1,11 +1,11 @@
 const logout = () => {
     sessionStorage.removeItem("accessToken");
-    window.location = "/home";
+    window.location ="/home";
 };
 
 const staffLogout = () => {
     sessionStorage.removeItem("accessToken");
-    window.location = "/staffLogin";
+    window.location ="/staffLogin"
 }
 
 export { logout, staffLogout };

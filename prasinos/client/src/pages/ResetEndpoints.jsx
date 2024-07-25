@@ -6,9 +6,6 @@ import http from '../http';
 import { useState, useEffect } from "react";
 
 export default function ResetEndpoint() {
-    const host = window.location.host;
-    const message_url = `${host}/reset`;
-    const publicKey = import.meta.env.EMAIL_JS_PUBLIC_KEY;
     const [user, setUser] = useState({
         name: "",
         email: ""
@@ -18,6 +15,9 @@ export default function ResetEndpoint() {
         if (sessionStorage.getItem("accessToken")) {
             http.get('/user/auth').then((res) => {
                 setUser(res.data.user);
+                if (res.data.status == 301) {
+                    navigate("/verify", { replace: true })
+                }
             });
         }
     }, []);

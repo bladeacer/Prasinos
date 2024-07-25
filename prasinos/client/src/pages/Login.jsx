@@ -6,13 +6,14 @@ import * as yup from 'yup';
 import http from '../http';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { UserContext, StaffContext } from '../contexts/Contexts';
+import { StaffContext, UserContext } from '../contexts/Contexts';
 import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/components/login_components';
 
 
 function Login() {
     const navigate = useNavigate();
     const { setUser } = useContext(UserContext);
+    const {setStaff} = useContext(StaffContext);
 
     const formik = useFormik({
         initialValues: {
@@ -35,11 +36,16 @@ function Login() {
             if (sessionStorage.getItem("accessToken")) {
                 sessionStorage.removeItem("accessToken");
             }
+
             http.post("/user/login", data)
                 .then((res) => {
                     sessionStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
-                    navigate("/home", { replace: true });
+                    setStaff(null);
+                    if (res.data.status !== 301) {
+                        navigate("/home", { replace: true });
+                        window.location.reload();
+                    }
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);
@@ -51,14 +57,15 @@ function Login() {
         <>
             <LoginWrapper>
                 <LogBox>
-                    <Typography sx={{ my: 2, fontSize: '1.7em' }}>
-                        Welcome back!
-                    </Typography>
-                    <Typography sx={{ fontSize: '1.15em' }}>
-                        Enter your credientials to login
-                    </Typography>
                     <Box component="form" sx={{ maxWidth: '500px' }}
                         onSubmit={formik.handleSubmit}>
+
+                        <Typography sx={{ my: 2, fontSize: '1.7em' }}>
+                            Welcome back!
+                        </Typography>
+                        <Typography sx={{ fontSize: '1.15em' }}>
+                            Enter your credientials to login
+                        </Typography>
 
                         <Typography variant='h6' sx={{ mt: 4 }}>Email address</Typography>
                         <TextField
@@ -91,8 +98,11 @@ function Login() {
                     </Box>
                     <ToastContainer />
                     <CustBox>
-                        {/* <Button sx={{opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': {opacity: 1}, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center'}} href="/home">Click on me to go back to the home page!</Button> */}
+                        <Box sx={{ zIndex: '4', width: '100%', height: '100%', '&:hover': { backdropFilter: 'blur(9px)' } }}>
+                            <Typography sx={{ position: 'relative', opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': { opacity: 1 }, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center', transform: 'translate(0%, 35%)' }}>You will be logged out once the verification process is complete</Typography>
+                        </Box>
                     </CustBox>
+
                     <CloseButton href="/home">X</CloseButton>
                 </LogBox>
             </LoginWrapper>

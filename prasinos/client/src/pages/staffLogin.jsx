@@ -13,6 +13,7 @@ import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/componen
 export default function StaffLogin() {
     const navigate = useNavigate();
     const { setStaff } = useContext(StaffContext);
+    const {setUser} = useContext(UserContext)
 
     const formik = useFormik({
         initialValues: {
@@ -39,7 +40,9 @@ export default function StaffLogin() {
                 .then((res) => {
                     sessionStorage.setItem("accessToken", res.data.accessToken);
                     setStaff(res.data.staff);
-                    navigate("/staffHome", { replace: true });
+                    setUser(null);
+                    navigate("/staffHome", {replace: true});
+                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

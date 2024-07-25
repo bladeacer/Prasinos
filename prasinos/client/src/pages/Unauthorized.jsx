@@ -7,7 +7,7 @@ export default function Unauthorized(is_in) {
         <>
             <CustomContainer>
 
-                {is_in == false && (
+                {is_in === false && (
                     <>
                         <Typography variant="h3" sx={{ mb: 3 }}>Access Denied :(</Typography>
                         <Typography sx={{ fontSize: '20px' }}>You need to login to view this page.</Typography>
@@ -15,7 +15,7 @@ export default function Unauthorized(is_in) {
                         <Button href="/home">Click here to homepage.</Button>
                     </>
                 )}
-                {is_in == true && (
+                {is_in === true && (
                     <>
                         <Typography variant="h3" sx={{ mb: 3 }}>Session Expiry</Typography>
                         <Typography sx={{ fontSize: '20px' }}>You need to logout to view this page.</Typography>
@@ -23,7 +23,7 @@ export default function Unauthorized(is_in) {
                         <Button href="/home">Click here to homepage.</Button>
                     </>
                 )}
-                {is_in == -1 && (
+                {is_in === -1 && (
                     <>
                         <Typography variant="h3" sx={{ mb: 3 }}>404 Not Found</Typography>
                         <Typography sx={{ fontSize: '20px' }}>This page does not exist, or you do not have the required permissions to view it.</Typography>
@@ -31,15 +31,14 @@ export default function Unauthorized(is_in) {
                     </>
                 )}
 
-                {/* Staff unauthorized interface */}
-                {is_in == 2 && (
+                {is_in === 2 && (
                     <>
                         <Typography variant="h3" sx={{ mb: 3 }}>Access Denied :(</Typography>
                         <Typography sx={{ fontSize: '20px' }}>You need to login to view this page.</Typography>
                         <Button href="/staffLogin">Click here if you want to login.</Button>
                     </>
                 )}
-                {is_in == 3 && (
+                {is_in === 3 && (
                     <>
                         <Typography variant="h3" sx={{ mb: 3 }}>Session Expiry</Typography>
                         <Typography sx={{ fontSize: '20px' }}>You need to logout to view this page.</Typography>
@@ -47,9 +46,9 @@ export default function Unauthorized(is_in) {
                     </>
                 )}
 
-                {is_in == -2 && (
+                {is_in === -2 &&  (
                     <>
-                        <Typography variant="h3" sx={{ mb: 3 }}>Access Denied :(</Typography>
+                        <Typography variant="h3" sx={{ mb: 3 }}>404 Not Found</Typography>
                         <Typography sx={{ fontSize: '20px' }}>This page does not exist, or you do not have the required permissions to view it.</Typography>
                         <Button href="/staffLogin">Click here to login.</Button>
                     </>

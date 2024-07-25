@@ -1,8 +1,10 @@
 let goof_check = false;
 let is_accent = [true, false, false, false, false,
     false, false, false, false, false,
-    false, false
+    false, false, false, false, false,
+    false
 ];
+// Add staff login, staff register and staff home accent parsers
 function falseAll() {
     is_accent.fill(false);
 }
@@ -18,8 +20,6 @@ function setRegister(){
     is_accent[6] = true;
     is_accent[5] = false;
 }
-const editRegex = /^\/edit\/.*$/; // Matches "/edit/" followed by anything
-const resetRegex = /^\/reset\/.*$/; // Matches "/reset/" followed by anything
 
 const accentRouteMap = new Map([
     ['/home', () => setAccentN(0)],
@@ -34,6 +34,10 @@ const accentRouteMap = new Map([
     ['/dangerZone', () => setAccentN(9)],
     ['/edit', () => setAccentN(10)],
     ['/reset', () => setAccentN(11)],
+    ['/verify', () => setAccentN(12)],
+    ['/staffLogin', () => setAccentN(13)],
+    ['/staffRegister', () => setAccentN(14)],
+    ['/staffHome', () => setAccentN(15)],
     // ... (add entries for other accent routes and function calls)
     ['*', () => { // Default function for unmatched paths
         falseAll();
@@ -43,57 +47,14 @@ const accentRouteMap = new Map([
 let pathname = window.location.pathname.toString();
 
 const setAccentFromPath = (path) => {
-    accentRouteMap.get(path)(); // Call the function associated with the path (or default)
+    const setAccentFunction = accentRouteMap.get(path);
+
+    // Check if a function exists for the path
+    if (setAccentFunction) {
+      setAccentFunction(); // Call the function if it exists
+    }
 };
 
 setAccentFromPath(pathname);
-
-// if (window.location.pathname.toString() == "/home") {
-//     falseAll();
-//     is_accent[0] = true;
-// }
-// else if (window.location.pathname.toString() == "/booking") {
-//     falseAll();
-//     is_accent[1] = true;
-// }
-// else if (window.location.pathname.toString() == "/events") {
-//     falseAll();
-//     is_accent[2] = true;
-// }
-// else if (window.location.pathname.toString() == "/rewards") {
-//     falseAll();
-//     is_accent[3] = true;
-// }
-// else if (window.location.pathname.toString() == "/support") {
-//     falseAll();
-//     is_accent[4] = true;
-// }
-// else if (window.location.pathname.toString() == "/login") {
-//     is_accent[5] = true;
-//     is_accent[6] = false;
-// } else if (window.location.pathname.toString() == "/register") {
-//     is_accent[6] = true;
-//     is_accent[5] = false;
-// } else if (window.location.pathname.toString() == "/settings") {
-//     falseAll();
-//     is_accent[7] = true;
-// } else if (window.location.pathname.toString() == "/") {
-//     falseAll();
-//     is_accent[8] = true;
-//     goof_check = true;
-// } else if (window.location.pathname.toString() == "/dangerZone") {
-//     falseAll();
-//     is_accent[9] = true;
-// } else if (window.location.pathname.toString().match("/edit/.*")) {
-//     falseAll();
-//     is_accent[10] = true;
-// } else if (window.location.pathname.toString().match("/reset/.*")) {
-//     falseAll();
-//     is_accent[11] = true;
-// }
-// else {
-//     falseAll();
-//     goof_check = true;
-// }
 
 export { is_accent, goof_check };

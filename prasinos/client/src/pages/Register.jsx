@@ -51,6 +51,7 @@ function Register() {
             http.post("/user/register", data)
                 .then((res) => {
                     navigate("/login", { replace: true });
+                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

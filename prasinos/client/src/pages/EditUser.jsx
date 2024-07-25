@@ -20,6 +20,9 @@ export default function EditUser() {
     useEffect(() => {
         http.get("/user/auth").then((res) => {
             setUser(res.data.user);
+            if (res.data.status == 301) {
+                navigate("/verify", { replace: true })
+            }
             // setImageFile(res.data.imageFile);
             setLoading(false);
         });
