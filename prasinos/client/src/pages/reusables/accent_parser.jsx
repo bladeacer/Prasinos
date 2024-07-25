@@ -1,8 +1,9 @@
-let goof_check = false;
-let is_accent = [true, false, false, false, false,
+
+let is_accent = [
+    true, false, false, false, false,
     false, false, false, false, false,
     false, false, false, false, false,
-    false
+    false, false, false, 
 ];
 // Add staff login, staff register and staff home accent parsers
 function falseAll() {
@@ -12,11 +13,11 @@ function setAccentN(n) {
     falseAll();
     is_accent[n] = true;
 }
-function setLogin(){
+function setLogin() {
     is_accent[5] = true;
     is_accent[6] = false;
 }
-function setRegister(){
+function setRegister() {
     is_accent[6] = true;
     is_accent[5] = false;
 }
@@ -38,11 +39,9 @@ const accentRouteMap = new Map([
     ['/staffLogin', () => setAccentN(13)],
     ['/staffRegister', () => setAccentN(14)],
     ['/staffHome', () => setAccentN(15)],
-    // ... (add entries for other accent routes and function calls)
-    ['*', () => { // Default function for unmatched paths
-        falseAll();
-        goof_check = true;
-    }]
+    ['/:uuid', () => setAccentN(16)],
+    ['/verifyhandler', () => setAccentN(17)],
+    ['*', () => falseAll()]
 ]);
 let pathname = window.location.pathname.toString();
 
@@ -51,10 +50,11 @@ const setAccentFromPath = (path) => {
 
     // Check if a function exists for the path
     if (setAccentFunction) {
-      setAccentFunction(); // Call the function if it exists
+        setAccentFunction(); // Call the function if it exists
     }
 };
 
 setAccentFromPath(pathname);
+let goof_check = is_accent.includes(true);
 
-export { is_accent, goof_check };
+export { is_accent, goof_check, accentRouteMap };

@@ -10,5 +10,6 @@ export const CustomContainer = styled(Container)({
     // border: "1px solid black",
     overflowX: 'hidden',
     textAlign: 'center',
-    textTransform: 'unset'
+    textTransform: 'unset',
+    zIndex: '-1000'
 })

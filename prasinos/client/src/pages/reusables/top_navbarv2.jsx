@@ -20,7 +20,7 @@ export default function TopNavbarV2() {
         <>
             <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-                {!goof_check && !is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[10] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && (
+                {!is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[10] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && (
                     <>
                         <ImageBox
                             component="img"
@@ -119,7 +119,7 @@ export default function TopNavbarV2() {
                         </CustomAppBar>
                     </>
                 )}
-                {!goof_check && (is_accent[5] || is_accent[6] || is_accent[9] || is_accent[10] || is_accent[11]) && (
+                {(is_accent[5] || is_accent[6] || is_accent[9] || is_accent[10] || is_accent[11]) && (
                     <>
                         <ImageBox
                             component="img"

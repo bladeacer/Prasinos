@@ -42,7 +42,6 @@ export default function StaffLogin() {
                     setStaff(res.data.staff);
                     setUser(null);
                     navigate("/staffHome", {replace: true});
-                    window.location.reload();
                 })
                 .catch(function (err) {
                     toast.error(`${err.response.data.message}`);

@@ -8,14 +8,12 @@ import { staffLogout } from "./reusables/logout";
 import { CustButton, SignUpButton, CustButtonsStack } from "./reusables/components/navbar_components";
 import { useState, useEffect } from 'react';
 import http from '../http'
-
+import dayjs from 'dayjs'
 
 export default function StaffHome() {
     const { staff } = useContext(StaffContext);
     const [userList, setUserList] = useState([]);
     const [search, setSearch] = useState('');
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [selectedRow, setSelectedRow] = useState(null);
 
     const onSearchChange = (e) => {
         setSearch(e.target.value);
@@ -65,14 +63,17 @@ export default function StaffHome() {
             )
         },
         { field: 'email', headerName: <span className="boldHeader">Email</span>, flex: 1.5 },
-        { field: 'createdAt', headerName: <span className="boldHeader">Created At</span>, flex: 1 },
-        // { field: 'points', headerName: <span className="boldHeader">Points</span>, flex: 1 },
-        // { field: 'tier', headerName: <span className="boldHeader">Tier</span>, flex: 1 }
+        {
+            field: 'createdAt', headerName: <span className="boldHeader">Created At</span>, flex: 1,
+            valueFormatter: (params) => dayjs(params).format("DD MMM YYYY")
+        },
+        { field: 'points', headerName: <span className="boldHeader">Points</span>, flex: 1 },
+        { field: 'tier', headerName: <span className="boldHeader">Tier</span>, flex: 1 }
     ];
 
     return (
         <>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 5, paddingTop: "40px", marginLeft: "12.25vw", width: "75vw" }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 5, paddingTop: "40px", marginLeft: "12.5vw", width: "75vw" }}>
 
                 <CustButtonsStack sx={{ display: 'unset', right: '20vw' }}>
                     <CustButton href="/staffSettings" sx={{ mr: 2 }}>{staff.name}</CustButton>
@@ -91,7 +92,7 @@ export default function StaffHome() {
                     <Clear />
                 </IconButton>
 
-                <Typography variant="h5" sx={{ ml: 20, fontWeight: "bold", textAlign: "center", fontSize: "35px" }} className="title">
+                <Typography variant="h5" sx={{ marginLeft: '5vw', mb: '120px', fontWeight: "bold", textAlign: "center", fontSize: "35px" }} className="title">
                     View users
                 </Typography>
             </Box>
@@ -106,7 +107,7 @@ export default function StaffHome() {
                             paginationModel: { page: 0, pageSize: 10 },
                         },
                     }}
-                    pageSizeOptions={[10, 25]}
+                    pageSizeOptions={[5, 10, 20, 25, 50]}
                     disableSelectionOnClick
                     getRowClassName={(params) =>
                         params.indexRelativeToCurrentPage % 2 === 0 ? 'even-row' : 'odd-row'
