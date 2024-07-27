@@ -23,6 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         values: ["Bronze", "Silver", "Gold"],
         allowNull: false,
       },
+      lastSpinDate: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
+      hasSpun: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      }
     },
     {
       tableName: "users",

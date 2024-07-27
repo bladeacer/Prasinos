@@ -3,11 +3,11 @@ module.exports = (sequelize, DataTypes) => {
     "Reward",
     {
       name: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING,
         allowNull: false,
       },
       description: {
-        type: DataTypes.TEXT,
+        type: DataTypes.STRING,
         allowNull: false,
       },
       points_needed: {
@@ -15,12 +15,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       tier_required: {
-        type: DataTypes.ENUM,
-        values: ["Bronze", "Silver", "Gold"],
+        type: DataTypes.STRING,
         allowNull: false,
-      },      
+      },
       imageFile: {
         type: DataTypes.STRING,
+        allowNull: true,
+      },
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
     },
     {

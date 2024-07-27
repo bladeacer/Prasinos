@@ -161,9 +161,9 @@ function Reward() {
           onClose={handleSortMenuClose}
         >
           <MenuItem onClick={() => handleSortChange("name")}>
-            Sort by Alphabetical Order
+            Alphabetical Order
           </MenuItem>
-          <MenuItem onClick={() => handleSortChange("id")}>Sort by ID</MenuItem>
+          <MenuItem onClick={() => handleSortChange("id")}>ID</MenuItem>
         </Menu>
       </Box>
 

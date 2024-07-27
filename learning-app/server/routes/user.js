@@ -5,13 +5,16 @@ const { User, Reward } = require("../models");
 const yup = require("yup");
 const { sign } = require("jsonwebtoken");
 const { validateToken } = require("../middlewares/auth");
+const {
+  getUserById,
+  updateUserPoints,
+} = require("../controllers/userController");
 require("dotenv").config();
 
 router.post("/register", async (req, res) => {
-  let data = req.body;
+  const data = req.body;
 
-  // Validate request body
-  let validationSchema = yup.object({
+  const validationSchema = yup.object({
     name: yup
       .string()
       .trim()
@@ -34,25 +37,24 @@ router.post("/register", async (req, res) => {
         "password at least 1 letter and 1 number"
       ),
   });
+
   try {
-    data = await validationSchema.validate(data, { abortEarly: false });
-    // Process valid data
-    // Check email
-    let user = await User.findOne({
-      where: { email: data.email },
+    const validatedData = await validationSchema.validate(data, {
+      abortEarly: false,
     });
-    if (user) {
-      res.status(400).json({ message: "Email already exists." });
-      return;
+
+    const existingUser = await User.findOne({
+      where: { email: validatedData.email },
+    });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists." });
     }
 
-    // Hash passowrd
-    data.password = await bcrypt.hash(data.password, 10);
+    validatedData.password = await bcrypt.hash(validatedData.password, 10);
 
-    // Create user
-    let result = await User.create(data);
+    const newUser = await User.create(validatedData);
     res.json({
-      message: `Email ${result.email} was registered successfully.`,
+      message: `Email ${newUser.email} was registered successfully.`,
     });
   } catch (err) {
     res.status(400).json({ errors: err.errors });
@@ -60,10 +62,9 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  let data = req.body;
+  const data = req.body;
 
-  // Validate request body
-  let validationSchema = yup.object({
+  const validationSchema = yup.object({
     email: yup.string().trim().lowercase().email().max(50).required(),
     password: yup
       .string()
@@ -76,71 +77,59 @@ router.post("/login", async (req, res) => {
         "password at least 1 letter and 1 number"
       ),
   });
+
   try {
-    data = await validationSchema.validate(data, { abortEarly: false });
-    // Process valid data
-    // Check email and password
-    let errorMsg = "Email or password is not correct.";
-    let user = await User.findOne({
-      where: { email: data.email },
+    const validatedData = await validationSchema.validate(data, {
+      abortEarly: false,
     });
-    if (!user) {
-      res.status(400).json({ message: errorMsg });
-      return;
+
+    const user = await User.findOne({ where: { email: validatedData.email } });
+    if (
+      !user ||
+      !(await bcrypt.compare(validatedData.password, user.password))
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Email or password is not correct." });
     }
-    let match = await bcrypt.compare(data.password, user.password);
-    if (!match) {
-      res.status(400).json({ message: errorMsg });
-      return;
-    }
-    // Return user info
-    let userInfo = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    };
-    let accessToken = sign(userInfo, process.env.APP_SECRET, {
+
+    const userInfo = { id: user.id, email: user.email, name: user.name };
+    const accessToken = sign(userInfo, process.env.APP_SECRET, {
       expiresIn: process.env.TOKEN_EXPIRES_IN,
     });
-    res.json({
-      accessToken: accessToken,
-      user: userInfo,
-    });
+
+    res.json({ accessToken, user: userInfo });
   } catch (err) {
     res.status(400).json({ errors: err.errors });
   }
 });
 
 router.get("/auth", validateToken, (req, res) => {
-  let userInfo = {
+  const userInfo = {
     id: req.user.id,
     email: req.user.email,
     name: req.user.name,
   };
-  res.json({
-    user: userInfo,
-  });
+  res.json({ user: userInfo });
 });
 
 router.get("/user-rewards/:userid", validateToken, async (req, res) => {
-  let userId = req.params.userid;
+  const userId = req.params.userid;
 
   try {
-    let user = await User.findByPk(userId, {
+    const user = await User.findByPk(userId, {
       attributes: ["id", "name", "email", "points", "tier"],
       include: [
         {
           model: Reward,
-          as: "rewards", // Ensure this alias matches the one in User model association
+          as: "rewards",
           attributes: ["id", "name", "points_needed", "tier_required"],
         },
       ],
     });
 
-    // Check if user is not found
     if (!user) {
-      res.sendStatus(404);
-      return;
+      return res.sendStatus(404);
     }
 
     res.json(user);
@@ -149,34 +138,39 @@ router.get("/user-rewards/:userid", validateToken, async (req, res) => {
   }
 });
 
-router.put("/user-rewards/:userid", async (req, res) => {
-  const userId = req.params.userid;
-  const { points, tier } = req.body;
-
-  // Validate tier value
-  if (tier > 3 || tier < 0) {
-    return res.status(400).json({ message: "Tier must be between 0 and 3." });
-  }
+router.put("/user-rewards/:id", async (req, res) => {
+  const userId = req.params.id;
+  const { points, tier } = req.body; // Removed `setPoints`
 
   try {
-    // Find user by id
-    let user = await User.findByPk(userId);
+    const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Update user's points and tier
-    user.points = points;
-    user.tier = tier;
+    // Update user's points with the provided value
+    if (points !== undefined) {
+      user.points = points; // Set points directly to the provided value
+    }
+
+    // Update tier if provided
+    if (tier) {
+      if (["Bronze", "Silver", "Gold"].includes(tier)) {
+        user.tier = tier;
+      } else {
+        return res.status(400).json({ message: "Invalid tier value." });
+      }
+    }
+
     await user.save();
 
-    res.json({ message: "User data updated successfully.", user });
-  } catch (err) {
-    console.error("Error updating user data:", err);
+    res.json({ message: "User points updated successfully.", user });
+  } catch (error) {
+    console.error("Error updating user points:", error);
     res
       .status(500)
-      .json({ message: "Failed to update user data.", error: err.message });
+      .json({ message: "Error updating user points.", error: error.message });
   }
 });
 

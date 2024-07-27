@@ -6,7 +6,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 // Enable CORS
 app.use(
@@ -24,10 +24,10 @@ app.get("/", (req, res) => {
 const rewardRoute = require("./routes/reward");
 app.use("/reward", rewardRoute);
 
-const userRoute = require('./routes/user');
+const userRoute = require("./routes/user");
 app.use("/user", userRoute);
 
-const fileRoute = require('./routes/file');
+const fileRoute = require("./routes/file");
 app.use("/file", fileRoute);
 
 const db = require("./models");

@@ -1,45 +1,3 @@
-// reward.js (model)
-module.exports = (sequelize, DataTypes) => {
-  const Reward = sequelize.define(
-    "Reward",
-    {
-      name: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      points_needed: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      tier_required: {
-        type: DataTypes.ENUM,
-        values: ["Bronze", "Silver", "Gold"],
-        allowNull: false,
-      },
-      imageFile: {
-        type: DataTypes.STRING(20),
-      },
-    },
-    {
-      tableName: "rewards",
-    }
-  );
-
-  Reward.associate = (models) => {
-    Reward.belongsTo(models.User, {
-      foreignKey: "userId",
-      as: "user",
-    });
-  };
-
-  return Reward;
-};
-
-// reward.js (route)
 const { User, Reward } = require("../models");
 const { Op } = require("sequelize");
 const { validateToken } = require("../middlewares/auth");
@@ -48,31 +6,11 @@ const yup = require("yup");
 const express = require("express");
 const router = express.Router();
 
-router.get("/claimed-rewards/:userid", async (req, res) => {
-  const userid = req.params.userid;
-
-  try {
-    // Fetch claimed rewards for the specified user
-    const claimedRewards = await Reward.findAll({
-      where: { userId: userid },
-      order: [["createdAt", "DESC"]],
-      include: { model: User, as: "user", attributes: ["name"] }, // Include user information if needed
-    });
-
-    res.json(claimedRewards);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Create a reward
 router.post("/", validateToken, async (req, res) => {
-  let data = req.body;
+  const data = req.body;
   data.userId = req.user.id;
 
-  // Validate request body
-  let validationSchema = yup.object({
+  const validationSchema = yup.object({
     name: yup.string().trim().min(3).max(100).required(),
     description: yup.string().trim().min(3).max(500).required(),
     points_needed: yup.number().integer().positive().required(),
@@ -80,31 +18,31 @@ router.post("/", validateToken, async (req, res) => {
   });
 
   try {
-    data = await validationSchema.validate(data, { abortEarly: false });
-    // Process valid data
-    let result = await Reward.create(data);
+    const validatedData = await validationSchema.validate(data, {
+      abortEarly: false,
+    });
+    const result = await Reward.create(validatedData);
     res.json(result);
   } catch (err) {
     res.status(400).json({ errors: err.errors });
   }
 });
 
-// Get all rewards
 router.get("/", async (req, res) => {
-  let condition = {};
-  let search = req.query.search;
-
-  if (search) {
-    condition[Op.or] = [
-      { name: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } },
-      { points_needed: { [Op.like]: `%${search}%` } },
-      { tier_required: { [Op.like]: `%${search}%` } },
-    ];
-  }
+  const search = req.query.search;
+  const condition = search
+    ? {
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+          { points_needed: { [Op.like]: `%${search}%` } },
+          { tier_required: { [Op.like]: `%${search}%` } },
+        ],
+      }
+    : {};
 
   try {
-    let list = await Reward.findAll({
+    const list = await Reward.findAll({
       where: condition,
       order: [["createdAt", "DESC"]],
       include: { model: User, as: "user", attributes: ["name"] },
@@ -117,18 +55,16 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a single reward by id
 router.get("/:id", async (req, res) => {
-  let id = req.params.id;
+  const id = req.params.id;
 
   try {
-    let reward = await Reward.findByPk(id, {
+    const reward = await Reward.findByPk(id, {
       include: { model: User, as: "user", attributes: ["name"] },
     });
 
     if (!reward) {
-      res.sendStatus(404);
-      return;
+      return res.sendStatus(404);
     }
 
     res.json(reward);
@@ -138,37 +74,27 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update a reward by id
 router.put("/:id", validateToken, async (req, res) => {
-  let id = req.params.id;
+  const id = req.params.id;
+  const data = req.body;
+
+  const validationSchema = yup.object({
+    name: yup.string().trim().min(3).max(100).required(),
+    description: yup.string().trim().min(3).max(500).required(),
+    points_needed: yup.number().integer().positive().required(),
+    tier_required: yup.string().oneOf(["Bronze", "Silver", "Gold"]).required(),
+    imageFile: yup.string().nullable(),
+  });
 
   try {
-    // Check reward exists
-    let reward = await Reward.findByPk(id);
-    if (!reward) {
-      res.sendStatus(404);
-      return;
-    }
-
-    let data = req.body;
-
-    // Validate request body
-    let validationSchema = yup.object({
-      name: yup.string().trim().min(3).max(100).required(),
-      description: yup.string().trim().min(3).max(500).required(),
-      points_needed: yup.number().integer().positive().required(),
-      tier_required: yup
-        .string()
-        .oneOf(["Bronze", "Silver", "Gold"])
-        .required(),
-      imageFile: yup.string().nullable(),
-    });
-
     await validationSchema.validate(data);
 
-    // Update reward
-    await reward.update(data);
+    const reward = await Reward.findByPk(id);
+    if (!reward) {
+      return res.sendStatus(404);
+    }
 
+    await reward.update(data);
     res.sendStatus(200);
   } catch (error) {
     console.error("Error updating reward:", error);
@@ -176,28 +102,22 @@ router.put("/:id", validateToken, async (req, res) => {
   }
 });
 
-// Delete a reward by id
 router.delete("/:id", validateToken, async (req, res) => {
-  let id = req.params.id;
+  const id = req.params.id;
 
   try {
-    // Check reward exists
-    let reward = await Reward.findByPk(id);
+    const reward = await Reward.findByPk(id);
     if (!reward) {
-      res.sendStatus(404);
-      return;
+      return res.sendStatus(404);
     }
 
-    // Check request user id
-    let userId = req.user.id;
+    const userId = req.user.id;
     if (reward.userId !== userId) {
-      res.sendStatus(403);
-      return;
+      return res.sendStatus(403);
     }
 
-    let num = await Reward.destroy({ where: { id: id } });
-
-    if (num == 1) {
+    const num = await Reward.destroy({ where: { id } });
+    if (num === 1) {
       res.json({ message: "Reward was deleted successfully." });
     } else {
       res.status(400).json({ message: `Cannot delete reward with id ${id}.` });
