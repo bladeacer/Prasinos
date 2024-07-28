@@ -27,6 +27,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import http from "../http";
 import UserContext from "../contexts/UserContext";
+import InfoIcon from "@mui/icons-material/Info";
+import Confetti from "react-confetti";
 import Wheel from "./Wheel";
 
 function UserRewards() {
@@ -34,7 +36,7 @@ function UserRewards() {
   const { user } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState(0);
-  const [tier, setTier] = useState("Bronze");
+  const [tier, setTier] = useState("");
   const [progress, setProgress] = useState(0);
   const [pointsNeeded, setPointsNeeded] = useState(0);
   const [eligibleRewards, setEligibleRewards] = useState([]);
@@ -49,16 +51,33 @@ function UserRewards() {
   const [canPlay, setCanPlay] = useState(true); // Manage game access
   const [spinnerLoading, setSpinnerLoading] = useState(false);
   const [openHelp, setOpenHelp] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false); // Add this
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [TierOpen, setTierOpen] = useState(false);
 
-  // Timer states
-  const [timer, setTimer] = useState(null);
-  const [remainingTime, setRemainingTime] = useState(0);
+  const [redeemedRewards, setRedeemedRewards] = useState([]);
+  const [redeeming, setRedeeming] = useState(false);
+
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const [popupOpen, setPopupOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const rewardsPerPage = 5;
+
+  const handleClick = () => {
+    setShowConfetti(true);
+    setTimeout(() => {
+      setShowConfetti(false);
+    }, 5000); // Confetti lasts for 5 seconds
+  };
+
+  const handleTierClickOpen = () => {
+    setTierOpen(true);
+  };
+
+  const handleTierClose = () => {
+    setTierOpen(false);
+  };
 
   const handleChangePage = (event, value) => {
     setPage(value);
@@ -77,6 +96,14 @@ function UserRewards() {
   };
 
   useEffect(() => {
+    if (tier === "Silver" || tier === "Gold") {
+      setCanPlay(true);
+    } else {
+      setCanPlay(false);
+    }
+  }, [tier]);
+
+  useEffect(() => {
     if (userid) {
       console.log(`Fetching user data for user ID: ${userid}`);
       http
@@ -86,7 +113,6 @@ function UserRewards() {
           setPoints(res.data.points);
           setTier(res.data.tier);
           setLoading(false);
-          checkGameAccess(res.data.lastSpinDate);
         })
         .catch((err) => {
           console.error("Error fetching user data:", err);
@@ -98,15 +124,6 @@ function UserRewards() {
       setLoading(false);
     }
   }, [userid]);
-
-  useEffect(() => {
-    if (remainingTime > 0) {
-      const timer = setInterval(() => {
-        setRemainingTime((prevTime) => Math.max(prevTime - 1000, 0));
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [remainingTime]);
 
   useEffect(() => {
     let pointsNeededToNextTier;
@@ -128,26 +145,15 @@ function UserRewards() {
       tier === "Gold" ? 100 : (points / pointsNeededToNextTier) * 100;
 
     setProgress(nextTierProgress > 100 ? 100 : nextTierProgress);
-    setPointsNeeded(tier === "Gold" ? 0 : pointsNeededToNextTier - points);
+    setPointsNeeded(
+      tier === "Gold" ? 0 : Math.max(pointsNeededToNextTier - points, 0)
+    );
   }, [points, tier]);
 
   const tierCheck = {
     Bronze: points >= 5000,
     Silver: points >= 15000,
     Gold: points >= 15000, // Once Gold is reached, stay in Gold
-  };
-
-  const checkGameAccess = (lastSpinDate) => {
-    const today = new Date().toISOString().split("T")[0];
-    const lastSpin = lastSpinDate
-      ? new Date(lastSpinDate).toISOString().split("T")[0]
-      : "";
-
-    if (today === lastSpin) {
-      setCanPlay(false);
-    } else {
-      setCanPlay(true);
-    }
   };
 
   const handlePlayGame = () => {
@@ -166,6 +172,7 @@ function UserRewards() {
         setGameOpen(false);
         toast.success(`You win ${rewardPoints} points!`);
         handlePointsUpdate(res.data.points);
+        fetchUserData(); // Update user data to check for tier change
       })
       .catch((err) => {
         console.error("Error updating user points:", err);
@@ -207,6 +214,42 @@ function UserRewards() {
       });
   };
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await http.get(`/user/user-rewards/${userid}`);
+        const userData = response.data;
+        setPoints(userData.points);
+        setTier(userData.tier);
+        setRedeemedRewards(userData.redeemedRewards || []); // Set redeemed rewards from server response
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("Failed to fetch user data.");
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [userid]);
+
+  useEffect(() => {
+    // Determine the tier based on points, but don't decrease if the user has moved up
+    if (points > 15000) {
+      setTier((prevTier) =>
+        prevTier === "Bronze" || prevTier === "Silver" ? "Gold" : prevTier
+      );
+    } else if (points > 5000) {
+      setTier((prevTier) => (prevTier === "Bronze" ? "Silver" : prevTier));
+    } else {
+      setTier((prevTier) => (prevTier === "Bronze" ? "Bronze" : prevTier));
+    }
+  }, [points]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [points]);
+
   const handleUpdatePoints = (newPoints) => {
     http
       .put(`/user/user-rewards/${userid}`, { points: newPoints, tier: tier })
@@ -226,8 +269,7 @@ function UserRewards() {
       const response = await http.get(`/user/user-rewards/${userid}`);
       const data = response.data;
       setPoints(data.points);
-      setTier(data.tier);
-      // Optionally refresh other state or perform additional logic here
+      return data.tier; // Return the tier value
     } catch (error) {
       console.error("Failed to fetch user data:", error);
     }
@@ -263,26 +305,44 @@ function UserRewards() {
     setSelectedReward(null);
   };
 
-  const handlePurchaseReward = () => {
+  const handlePurchaseReward = async () => {
     if (selectedReward && points >= selectedReward.points_needed) {
-      // Update points on the server
-      http
-        .put(`/user/user-rewards/${userid}`, {
+      setRedeeming(true);
+      try {
+        // Update points and redeemed rewards on the server
+        const updatedRewards = [
+          ...redeemedRewards,
+          {
+            id: selectedReward.id,
+            name: selectedReward.name,
+            description: selectedReward.description,
+            points_needed: selectedReward.points_needed,
+            tier: tier,
+            time_redeemed: new Date(),
+          },
+        ];
+
+        await http.put(`/user/user-rewards/${userid}`, {
           points: points - selectedReward.points_needed,
           tier: tier,
-        })
-        .then(() => {
-          // Fetch updated user data after successful purchase
-          fetchUserData();
-          toast.success(
-            `Reward "${selectedReward.name}" purchased successfully!`
-          );
-          handleClose();
-        })
-        .catch((err) => {
-          console.error("Error updating points:", err);
-          toast.error("Failed to update points.");
+          redeemedRewards: updatedRewards,
         });
+
+        // Add the redeemed reward to the list of redeemed rewards locally
+        setRedeemedRewards(updatedRewards);
+
+        // Fetch updated user data after successful purchase
+        fetchUserData();
+        toast.success(
+          `Reward "${selectedReward.name}" purchased successfully!`
+        );
+        handleClose();
+      } catch (err) {
+        console.error("Error updating points:", err);
+        toast.error("Failed to update points.");
+      } finally {
+        setRedeeming(false);
+      }
     } else {
       toast.error("Insufficient points to purchase this reward.");
     }
@@ -379,26 +439,70 @@ function UserRewards() {
   return (
     <Box>
       <Box>
-        <Typography variant="h4" sx={{ my: 2 }}>
-          Hello, {user.name}
-        </Typography>
+        <Box>
+          <Box sx={{ mb: 2, mt: 4 }}>
+            <Box sx={{ textAlign: "left", mb: 2 }}>
+              <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1 }}>
+                Hello, {user.name}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Typography
+                  variant="body1"
+                  color="text.primary"
+                  sx={{ mb: 2, display: "flex", alignItems: "center", mb: 1 }}
+                >
+                  <b>Tier:</b>
+                  <span style={{ marginLeft: "0.5rem" }}>{tier}</span>
+                  <IconButton onClick={handleTierClickOpen} sx={{ ml: 1 }}>
+                    <InfoIcon fontSize="inherit" />
+                  </IconButton>
+                </Typography>
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                textAlign: "center",
+                padding: "1rem",
+                borderRadius: "8px",
+                backgroundColor: "rgba(255, 255, 255, 0)",
+                transition: "background-color 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                },
+                mx: "auto",
+                maxWidth: "fit-content",
+              }}
+              onClick={handleClick}
+            >
+              <Typography variant="body1" color="text.primary" sx={{ mb: 1 }}>
+                Available Points:
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "4.5rem",
+                  }}
+                >
+                  {points}
+                </span>
+              </Typography>
+              {showConfetti && <Confetti />}
+            </Box>
+          </Box>
+        </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-            <b>Tier:</b> {tier}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {hasReachedTier && "✅"}
-          </Typography>
           <Box sx={{ flexGrow: 1 }}>
             <LinearProgress
               variant="determinate"
               value={progress}
-              sx={{ borderRadius: 10, height: 10 }}
+              sx={{ borderRadius: 20, height: 20 }}
             />
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-            {trophyIcon}
+            {tierTrophies[tier]}
           </Typography>
         </Box>
 
@@ -406,15 +510,14 @@ function UserRewards() {
           {tier !== "Gold" && (
             <Grid item>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Current Points: <b>{points}</b> | Points needed to next tier:{" "}
-                <b>{pointsNeeded}</b>
+                Points needed to next tier: <b>{pointsNeeded}</b>
               </Typography>
             </Grid>
           )}
           {tier === "Gold" && (
             <Grid item>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Your Points: <b>{points}</b> | You are in the highest tier!
+                You are in the highest tier!
               </Typography>
             </Grid>
           )}
@@ -439,14 +542,6 @@ function UserRewards() {
               Spin the Wheel
             </Button>
           )}
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate(`/claimed-rewards/${userid}`)}
-          >
-            View Claimed Rewards
-          </Button>
         </Box>
 
         {gameOpen && (
@@ -480,7 +575,6 @@ function UserRewards() {
                     <li>
                       Your points will be updated based on the wheel's result.
                     </li>
-                    <li>Note: You can only spin the wheel once per day.</li>
                   </ol>
                   <Typography variant="body2" color="text.secondary">
                     Good luck and have fun!
@@ -560,9 +654,57 @@ function UserRewards() {
           </Dialog>
         )}
 
+        <Typography variant="h5" sx={{ my: 2 }}>
+          Tier Benefits for {tier}
+        </Typography>
+
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          {/* Card for Tier Benefits */}
+          <Grid item xs={12} sm={6} md={4}>
+            <Card
+              sx={{
+                borderRadius: 2,
+                p: 2,
+                border: "4px solid green",
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6">🎉{tier} Tier</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {tierBenefits[tier]}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          {/* Tier Benefits Card */}
+          <Grid item xs={12} sm={6} md={4}>
+            <Card
+              sx={{
+                borderRadius: 2,
+                p: 2,
+                border: `4px solid ${tier === "Bronze" ? "red" : "green"}`,
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6">
+                  {tier === "Bronze" ? "❌🎮 Game" : "🎮 Game"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {tier === "Bronze"
+                    ? "You did not unlock 'Spin the Wheel' game. Must reach Silver or Gold Tier."
+                    : "You unlocked 'Spin the Wheel' game! Earn more points!"}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
         <Box
-          sx={{ display: "flex", alignItems: "center", mb: 2, width: "100%" }}
+          sx={{ display: "flex", alignItems: "center", width: "100%", mb: 2 }}
         >
+          <Typography variant="h5" sx={{ my: 0, mr: 2 }}>
+            Eligible Rewards
+          </Typography>
           <Box sx={{ flexGrow: 1 }} />
           <Input
             value={search}
@@ -615,32 +757,6 @@ function UserRewards() {
             </MenuItem>
           </Menu>
         </Box>
-        <Typography variant="h5" sx={{ my: 2 }}>
-          Tier Benefits for {tier}
-        </Typography>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={4}>
-            <Card
-              sx={{
-                borderRadius: 2,
-                p: 2,
-                border: "4px solid green",
-              }}
-            >
-              <CardContent>
-                <Typography variant="h6">🎉{tier} Tier</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {tierBenefits[tier]}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        <Typography variant="h5" sx={{ my: 2 }}>
-          Eligible Rewards
-        </Typography>
 
         <Typography variant="body1" sx={{ mb: 2 }}>
           Showing {startIndex + 1} - {Math.min(endIndex, sortedRewards.length)}{" "}
@@ -760,6 +876,49 @@ function UserRewards() {
           )}
         </Box>
 
+        <Typography variant="h5" sx={{ my: 2 }}>
+          Redeemed Rewards
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Note: Redeemed Rewards are not stored permanently!
+        </Typography>
+        <Grid container spacing={2} sx={{ mb: 4, justifyContent: "center" }}>
+          {redeemedRewards.length > 0 ? (
+            redeemedRewards.map((reward) => (
+              <Grid item xs={12} sm={6} md={4} key={reward.id}>
+                <Card sx={{ height: "100%" }}>
+                  <CardContent>
+                    <Typography variant="h6" component="div">
+                      {reward.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {reward.description}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <b>Points:</b> {reward.points_needed}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <b>Tier:</b> {reward.tier}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <b>Time Redeemed:</b>{" "}
+                      {reward.time_redeemed.toLocaleString()}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  No Redeemed Rewards.
+                </Typography>
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+
         <Dialog open={open} onClose={handleClose}>
           <DialogTitle>Confirm Purchase</DialogTitle>
           <DialogContent>
@@ -782,16 +941,53 @@ function UserRewards() {
               </Typography>{" "}
             </DialogContentText>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} sx={{ color: "red" }}>
-              Cancel
+          <DialogActions
+            sx={{ display: "flex", justifyContent: "space-between" }}
+          >
+            <Button
+              onClick={handleClose}
+              sx={{
+                color: "white",
+                backgroundColor: "red",
+                "&:hover": {
+                  backgroundColor: "darkred",
+                },
+                flex: 1,
+                marginRight: "8px", // Adjust spacing as needed
+              }}
+            >
+              <b>Cancel</b>
             </Button>
             <Button
               onClick={handlePurchaseReward}
               variant="contained"
               color="primary"
+              sx={{
+                flex: 1,
+                marginLeft: "8px", // Adjust spacing as needed
+              }}
             >
-              Redeem
+              <b>Redeem</b>
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={TierOpen} onClose={handleTierClose}>
+          <DialogTitle>Tier Information</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              There are 3 tiers: Bronze, Silver, and Gold. <br />
+              <br />
+              Earn points to reach the next tier. <br />
+              <br />
+              Bronze: 0 to 5000 points <br />
+              Silver: 5000 to 15000 points <br />
+              Gold: 15000 points and above.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleTierClose} color="primary">
+              Close
             </Button>
           </DialogActions>
         </Dialog>

@@ -91,6 +91,10 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
               <Route path="/user-rewards/:userid" element={<UserRewards />} />
+              <Route
+                path="/user-rewards/:userid/redeemed-rewards"
+                element={<UserRewards />}
+              />
             </Routes>
           </Container>
         </ThemeProvider>

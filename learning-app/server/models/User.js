@@ -23,14 +23,6 @@ module.exports = (sequelize, DataTypes) => {
         values: ["Bronze", "Silver", "Gold"],
         allowNull: false,
       },
-      lastSpinDate: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-      },
-      hasSpun: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      }
     },
     {
       tableName: "users",
@@ -43,6 +35,12 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: "cascade",
       as: "rewards",
     });
+
+    User.hasMany(models.RedeemedRewards, {
+      foreignKey: "userId",
+      as: "redeemedRewards",
+    });
   };
+
   return User;
 };

@@ -72,17 +72,7 @@ const Wheel = ({ onFinish }) => {
   const [spinning, setSpinning] = useState(false);
   const [reward, setReward] = useState(null);
   const [rotation, setRotation] = useState(0);
-  const [hasSpun, setHasSpun] = useState(
-    localStorage.getItem("hasSpun") === "true"
-  );
-  const [lastSpinDate, setLastSpinDate] = useState(
-    localStorage.getItem("lastSpinDate")
-  );
-
-  useEffect(() => {
-    localStorage.setItem("hasSpun", hasSpun);
-    localStorage.setItem("lastSpinDate", lastSpinDate);
-  }, [hasSpun, lastSpinDate]);
+  const [showButton, setShowButton] = useState(true);
 
   useEffect(() => {
     if (reward !== null) {
@@ -104,8 +94,7 @@ const Wheel = ({ onFinish }) => {
   const handleSpin = () => {
     if (spinning) return;
     setSpinning(true);
-    setHasSpun(true);
-    setLastSpinDate(new Date());
+    setShowButton(false);
 
     // Determine the number of rotations and the final angle
     const additionalRotation = Math.floor(Math.random() * 360);
@@ -116,16 +105,6 @@ const Wheel = ({ onFinish }) => {
     const totalSegments = colors.length;
     const randomIndex = Math.floor(Math.random() * totalSegments);
     setReward({ index: randomIndex });
-  };
-
-  const checkIfSpunToday = () => {
-    const today = new Date();
-    const lastSpin = new Date(lastSpinDate);
-    return (
-      lastSpin.getDate() === today.getDate() &&
-      lastSpin.getMonth() === today.getMonth() &&
-      lastSpin.getFullYear() === today.getFullYear()
-    );
   };
 
   // Create conic-gradient background for the wheel
@@ -140,16 +119,6 @@ const Wheel = ({ onFinish }) => {
 
   return (
     <Box>
-      {!hasSpun || !checkIfSpunToday() ? (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSpin}
-          disabled={spinning}
-        >
-          Spin
-        </Button>
-      ) : null}
       <WheelContainer>
         {spinning && <Spinner />}
         <WheelContent
@@ -158,6 +127,11 @@ const Wheel = ({ onFinish }) => {
         />
         <Pointer />
       </WheelContainer>
+      {showButton && (
+        <Button variant="contained" color="primary" onClick={handleSpin}>
+          Spin
+        </Button>
+      )}
     </Box>
   );
 };
