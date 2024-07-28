@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, TextField, Button, Grid, Checkbox, FormControl, FormLabel, FormControlLabel, FormHelperText, FormGroup, RadioGroup, Radio, InputLabel, Select, MenuItem, IconButton, Link, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
-import { Add, Delete, Upload } from '@mui/icons-material';
+import { Add, Delete, Upload, Remove } from '@mui/icons-material';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -13,7 +13,8 @@ import { useContext } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserContext from '../contexts/UserContext';
-import axios from 'axios';
+import communityClubs from '../../../server/CommunityClubs.json';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 function AddEvent() {
     const { user } = useContext(UserContext);
@@ -22,7 +23,15 @@ function AddEvent() {
     const [imagePreview, setImagePreview] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
     const [open, setOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [lat, setLat] = useState(null);
+    const [lng, setLng] = useState(null);
+    const [selectedLocation, setSelectedLocation] = useState(null);
     const [apiKey] = useState('AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE');
+
+    const readClubs = communityClubs.filter(club =>
+        club.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const validate = values => {
         const errors = {};
@@ -88,6 +97,8 @@ function AddEvent() {
                 // Ensure imageFile is set if it exists
                 if (imageFile) {
                     data.eventImage = imageFile;
+                } else {
+                    data.eventImage = 'prasinos_no_image.jpg';
                 }
 
                 // Ensure supportingDocs is set
@@ -295,6 +306,10 @@ function AddEvent() {
         setSupportingDocs([...supportingDocs, { file: null, filename: '', notes: '' }]);
     };
 
+    const handleRemoveSupportingDoc = () => {
+        setSupportingDocs(supportingDocs.slice(0, supportingDocs.length - 1));
+    };
+
     const onFileChange = (e) => {
         let file = e.target.files[0];
         if (file) {
@@ -353,89 +368,170 @@ function AddEvent() {
         fetchLocationSuggestions(value);
     };
 
-    const handleSuggestionClick = (suggestion) => {
-        formik.setFieldValue('eventLocation', suggestion.description);
-        setSuggestions([]); // Clear suggestions after selection
-    };
+    const fetchPlaceDetails = async (placeId) => {
+        if (!placeId) return;
+        const apiUrl = `/maps/api/place/details/json?placeid=${placeId}&key=${apiKey}`;
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                console.error(`HTTP error: ${response.status} ${response.statusText}`);
+                return;
+            }
+            const contentType = response.headers.get("Content-Type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.error("Received non-JSON response:", await response.text());
+                return;
+            }
+            const data = await response.json();
+            console.log('Fetched data:', data); // Add this line to log the fetched data
+            setSelectedLocation(data.result);
+            const { lat, lng } = data.result.geometry.location;
+            setLat(lat);
+            setLng(lng);
 
+            if (lat === null || lng === null) {
+                return null;
+            }
+            
+        console.log('Place details:', data.result);
+    } catch (error) {
+        console.error('Error fetching place details:', error);
+    }
+};
 
-    return (
-        <Box>
-            <Typography variant="h5" sx={{ my: 2 }}>
-                Add Event
-            </Typography>
-            <Box component="form" onSubmit={formik.handleSubmit}>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={6} lg={8}>
-                        <FormControl component="fieldset" fullWidth margin="dense">
-                            <FormLabel component="legend">Event Activity</FormLabel>
-                            <RadioGroup
-                                aria-label="eventActivity"
-                                name="eventActivity"
-                                value={formik.values.eventActivity}
-                                onChange={handleEventActivityChange}
+const handleSuggestionClick = async (suggestion) => {
+    console.log('handleSuggestionClick called with:', suggestion);
+    const locationDetails = await fetchPlaceDetails(suggestion.place_id);
+
+    // Ensure eventLocation is a string
+    const eventLocation = suggestion.description;
+    formik.setFieldValue('eventLocation', eventLocation);
+
+    console.log('Setting eventLocation to:', eventLocation);
+    console.log('Location details:', locationDetails);
+
+    // Use locationDetails if needed
+    if (locationDetails) {
+        // Example: Set additional form fields based on locationDetails
+        formik.setFieldValue('formattedAddress', locationDetails.formatted_address);
+        formik.setFieldValue('placeId', locationDetails.place_id);
+        // Add more fields as needed
+    }
+
+    setSuggestions([]); // Clear suggestions after selection
+};
+
+return (
+    <Box>
+        <Typography variant="h5" sx={{ my: 2 }}>
+            Add Event
+        </Typography>
+        <Box component="form" onSubmit={formik.handleSubmit}>
+            <Grid container spacing={2}>
+                <Grid item xs={12} md={6} lg={8}>
+                    <FormControl component="fieldset" fullWidth margin="dense">
+                        <FormLabel component="legend">Event Activity</FormLabel>
+                        <RadioGroup
+                            aria-label="eventActivity"
+                            name="eventActivity"
+                            value={formik.values.eventActivity}
+                            onChange={handleEventActivityChange}
+                            onBlur={formik.handleBlur}
+                            row
+                        >
+                            <FormControlLabel value="treePlanting" control={<Radio />} label="Tree Planting" />
+                            <FormControlLabel value="beachRecycling" control={<Radio />} label="Beach Recycling" />
+                            <FormControlLabel value="pickingUpLitter" control={<Radio />} label="Picking Up Litter" />
+                            <FormControlLabel value="others" control={<Radio />} label="Others (Please specify)" />
+                        </RadioGroup>
+                        {formik.values.eventActivity === 'others' && (
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                autoComplete="off"
+                                label="Please specify"
+                                name="otherEventActivity"
+                                value={formik.values.otherEventActivity}
+                                onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                row
-                            >
-                                <FormControlLabel value="treePlanting" control={<Radio />} label="Tree Planting" />
-                                <FormControlLabel value="beachRecycling" control={<Radio />} label="Beach Recycling" />
-                                <FormControlLabel value="pickingUpLitter" control={<Radio />} label="Picking Up Litter" />
-                                <FormControlLabel value="others" control={<Radio />} label="Others (Please specify)" />
-                            </RadioGroup>
-                            {formik.values.eventActivity === 'others' && (
-                                <TextField
-                                    fullWidth
-                                    margin="dense"
-                                    autoComplete="off"
-                                    label="Please specify"
-                                    name="otherEventActivity"
-                                    value={formik.values.otherEventActivity}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.otherEventActivity && Boolean(formik.errors.otherEventActivity)}
-                                    helperText={formik.touched.otherEventActivity && formik.errors.otherEventActivity}
-                                />
-                            )}
-                            {formik.touched.eventActivity && formik.errors.eventActivity && (
-                                <Typography variant="caption" color="error">
-                                    {formik.errors.eventActivity}
-                                </Typography>
-                            )}
-                        </FormControl>
-                        <TextField
-                            fullWidth margin="dense" autoComplete="off"
-                            label="Event Name"
-                            name="eventName"
-                            value={formik.values.eventName}
+                                error={formik.touched.otherEventActivity && Boolean(formik.errors.otherEventActivity)}
+                                helperText={formik.touched.otherEventActivity && formik.errors.otherEventActivity}
+                            />
+                        )}
+                        {formik.touched.eventActivity && formik.errors.eventActivity && (
+                            <Typography variant="caption" color="error">
+                                {formik.errors.eventActivity}
+                            </Typography>
+                        )}
+                    </FormControl>
+                    <TextField
+                        fullWidth margin="dense" autoComplete="off"
+                        label="Event Name"
+                        name="eventName"
+                        value={formik.values.eventName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.eventName && Boolean(formik.errors.eventName)}
+                        helperText={formik.touched.eventName && formik.errors.eventName}
+                    />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel
+                            style={{
+                                color: formik.touched.eventOrganizerType && formik.errors.eventOrganizerType ? '#d42f2f' : '#666666',
+                                backgroundColor: formik.touched.eventOrganizerType ? 'white' : 'transparent', // Adjust based on your form's design
+                                padding: '0 5px',
+                                margin: '-1px 0',
+                            }}
+                        >
+                            Event Organizer Type
+                        </InputLabel>
+                        <Select
+                            name="eventOrganizerType"
+                            value={formik.values.eventOrganizerType}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            error={formik.touched.eventName && Boolean(formik.errors.eventName)}
-                            helperText={formik.touched.eventName && formik.errors.eventName}
-                        />
+                            error={formik.touched.eventOrganizerType && Boolean(formik.errors.eventOrganizerType)}
+                        >
+                            <MenuItem value="individual">Individual</MenuItem>
+                            <MenuItem value="organization">Organization</MenuItem>
+                            <MenuItem value="community club">Community Club</MenuItem>
+                            <MenuItem value="government agency">Government Agency</MenuItem>
+                        </Select>
+                        {formik.touched.eventOrganizerType && formik.errors.eventOrganizerType && (
+                            <FormHelperText error>{formik.errors.eventOrganizerType}</FormHelperText>
+                        )}
+                    </FormControl>
+
+                    {formik.values.eventOrganizerType === "community club" ? (
                         <FormControl fullWidth margin="dense">
                             <InputLabel
                                 style={{
-                                    color: formik.touched.eventOrganizerType && formik.errors.eventOrganizerType ? '#d42f2f' : '#666666'
+                                    color: formik.touched.eventOrganizerType && formik.errors.eventOrganizerType ? '#d42f2f' : '#666666',
+                                    backgroundColor: formik.touched.eventOrganizerType ? 'white' : 'transparent', // Adjust based on your form's design
+                                    padding: '0 5px',
+                                    margin: '-1px 0',
                                 }}
                             >
-                                Event Organizer Type
+                                Event Organizer Name
                             </InputLabel>
                             <Select
-                                name="eventOrganizerType"
-                                value={formik.values.eventOrganizerType}
+                                name="eventOrganizerName"
+                                value={formik.values.eventOrganizerName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                error={formik.touched.eventOrganizerType && Boolean(formik.errors.eventOrganizerType)}
+                                error={formik.touched.eventOrganizerName && Boolean(formik.errors.eventOrganizerName)}
                             >
-                                <MenuItem value="individual">Individual</MenuItem>
-                                <MenuItem value="organization">Organization</MenuItem>
-                                <MenuItem value="community club">Community Club</MenuItem>
-                                <MenuItem value="government agency">Government Agency</MenuItem>
+                                {readClubs.map((club, index) => (
+                                    <MenuItem key={index} value={club}>
+                                        {club}
+                                    </MenuItem>
+                                ))}
                             </Select>
-                            {formik.touched.eventOrganizerType && formik.errors.eventOrganizerType && (
-                                <FormHelperText error>{formik.errors.eventOrganizerType}</FormHelperText>
+                            {formik.touched.eventOrganizerName && formik.errors.eventOrganizerName && (
+                                <FormHelperText error>{formik.errors.eventOrganizerName}</FormHelperText>
                             )}
                         </FormControl>
+                    ) : (
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Event Organizer Name"
@@ -446,390 +542,426 @@ function AddEvent() {
                             error={formik.touched.eventOrganizerName && Boolean(formik.errors.eventOrganizerName)}
                             helperText={formik.touched.eventOrganizerName && formik.errors.eventOrganizerName}
                         />
-                        <FormControl component="fieldset" fullWidth margin="dense">
-                            <FormLabel component="legend">Event Scope</FormLabel>
-                            <RadioGroup
-                                aria-label="eventScope"
-                                name="eventScope"
-                                value={formik.values.eventScope}
+                    )}
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={6}>
+                            <FormControl component="fieldset" fullWidth margin="dense">
+                                <FormLabel component="legend">Event Scope</FormLabel>
+                                <RadioGroup
+                                    aria-label="eventScope"
+                                    name="eventScope"
+                                    value={formik.values.eventScope}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    row
+                                >
+                                    <FormControlLabel value="open" control={<Radio />} label="Open to public" />
+                                    <FormControlLabel value="invitation" control={<Radio />} label="By invitation" />
+                                </RadioGroup>
+                                {formik.touched.eventScope && formik.errors.eventScope && (
+                                    <Typography variant="caption" color="error">
+                                        {formik.errors.eventScope}
+                                    </Typography>
+                                )}
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                autoComplete="off"
+                                label="Expected Attendance"
+                                name="expectedAttendance"
+                                type="number"
+                                value={formik.values.expectedAttendance}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                row
-                            >
-                                <FormControlLabel value="open" control={<Radio />} label="Open to public" />
-                                <FormControlLabel value="invitiation" control={<Radio />} label="By invitation" />
-                            </RadioGroup>
-                            {formik.touched.eventScope && formik.errors.eventScope && (
-                                <Typography variant="caption" color="error">
-                                    {formik.errors.eventScope}
-                                </Typography>
-                            )}
-                        </FormControl>
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            label="Expected Attendance"
-                            name="expectedAttendance"
-                            type="number"
-                            value={formik.values.expectedAttendance}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.expectedAttendance && Boolean(formik.errors.expectedAttendance)}
-                            helperText={formik.touched.expectedAttendance && formik.errors.expectedAttendance}
-                            inputProps={{
-                                min: "2", // Minimum value allowed is 2
-                            }}
-                        />
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            type="date"
-                            label="Event Start Date"
-                            name="eventStartDate"
-                            InputLabelProps={{ shrink: true }}
-                            value={formik.values.eventStartDate}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.eventStartDate && Boolean(formik.errors.eventStartDate)}
-                            helperText={formik.touched.eventStartDate && formik.errors.eventStartDate}
-                        />
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            type="date"
-                            label="Event End Date"
-                            name="eventEndDate"
-                            InputLabelProps={{ shrink: true }}
-                            value={formik.values.eventEndDate}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.eventEndDate && Boolean(formik.errors.eventEndDate)}
-                            helperText={formik.touched.eventEndDate && formik.errors.eventEndDate}
-                        />
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            type="time"
-                            label="Event Start Time"
-                            name="eventStartTime"
-                            InputLabelProps={{ shrink: true }}
-                            value={formik.values.eventStartTime}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.eventStartTime && Boolean(formik.errors.eventStartTime)}
-                            helperText={formik.touched.eventStartTime && formik.errors.eventStartTime}
-                        />
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            type="time"
-                            label="Event End Time"
-                            name="eventEndTime"
-                            InputLabelProps={{ shrink: true }}
-                            value={formik.values.eventEndTime}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.eventEndTime && Boolean(formik.errors.eventEndTime)}
-                            helperText={formik.touched.eventEndTime && formik.errors.eventEndTime}
-                        />
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="on"
-                            label="Event Location"
-                            name="eventLocation"
-                            value={formik.values.eventLocation}
-                            onChange={handleInputChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.eventLocation && Boolean(formik.errors.eventLocation)}
-                            helperText={formik.touched.eventLocation && formik.errors.eventLocation}
-                        />
-                        {Array.isArray(suggestions) && suggestions.length > 0 && (
-                            <List>
-                                {suggestions.map((suggestion) => (
-                                    <ListItem button key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
-                                        <ListItemText primary={suggestion.description} />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                        <TextField
-                            fullWidth margin="dense" autoComplete="off"
-                            multiline minRows={2}
-                            label="Event Description"
-                            name="eventDescription"
-                            value={formik.values.eventDescription}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.eventDescription && Boolean(formik.errors.eventDescription)}
-                            helperText={formik.touched.eventDescription && formik.errors.eventDescription}
-                        />
-                        {/* Funding Requests */}
-                        <Box>
-                            <Typography variant="h6">Funding Requests</Typography>
-                            <Button onClick={() => formik.setFieldValue('fundingRequests', [...formik.values.fundingRequests, { item: '', purpose: '', source: '', amountRequested: '' }])}>
-                                Add
-                            </Button>
-                            {formik.values.fundingRequests.map((request, index) => (
-                                <Grid container spacing={2} key={index} alignItems="center">
-                                    <Grid item xs={3}>
-                                        <TextField
-                                            label="Item"
-                                            name={`fundingRequests[${index}].item`}
-                                            value={request.item}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            fullWidth
-                                        />
-                                    </Grid>
-                                    <Grid item xs={3}>
-                                        <TextField
-                                            label="Purpose"
-                                            name={`fundingRequests[${index}].purpose`}
-                                            value={request.purpose}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            fullWidth
-                                        />
-                                    </Grid>
-                                    <Grid item xs={3}>
-                                        <TextField
-                                            label="Source"
-                                            name={`fundingRequests[${index}].source`}
-                                            value={request.source}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            fullWidth
-                                        />
-                                    </Grid>
-                                    <Grid item xs={2}>
-                                        <TextField
-                                            label="Amount Requested"
-                                            name={`fundingRequests[${index}].amountRequested`}
-                                            value={request.amountRequested}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            fullWidth
-                                        />
-                                    </Grid>
-                                    <Grid item xs={1}>
-                                        <IconButton onClick={() => handleDeleteRequest(index)}>
-                                            <Delete />
-                                        </IconButton>
-                                    </Grid>
-                                </Grid>
+                                error={formik.touched.expectedAttendance && Boolean(formik.errors.expectedAttendance)}
+                                helperText={formik.touched.expectedAttendance && formik.errors.expectedAttendance}
+                                inputProps={{
+                                    min: "2", // Minimum value allowed is 2
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                autoComplete="off"
+                                type="date"
+                                label="Event Start Date"
+                                name="eventStartDate"
+                                InputLabelProps={{ shrink: true }}
+                                value={formik.values.eventStartDate}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.eventStartDate && Boolean(formik.errors.eventStartDate)}
+                                helperText={formik.touched.eventStartDate && formik.errors.eventStartDate}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                autoComplete="off"
+                                type="date"
+                                label="Event End Date"
+                                name="eventEndDate"
+                                InputLabelProps={{ shrink: true }}
+                                value={formik.values.eventEndDate}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.eventEndDate && Boolean(formik.errors.eventEndDate)}
+                                helperText={formik.touched.eventEndDate && formik.errors.eventEndDate}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                autoComplete="off"
+                                type="time"
+                                label="Event Start Time"
+                                name="eventStartTime"
+                                InputLabelProps={{ shrink: true }}
+                                value={formik.values.eventStartTime}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.eventStartTime && Boolean(formik.errors.eventStartTime)}
+                                helperText={formik.touched.eventStartTime && formik.errors.eventStartTime}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                autoComplete="off"
+                                type="time"
+                                label="Event End Time"
+                                name="eventEndTime"
+                                InputLabelProps={{ shrink: true }}
+                                value={formik.values.eventEndTime}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.eventEndTime && Boolean(formik.errors.eventEndTime)}
+                                helperText={formik.touched.eventEndTime && formik.errors.eventEndTime}
+                            />
+                        </Grid>
+                    </Grid>
+                    <TextField
+                        fullWidth
+                        margin="dense"
+                        autoComplete="on"
+                        label="Event Location"
+                        name="eventLocation"
+                        value={formik.values.eventLocation}
+                        onChange={handleInputChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.eventLocation && Boolean(formik.errors.eventLocation)}
+                        helperText={formik.touched.eventLocation && formik.errors.eventLocation}
+                    />
+                    {Array.isArray(suggestions) && suggestions.length > 0 && (
+                        <List>
+                            {suggestions.map((suggestion) => (
+                                <ListItem button key={suggestion.place_id} onClick={() => handleSuggestionClick(suggestion)}>
+                                    <ListItemText primary={suggestion.description} />
+                                </ListItem>
                             ))}
-                        </Box>
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            type="number"
-                            label="Participation Fee"
-                            name="participationFee"
-                            value={formik.values.participationFee}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.participationFee && Boolean(formik.errors.participationFee)}
-                            helperText={formik.touched.participationFee && formik.errors.participationFee}
-                            inputProps={{
-                                min: "0", // Ensures the input does not accept negative numbers
-                            }}
-                        />
-                        <Typography variant="h6">Contact Information</Typography>
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            label="Email"
-                            name="email"
-                            value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.email && Boolean(formik.errors.email)}
-                            helperText={formik.touched.email && formik.errors.email}
-                            InputProps={{
-                                readOnly: formik.values.useAccountInfo,
-                                style: { backgroundColor: formik.values.useAccountInfo ? '#f0f0f0' : 'inherit' } // Gray background if readOnly
-                            }}
-                        />
-                        <TextField
-                            fullWidth
-                            margin="dense"
-                            autoComplete="off"
-                            label="Contact Number"
-                            name="contactNumber"
-                            value={formik.values.contactNumber}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.contactNumber && Boolean(formik.errors.contactNumber)}
-                            helperText={formik.touched.contactNumber && formik.errors.contactNumber}
-                            InputProps={{
-                                readOnly: formik.values.useAccountInfo,
-                                style: { backgroundColor: formik.values.useAccountInfo ? '#f0f0f0' : 'inherit' } // Gray background if readOnly
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <Typography variant="h6" style={{ margin: 0 }}>
-                                Supporting Documents
-                            </Typography>
-                            <IconButton onClick={handleAddSupportingDoc} style={{ marginLeft: '8px' }}>
-                                <Add />
-                            </IconButton>
-                        </div>
-                        {supportingDocs.map((doc, index) => (
-                            <Box key={index} display="flex" flexDirection="column" mb={2}>
-                                <Box display="flex" alignItems="center">
-                                    <IconButton
-                                        component="label"
-                                    >
-                                        <Upload />
-                                        <input
-                                            type="file"
-                                            hidden
-                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx"
-                                            onChange={(e) => handleSupportingDocChange(e, index)}
-                                        />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleDeleteSupportingDoc(index)}>
-                                        <Delete />
-                                    </IconButton>
-                                </Box>
-                                {doc.filename && (
-                                    <>
-                                        <Typography variant="body2" mt={1}>Uploaded File: {doc.actualfilename.length > 20 ? `${doc.actualfilename.substring(0, 20)}...` : doc.actualfilename}</Typography>
-                                        {doc.file.type.startsWith('image/') ? (
-                                            <img src={doc.preview} alt={doc.filename} style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
-                                        ) : (
-                                            <a href={doc.preview} target="_blank" rel="noopener noreferrer" style={{ marginTop: '8px' }}>
-                                                Preview File
-                                            </a>
-                                        )}
-                                    </>
-                                )}
-                                <TextField
-                                    fullWidth
-                                    margin="dense"
-                                    label="Notes"
-                                    name={`supportingDocs[${index}].notes`}
-                                    value={doc.notes}
-                                    onChange={(e) => handleSupportingDocNotesChange(index, e.target.value)}
-                                    style={{ marginTop: '16px' }}
-                                />
-                            </Box>
-                        ))}
+                        </List>
+                    )}
 
-                        <Typography variant="h6" style={{ marginTop: '16px' }}>Event Cover Image</Typography>
-                        <Box mt={2}>
-                            <Button variant="contained" component="label">
-                                Upload Event Image
-                                <input type="file" hidden onChange={onFileChange} />
-                            </Button>
-                            {imageFile && (
-                                <>
-                                    <Typography variant="caption" display="block">Image uploaded</Typography>
-                                    <img src={imagePreview} alt="Event Cover" style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
-                                    <IconButton onClick={handleDeleteImage} aria-label="delete" color="error">
+                    {selectedLocation && (
+                        <div style={{ height: '400px', width: '100%' }}>
+                            <LoadScript googleMapsApiKey="AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE">
+                                <GoogleMap
+                                    center={{ lat, lng }}
+                                    zoom={15}
+                                    mapContainerStyle={{ height: '100%', width: '100%' }}
+                                >
+                                    <Marker position={{ lat, lng }} />
+                                </GoogleMap>
+                            </LoadScript>
+                        </div>
+                    )}
+                    <TextField
+                        fullWidth margin="dense" autoComplete="off"
+                        multiline minRows={2}
+                        label="Event Description"
+                        name="eventDescription"
+                        value={formik.values.eventDescription}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.eventDescription && Boolean(formik.errors.eventDescription)}
+                        helperText={formik.touched.eventDescription && formik.errors.eventDescription}
+                    />
+                    {/* Funding Requests */}
+                    <Box>
+                        <Typography variant="h6">Funding Requests</Typography>
+                        <Button onClick={() => formik.setFieldValue('fundingRequests', [...formik.values.fundingRequests, { item: '', purpose: '', source: '', amountRequested: '' }])}>
+                            Add
+                        </Button>
+                        {formik.values.fundingRequests.map((request, index) => (
+                            <Grid container spacing={2} key={index} alignItems="center">
+                                <Grid item xs={3}>
+                                    <TextField
+                                        label="Item"
+                                        name={`fundingRequests[${index}].item`}
+                                        value={request.item}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        fullWidth
+                                    />
+                                </Grid>
+                                <Grid item xs={3}>
+                                    <TextField
+                                        label="Purpose"
+                                        name={`fundingRequests[${index}].purpose`}
+                                        value={request.purpose}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        fullWidth
+                                    />
+                                </Grid>
+                                <Grid item xs={3}>
+                                    <TextField
+                                        label="Source"
+                                        name={`fundingRequests[${index}].source`}
+                                        value={request.source}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        fullWidth
+                                    />
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <TextField
+                                        label="Amount Requested"
+                                        name={`fundingRequests[${index}].amountRequested`}
+                                        value={request.amountRequested}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        fullWidth
+                                    />
+                                </Grid>
+                                <Grid item xs={1}>
+                                    <IconButton onClick={() => handleDeleteRequest(index)}>
                                         <Delete />
                                     </IconButton>
+                                </Grid>
+                            </Grid>
+                        ))}
+                    </Box>
+                    <TextField
+                        fullWidth
+                        margin="dense"
+                        autoComplete="off"
+                        type="number"
+                        label="Participation Fee"
+                        name="participationFee"
+                        value={formik.values.participationFee}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.participationFee && Boolean(formik.errors.participationFee)}
+                        helperText={formik.touched.participationFee && formik.errors.participationFee}
+                        inputProps={{
+                            min: "0", // Ensures the input does not accept negative numbers
+                        }}
+                    />
+                    <Typography variant="h6">Contact Information</Typography>
+                    <TextField
+                        fullWidth
+                        margin="dense"
+                        autoComplete="off"
+                        label="Email"
+                        name="email"
+                        value={formik.values.email}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.email && Boolean(formik.errors.email)}
+                        helperText={formik.touched.email && formik.errors.email}
+                        InputProps={{
+                            readOnly: formik.values.useAccountInfo,
+                            style: { backgroundColor: formik.values.useAccountInfo ? '#f0f0f0' : 'inherit' } // Gray background if readOnly
+                        }}
+                    />
+                    <TextField
+                        fullWidth
+                        margin="dense"
+                        autoComplete="off"
+                        label="Contact Number"
+                        name="contactNumber"
+                        value={formik.values.contactNumber}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.contactNumber && Boolean(formik.errors.contactNumber)}
+                        helperText={formik.touched.contactNumber && formik.errors.contactNumber}
+                        InputProps={{
+                            readOnly: formik.values.useAccountInfo,
+                            style: { backgroundColor: formik.values.useAccountInfo ? '#f0f0f0' : 'inherit' } // Gray background if readOnly
+                        }}
+                    />
+                </Grid>
+                <Grid item xs={12} md={6} lg={4}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="h6" style={{ margin: 0 }}>
+                            Supporting Documents
+                        </Typography>
+                        <IconButton onClick={handleAddSupportingDoc} style={{ marginLeft: '8px' }}>
+                            <Add />
+                        </IconButton>
+                        {supportingDocs.length > 0 && (
+                            <IconButton onClick={handleRemoveSupportingDoc} >
+                                <Remove />
+                            </IconButton>
+                        )}
+                    </div>
+                    {supportingDocs.map((doc, index) => (
+                        <Box key={index} display="flex" flexDirection="column" mb={2}>
+                            <Box display="flex" alignItems="center">
+                                <IconButton
+                                    component="label"
+                                >
+                                    <Upload />
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx"
+                                        onChange={(e) => handleSupportingDocChange(e, index)}
+                                    />
+                                </IconButton>
+                                <IconButton onClick={() => handleDeleteSupportingDoc(index)}>
+                                    <Delete />
+                                </IconButton>
+                            </Box>
+                            {doc.filename && (
+                                <>
+                                    <Typography variant="body2" mt={1}>Uploaded File: {doc.actualfilename.length > 20 ? `${doc.actualfilename.substring(0, 20)}...` : doc.actualfilename}</Typography>
+                                    {doc.file.type.startsWith('image/') ? (
+                                        <img src={doc.preview} alt={doc.filename} style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
+                                    ) : (
+                                        <a href={doc.preview} target="_blank" rel="noopener noreferrer" style={{ marginTop: '8px' }}>
+                                            Preview File
+                                        </a>
+                                    )}
                                 </>
                             )}
+                            <TextField
+                                fullWidth
+                                margin="dense"
+                                label="Notes"
+                                name={`supportingDocs[${index}].notes`}
+                                value={doc.notes}
+                                onChange={(e) => handleSupportingDocNotesChange(index, e.target.value)}
+                                style={{ marginTop: '16px' }}
+                            />
                         </Box>
-                    </Grid>
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={formik.values.useAccountInfo}
-                                    onChange={formik.handleChange}
-                                    name="useAccountInfo"
-                                />
-                            }
-                            label="Use account information"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={formik.values.consentApproved}
-                                    onChange={formik.handleChange}
-                                    name="consentApproved"
-                                />
-                            }
-                            label="By submitting this proposal, you understand that all activities are subject to approval and will only be delivered when approved"
-                        />
-                        {formik.touched.consentApproved && formik.errors.consentApproved && (
-                            <Typography variant="caption" color="error">
-                                {formik.errors.consentApproved}
-                            </Typography>
-                        )}
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={formik.values.termsApproved}
-                                    onChange={formik.handleChange}
-                                    name="termsApproved"
-                                />
-                            }
-                            label={
-                                <>
-                                    I have read and agreed to the{' '}
-                                    <Link
-                                        onClick={handleTermsClick}
-                                        style={{ color: 'blue', textDecoration: 'underline' }}
-                                    >
-                                        Terms and Conditions of Prásinos
-                                    </Link>
-                                </>
-                            }
-                        />
-                        {formik.touched.termsApproved && formik.errors.termsApproved && (
-                            <Typography variant="caption" color="error">
-                                {formik.errors.termsApproved}
-                            </Typography>
-                        )}
-                    </FormGroup>
-                </Grid>
-                <Box mt={2} display="flex" justifyContent="flex-end" width="100%" pr={2}>
-                    <div>
-                        <Button variant="contained" type="button" sx={{ mr: 2 }} onClick={handleClickOpen}>
-                            Submit Event
+                    ))}
+
+                    <Typography variant="h6" style={{ marginTop: '16px' }}>Event Cover Image</Typography>
+                    <Box mt={2}>
+                        <Button variant="contained" component="label">
+                            Upload Event Image
+                            <input type="file" hidden onChange={onFileChange} />
                         </Button>
-                        <Dialog
-                            open={open}
-                            onClose={handleClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
-                        >
-                            <DialogTitle id="alert-dialog-title">{"Submit Event"}</DialogTitle>
-                            <DialogContent>
-                                <DialogContentText id="alert-dialog-description">
-                                    Are you sure you want to submit the event? This cannot be undone. You can save as draft if you are not ready to submit yet. You can only edit limited fields after submission.
-                                </DialogContentText>
-                            </DialogContent>
-                            <DialogActions>
-                                <Button onClick={handleClose}>Cancel</Button>
-                                <Button onClick={handleConfirm} autoFocus>
-                                    Confirm
-                                </Button>
-                            </DialogActions>
-                        </Dialog>
-                    </div>
-                    <Button variant="outlined" color="primary" type="button" onClick={saveAsDraft}>
-                        Save as Draft
+                        {imageFile && (
+                            <>
+                                <Typography variant="caption" display="block">Image uploaded</Typography>
+                                <img src={imagePreview} alt="Event Cover" style={{ maxHeight: 100, maxWidth: 100, marginTop: '8px', objectFit: 'contain' }} />
+                                <IconButton onClick={handleDeleteImage} aria-label="delete" color="error">
+                                    <Delete />
+                                </IconButton>
+                            </>
+                        )}
+                    </Box>
+                </Grid>
+                <FormGroup>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={formik.values.useAccountInfo}
+                                onChange={formik.handleChange}
+                                name="useAccountInfo"
+                            />
+                        }
+                        label="Use account information"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={formik.values.consentApproved}
+                                onChange={formik.handleChange}
+                                name="consentApproved"
+                            />
+                        }
+                        label="By submitting this proposal, you understand that all activities are subject to approval and will only be delivered when approved"
+                    />
+                    {formik.touched.consentApproved && formik.errors.consentApproved && (
+                        <Typography variant="caption" color="error">
+                            {formik.errors.consentApproved}
+                        </Typography>
+                    )}
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={formik.values.termsApproved}
+                                onChange={formik.handleChange}
+                                name="termsApproved"
+                            />
+                        }
+                        label={
+                            <>
+                                I have read and agreed to the{' '}
+                                <Link
+                                    onClick={handleTermsClick}
+                                    style={{ color: 'blue', textDecoration: 'underline' }}
+                                >
+                                    Terms and Conditions of Prásinos
+                                </Link>
+                            </>
+                        }
+                    />
+                    {formik.touched.termsApproved && formik.errors.termsApproved && (
+                        <Typography variant="caption" color="error">
+                            {formik.errors.termsApproved}
+                        </Typography>
+                    )}
+                </FormGroup>
+            </Grid>
+            <Box mt={2} display="flex" justifyContent="flex-end" width="100%" pr={2}>
+                <div>
+                    <Button variant="contained" type="button" sx={{ mr: 2 }} onClick={handleClickOpen}>
+                        Submit Event
                     </Button>
-                </Box>
+                    <Dialog
+                        open={open}
+                        onClose={handleClose}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title">{"Submit Event"}</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                                Are you sure you want to submit the event? This cannot be undone. You can save as draft if you are not ready to submit yet. You can only edit limited fields after submission.
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleClose}>Cancel</Button>
+                            <Button onClick={handleConfirm} autoFocus>
+                                Confirm
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                </div>
+                <Button variant="outlined" color="primary" type="button" onClick={saveAsDraft}>
+                    Save as Draft
+                </Button>
             </Box>
-            <Box mt={2}>     </Box>
-            <ToastContainer />
         </Box>
-    );
+        <Box mt={2}>     </Box>
+        <ToastContainer />
+    </Box>
+);
 }
 
 export default AddEvent;

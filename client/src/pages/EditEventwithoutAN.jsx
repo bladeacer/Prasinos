@@ -10,7 +10,6 @@ import * as yup from 'yup';
 import http from '../http';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 function EditEvent() {
     const { id } = useParams();
@@ -19,15 +18,11 @@ function EditEvent() {
     const [open, setOpen] = useState(false);
     const [supportingDocs, setSupportingDocs] = useState([]);
     const [imagePreview, setImagePreview] = useState(null);
-    const [requestFields, setRequestFields] = useState([]);
     const [eventStatus, checkEventStatus] = useState(null);
     const [originalData, setOriginalData] = useState({});
     const [loading, setLoading] = useState(true);
     const [suggestions, setSuggestions] = useState([]);
-    const [lat, setLat] = useState(null);
-    const [lng, setLng] = useState(null);
-    const [selectedLocation, setSelectedLocation] = useState(null);
-    const [deleteFromServer, setDeleteFromServer] = useState(false); // Add a state to track if the image should be deleted from the server
+    const [deleteFromServer, setDeleteFromServer] = useState(false); 
     const [apiKey] = useState('AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE');
 
     const formik = useFormik({
@@ -79,8 +74,6 @@ function EditEvent() {
         onSubmit: async (data) => {
             if (eventImage) {
                 data.eventImage = eventImage;
-            } else {
-                data.eventImage = 'prasinos_no_image.jpg';
             }
             data.supportingDocs = supportingDocs;
             data.eventStatus = "Pending Review"
@@ -116,72 +109,7 @@ function EditEvent() {
         }
     };
 
-    const getPlaceIdByName = async (placeName) => {
-        if (!placeName) return;
-        const searchUrl = `/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(placeName)}&inputtype=textquery&key=${apiKey}`;
-        try {
-            const response = await fetch(searchUrl);
-            if (!response.ok) {
-                console.error(`HTTP error: ${response.status} ${response.statusText}`);
-                return;
-            }
-            const contentType = response.headers.get("Content-Type");
-            if (!contentType || !contentType.includes("application/json")) {
-                console.error("Received non-JSON response:", await response.text());
-                return;
-            }
-            const data = await response.json(); 
-            if (data.candidates && data.candidates.length > 0) {
-                const placeId = data.candidates[0].place_id;
-                return placeId;
-            } else {
-                console.log('No place ID found');
-                return null;
-            }
-        } catch (error) {
-            console.error('Error fetching place details:', error);
-            return null;
-        }
-    };
-
-    const fetchPlaceDetails = async (placeId) => {
-        if (!placeId) return;
-        const apiUrl = `/maps/api/place/details/json?placeid=${placeId}&key=${apiKey}`;
-        try {
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                console.error(`HTTP error: ${response.status} ${response.statusText}`);
-                return;
-            }
-            const contentType = response.headers.get("Content-Type");
-            if (!contentType || !contentType.includes("application/json")) {
-                console.error("Received non-JSON response:", await response.text());
-                return;
-            }
-            const data = await response.json();
-            setSelectedLocation(data.result);
-            const { lat, lng } = data.result.geometry.location;
-            setLat(lat);
-            setLng(lng);
-
-            if (lat === null || lng === null) {
-                return null;
-            }
-        } catch (error) {
-            console.error('Error fetching place details:', error);
-        }
-    };
-
     useEffect(() => {
-        const fetchPlaceIdAndDetails = async (eventLocation) => {
-            if (eventLocation) {
-                let placeId = await getPlaceIdByName(eventLocation);
-                if (placeId) {
-                    fetchPlaceDetails(placeId);
-                }
-            }
-        };
-
         const fetchEventData = async () => {
             try {
                 const response = await http.get(`/event/${id}`);
@@ -194,11 +122,8 @@ function EditEvent() {
                 setImagePreview(eventData.imagePreview);
                 setSupportingDocs(eventData.supportingDocs);
                 checkEventStatus(eventData.eventStatus);
-                setRequestFields(eventData.requestChangefields);
                 setLoading(false);
                 setOriginalData(eventData);
-                fetchPlaceIdAndDetails(eventData.eventLocation);
-            
             } catch (error) {
                 console.error('Error fetching event:', error);
                 setLoading(false);
@@ -267,22 +192,13 @@ function EditEvent() {
         window.open('/src/Prasinos_termsandconditions.pdf', '_blank');
     };
 
-    const isEditableBasedOnStatus = (field, event) => {
+    const isEditableBasedOnStatus = (field) => {
         const editableInDraft = ['email', 'contactNumber', 'eventLocation', 'eventDescription', 'eventActivity', 'otherEventActivity', 'eventName', 'eventOrganizerType', 'eventOrganizerName', 'eventScope', 'expectedAttendance', 'eventStartDate', 'eventEndDate', 'eventStartTime', 'eventEndTime', 'participationFee', 'useAccountInfo', 'supportingDocuments', 'eventImage'];
         const editableInPendingReview = ['eventDescription', 'eventStartDate', 'eventEndDate', 'eventStartTime', 'eventEndTime', 'participationFee', 'eventScope'];
-
-        let localRequestFields = Array.isArray(requestFields) ? [...requestFields] : []; // Ensure requestFields is an array
-        if (localRequestFields.includes("eventDateandTime")) {
-            localRequestFields = localRequestFields.filter(field => field !== "eventDateandTime");
-            localRequestFields.push('eventStartDate', 'eventEndDate', 'eventStartTime', 'eventEndTime');
-        }
-
         if (eventStatus === 'Draft') {
             return editableInDraft.includes(field);
         } else if (eventStatus === 'Pending Review') {
             return editableInPendingReview.includes(field);
-        } else if (eventStatus === 'Action Needed') {
-            return localRequestFields.includes(field);
         }
         return false;
     };
@@ -443,27 +359,13 @@ function EditEvent() {
         fetchLocationSuggestions(value);
     };
 
-    const handleSuggestionClick = async (suggestion) => {
-        console.log('handleSuggestionClick called with:', suggestion);
-        const locationDetails = await fetchPlaceDetails(suggestion.place_id);
-
-        // Ensure eventLocation is a string
-        const eventLocation = suggestion.description;
-        formik.setFieldValue('eventLocation', eventLocation);
-
-        console.log('Setting eventLocation to:', eventLocation);
-        console.log('Location details:', locationDetails);
-
-        if (locationDetails) {
-            formik.setFieldValue('formattedAddress', locationDetails.formatted_address);
-            formik.setFieldValue('placeId', locationDetails.place_id);
-        }
-
+    const handleSuggestionClick = (suggestion) => {
+        formik.setFieldValue('eventLocation', suggestion.description);
         setSuggestions([]); // Clear suggestions after selection
     };
 
     const handleDeleteImage = async () => {
-        if (eventImage && eventImage !== 'prasinos_no_image.jpg') {
+        if (eventImage) {
             try {
                 const response = await http.delete(`file/delete/${encodeURIComponent(eventImage)}`);
                 console.log('Response:', response);
@@ -686,19 +588,6 @@ function EditEvent() {
                                 ))}
                             </List>
                         )}
-                        {selectedLocation && (
-                            <div style={{ height: '400px', width: '100%' }}>
-                                <LoadScript googleMapsApiKey="AIzaSyAWGu_ttZhiRdqdAQe3PgCE4VZmJivPIiE">
-                                    <GoogleMap
-                                        center={{ lat, lng }}
-                                        zoom={15}
-                                        mapContainerStyle={{ height: '100%', width: '100%' }}
-                                    >
-                                        <Marker position={{ lat, lng }} />
-                                    </GoogleMap>
-                                </LoadScript>
-                            </div>
-                        )}
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
                             label="Event Description"
@@ -713,7 +602,7 @@ function EditEvent() {
                         />
                         <Box>
                             <Typography variant="h6">Funding Requests</Typography>
-                            <Button disabled={!isEditableBasedOnStatus('fundingRequests')} onClick={() => formik.setFieldValue('fundingRequests', [...formik.values.fundingRequests, { item: '', purpose: '', source: '', amountRequested: '' }])}>
+                            <Button onClick={() => formik.setFieldValue('fundingRequests', [...formik.values.fundingRequests, { item: '', purpose: '', source: '', amountRequested: '' }])}>
                                 Add
                             </Button>
                             {formik.values.fundingRequests.map((request, index) => (
@@ -725,7 +614,6 @@ function EditEvent() {
                                             value={request.item}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
-                                            disabled={!isEditableBasedOnStatus('fundingRequests')}
                                             fullWidth
                                         />
                                     </Grid>
@@ -736,7 +624,6 @@ function EditEvent() {
                                             value={request.purpose}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
-                                            disabled={!isEditableBasedOnStatus('fundingRequests')}
                                             fullWidth
                                         />
                                     </Grid>
@@ -747,7 +634,6 @@ function EditEvent() {
                                             value={request.source}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
-                                            disabled={!isEditableBasedOnStatus('fundingRequests')}
                                             fullWidth
                                         />
                                     </Grid>
@@ -758,12 +644,11 @@ function EditEvent() {
                                             value={request.amountRequested}
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
-                                            disabled={!isEditableBasedOnStatus('fundingRequests')}
                                             fullWidth
                                         />
                                     </Grid>
                                     <Grid item xs={1}>
-                                        <IconButton disabled={!isEditableBasedOnStatus('fundingRequests')} onClick={() => handleDeleteRequest(index)}>
+                                        <IconButton onClick={() => handleDeleteRequest(index)}>
                                             <Delete />
                                         </IconButton>
                                     </Grid>
@@ -806,7 +691,7 @@ function EditEvent() {
                     </Grid>
                     <Grid item xs={12} md={6} lg={4}>
                         <Box>
-                            {eventImage && eventImage !== 'prasinos_no_image.jpg' ? (
+                            {eventImage ? (
                                 <>
                                     <img
                                         src={`${import.meta.env.VITE_FILE_BASE_URL}${eventImage}`}
@@ -970,33 +855,6 @@ function EditEvent() {
                             <Button variant="outlined" sx={{ mt: 2 }} onClick={discardChanges}>
                                 Discard Changes
                             </Button>
-                        </>
-                    ) : eventStatus === "Action Needed" ? (
-                        <>
-                            <div>
-                                <Button variant="contained" color="primary" sx={{ mt: 2, mr: 2 }} onClick={handleClickOpen}>
-                                    Resubmit Event
-                                </Button>
-                                <Dialog
-                                    open={open}
-                                    onClose={handleClose}
-                                    aria-labelledby="alert-dialog-title"
-                                    aria-describedby="alert-dialog-description"
-                                >
-                                    <DialogTitle id="alert-dialog-title">{"Resubmit Event"}</DialogTitle>
-                                    <DialogContent>
-                                        <DialogContentText id="alert-dialog-description">
-                                            Are you sure you want to resubmit the event? This cannot be undone. Make sure the changes are correct before resubmitting.
-                                        </DialogContentText>
-                                    </DialogContent>
-                                    <DialogActions>
-                                        <Button onClick={handleClose}>Cancel</Button>
-                                        <Button onClick={handleConfirm} autoFocus>
-                                            Confirm
-                                        </Button>
-                                    </DialogActions>
-                                </Dialog>
-                            </div>
                         </>
                     ) : (
                         <>

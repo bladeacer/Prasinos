@@ -19,20 +19,36 @@ function Events() {
     const sortEventsByStartDate = (events) => events.sort((a, b) => new Date(a.eventStartDate) - new Date(b.eventStartDate));
 
     const getEvents = (activities = selectedActivities) => {
-        http.get('/event').then((res) => {
+        // Check if user.id is available
+        if (!user || !user.id || user.role) {
+            setEventList([]); // Set event list to empty array
+            return; // Return early if user.id or user.role is not available
+        }
+        http.get('/event', {
+            params: {
+                userId: user.id // Include user_id in the request parameters
+            }
+        }).then((res) => {
             let filteredEvents = res.data;
+
+            // Filter events to include only those created by the logged-in user
+            filteredEvents = filteredEvents.filter(event => event.userId === user.id);
+
             // Step 3: Filter events if there are selected activities
             if (activities.length > 0) {
-                filteredEvents = filterEventsByActivity(res.data, activities);
+                filteredEvents = filterEventsByActivity(filteredEvents, activities);
             }
             const sortedEvents = sortEventsByStartDate(filteredEvents);
             setEventList(sortedEvents);
         }).catch(error => console.error('Error fetching events:', error));
     };
 
+
     const searchEvents = () => {
         http.get(`/event?search=${encodeURIComponent(search)}`).then((res) => {
-            const sortedEvents = sortEventsByStartDate(res.data);
+            let searchEvents = res.data;
+            searchEvents = searchEvents.filter(event => event.userId === user.id);
+            const sortedEvents = sortEventsByStartDate(searchEvents);
             setEventList(sortedEvents);
         }).catch(error => console.error('Error searching events:', error));
     };
@@ -106,7 +122,7 @@ function Events() {
                 </IconButton>
                 <Box sx={{ flexGrow: 1 }} />
                 <Button aria-controls="activity-menu" aria-haspopup="true" onClick={handleClick} variant='contained' sx={{ mr: { xs: 0.5, sm: 1.5, md: 2.5 } }}>
-                    Sort by Activities
+                    Filter by Activities
                 </Button>
                 <Menu
                     id="activity-menu"
@@ -135,7 +151,7 @@ function Events() {
                     </FormControl>
                 </Menu>
                 {
-                    user && user.role !== 'admin' &&(
+                    user && user.role !== 'admin' && (
                         <Link to="/addevent">
                             <Button variant='contained'>
                                 Add
@@ -208,12 +224,14 @@ function Events() {
                                                 {event.eventName}
                                             </Typography>
                                             {
-                                                user && user.id === event.userId && user.role !== 'admin' &&(
+                                                user && user.id === event.userId && user.role !== 'admin' && (
                                                     <>
-                                                        <IconButton color="primary" sx={{ padding: '4px' }} href={`/editevent/${event.id}`} >
-                                                            <Edit />
-                                                        </IconButton>
-                                                        {!["Pending Review", "Approved", "Action Needed"].includes(event.eventStatus) &&(
+                                                        {event.eventStatus !== "Rejected" && (
+                                                            <IconButton color="primary" sx={{ padding: '4px' }} href={`/editevent/${event.id}`}>
+                                                                <Edit />
+                                                            </IconButton>
+                                                        )}
+                                                        {!["Pending Review", "Approved", "Action Needed"].includes(event.eventStatus) && (
                                                             <IconButton color="error" sx={{ padding: '4px' }} onClick={() => onDeleteEvent(event.id)}>
                                                                 <Delete />
                                                             </IconButton>

@@ -8,7 +8,17 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/maps/api/place/autocomplete/json': {
-        target: 'https://maps.googleapis.com', // Replace with the actual API server if different
+        target: 'https://maps.googleapis.com', 
+        changeOrigin: true,
+        secure: false,
+      },
+      '/maps/api/place/details/json': {
+        target: 'https://maps.googleapis.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/maps/api/place/findplacefromtext/json': {
+        target: 'https://maps.googleapis.com', 
         changeOrigin: true,
         secure: false,
       },

@@ -42,7 +42,7 @@ function Login() {
                     localStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
                     if (data.role === 'admin') {
-                        navigate("/reviewevent");
+                        navigate("/dashboard");
                     } else {
                         navigate("/");
                     }

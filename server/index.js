@@ -27,6 +27,7 @@ app.use("/file", fileRoute);
 const adminRoute = require('./routes/admin');
 app.use("/admin", adminRoute);
 
+
 const db = require('./models');
 db.sequelize.sync({ alter: true })
     .then(() => {

@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import MyTheme from './themes/MyTheme';
 import Events from './pages/Events';
 import AddEvent from './pages/AddEvent';
+import AdminDashboard from './pages/AdminDashboard';
 import EditEvent from './pages/EditEvent';
 import MyForm from './pages/MyForm';
 import Register from './pages/Register';
@@ -24,7 +25,7 @@ function App() {
     if (token) {
       setIsLoading(true);
       http.get('/user/auth').then((res) => {
-        setUser(res.data.user); 
+        setUser(res.data.user);
         setIsLoading(false);
       }).catch(() => {
         setIsLoading(false);
@@ -65,16 +66,25 @@ function App() {
                 <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
                   <img src={Logo} alt="Logo" style={{ marginLeft: 10, height: 50 }} />
                 </Link>
-                <Link to="/events" ><Typography>Events</Typography></Link>
+                {user && user.role === 'admin' && (
+                  <>
+                    <Link to="/dashboard"><Typography>Dashboard</Typography></Link>
+                  </>
+                )}
+                {user && user.role === 'admin' && (
+                  <>
+                    <Link to="/reviewevent"><Typography>Review Event</Typography></Link>
+                  </>
+                )}
+                {user && user.role !== 'admin' && (
+                  <>
+                    <Link to="/events"><Typography>Events</Typography></Link>
+                  </>
+                )}
                 <Box sx={{ flexGrow: 1 }}></Box>
                 {user && (
                   <>
                     <Typography>{user.name}</Typography>
-                    {/* {user.role === 'admin' && (
-                      <>
-                        <Link to="/admin"><Typography>Admin Dashboard</Typography></Link>
-                      </>
-                    )} */}
                     <Button onClick={logout}>Logout</Button>
                   </>
                 )}
@@ -99,6 +109,11 @@ function App() {
               <Route path={"/reviewevent"} element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <ReviewEvent />
+                </ProtectedRoute>
+              } />
+              <Route path={"/dashboard"} element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
                 </ProtectedRoute>
               } />
               <Route path={"/login"} element={<Login />} />

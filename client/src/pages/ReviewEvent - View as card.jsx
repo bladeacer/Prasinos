@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Box, Typography, Grid, Card, CardContent, Button, Dialog, DialogActions, DialogContent, DialogTitle, CardMedia, IconButton, TextField, Menu, MenuItem, FormControl, FormGroup, FormControlLabel, Checkbox, List, ListItem, ListItemAvatar, Avatar, ListItemText, Input, Container, Tab, Tabs, Tooltip } from '@mui/material';
-import { CheckCircle, Cancel, ChangeCircle, AccountCircle, AccessTime, Timer, LocationOn, AttachMoney, Close, Undo, Search, Clear, ViewModule, ViewList } from '@mui/icons-material';
+import { Box, Typography, Grid, Card, CardContent, Button, Dialog, DialogActions, DialogContent, DialogTitle, CardMedia, IconButton, TextField, Menu, MenuItem, FormControl, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
+import { CheckCircle, Cancel, ChangeCircle, AccountCircle, AccessTime, Timer, LocationOn, AttachMoney, Close, Undo } from '@mui/icons-material';
 import http from '../http';
 import dayjs from 'dayjs';
 
@@ -15,22 +15,12 @@ function ReviewEvents() {
     const [isRequestChangeClicked, setIsRequestChangeClicked] = useState(false);
     const [selectedFields, setSelectedFields] = useState([]);
     const [comment, setComment] = useState('');
-    const [displayMode, setDisplayMode] = useState('list');
-    const [search, setSearch] = useState('');
-    const [selectedTab, setSelectedTab] = useState('All');
-    const [eventCounts, setEventCounts] = useState({
-        All: 0,
-        'Pending Review': 0,
-        Approved: 0,
-        Rejected: 0,
-        'Action Needed': 0,
-    });
 
-    // const fetchEventsToReview = () => {
-    //     http.get('/event?status=Pending Review').then((res) => {
-    //         setEventsToReview(res.data);
-    //     }).catch(error => console.error('Error fetching events for review:', error));
-    // };
+    const fetchEventsToReview = () => {
+        http.get('/event?status=Pending Review').then((res) => {
+            setEventsToReview(res.data);
+        }).catch(error => console.error('Error fetching events for review:', error));
+    };
 
     const activities = [
         { label: 'Tree Planting', value: 'treePlanting' },
@@ -41,73 +31,25 @@ function ReviewEvents() {
 
     const handleClick = (event) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
-    const onSearchChange = (e) => setSearch(e.target.value);
 
     const handleActivityChange = (event) => {
         const value = event.target.name;
         setSelectedActivities(prev => {
             const newActivities = prev.includes(value) ? prev.filter(activity => activity !== value) : [...prev, value];
+            // Optionally, call a function to filter events based on newActivities
             return newActivities;
         });
     };
 
-    const searchEvents = () => {
-        http.get(`/event?search=${encodeURIComponent(search)}`).then((res) => {
-            setEventsToReview(res.data);
-        }).catch(error => console.error('Error searching events:', error));
-    };
-
-
-    const onSearchKeyDown = (e) => {
-        if (e.key === "Enter") {
-            searchEvents();
-        }
-    };
-
-    const onClickSearch = () => searchEvents();
-
-    const onClickClear = () => {
-        setSearch('');
-        fetchAndFilterEvents();
-    };
-
-    const toggleDisplayMode = () => {
-        setDisplayMode(displayMode === 'list' ? 'card' : 'list');
-    };
-
-    const sortEventsByStartDate = (events) => events.sort((a, b) => new Date(a.eventStartDate) - new Date(b.eventStartDate));
-
+    // Example function to fetch and filter events, adjust as necessary
     const fetchAndFilterEvents = () => {
         http.get('/event').then((res) => {
             let filteredEvents = res.data;
-    
-            // Exclude events with status "Draft"
-            filteredEvents = filteredEvents.filter(event => event.eventStatus !== 'Draft');
-    
-            if (selectedTab !== 'All') {
-                filteredEvents = filteredEvents.filter(event => event.eventStatus === selectedTab);
-            }
             if (selectedActivities.length > 0) {
                 filteredEvents = filteredEvents.filter(event => selectedActivities.includes(event.eventActivity));
             }
-            const sortedEvents = sortEventsByStartDate(filteredEvents);
-            setEventsToReview(sortedEvents);
-    
-            // Calculate counts for each status
-            const counts = {
-                All: filteredEvents.length,
-                'Pending Review': filteredEvents.filter(event => event.eventStatus === 'Pending Review').length,
-                Approved: filteredEvents.filter(event => event.eventStatus === 'Approved').length,
-                Rejected: filteredEvents.filter(event => event.eventStatus === 'Rejected').length,
-                'Action Needed': filteredEvents.filter(event => event.eventStatus === 'Action Needed').length,
-            };
-            setEventCounts(counts);
+            setEventsToReview(filteredEvents);
         }).catch(error => console.error('Error fetching events:', error));
-    };
-
-    const handleTabChange = (event, newValue) => {
-        setSelectedTab(newValue);
-        fetchAndFilterEvents();
     };
 
     const showToast = (message, actionCallback) => {
@@ -138,12 +80,13 @@ function ReviewEvents() {
 
     // Inside the approveEvent function, add a dialog prompt for admin comments
     const approveEvent = (eventId) => {
+
         setIsDialogOpen(false);
         showToast("Event Approving", () => undoApproval());
 
         function undoApproval() {
             clearTimeout(approvalTimeout);
-            return;
+            return
         }
 
         const approvalTimeout = setTimeout(() => {
@@ -151,59 +94,58 @@ function ReviewEvents() {
         }, 4000);
 
         function performApproval(eventId) {
+
+
             http.get('/user/auth').then((res) => {
                 const adminId = res.data.user.id;
-                const updateData = { eventStatus: 'Approved', adminId: adminId };
                 if (comment) {
-                    updateData.adminComment = comment;
+                    http.put(`/event/${eventId}`, { eventStatus: 'Approved', adminComment: comment, adminId: adminId })
+                        .then(() => {
+                            setEventsToReview(eventsToReview.filter(event => event.id !== eventId));
+                        })
+                } else {
+                    http.put(`/event/${eventId}`, { eventStatus: 'Approved', adminId: adminId })
+                        .then(() => {
+                            setEventsToReview(eventsToReview.filter(event => event.id !== eventId));
+                        })
                 }
-                http.put(`/event/${eventId}`, updateData)
-                    .then(() => {
-                        setEventsToReview(eventsToReview.map(event =>
-                            event.id === eventId ? { ...event, eventStatus: 'Approved' } : event
-                        ));
-                        fetchAndFilterEvents();
-                    })
-                    .catch(error => {
-                        toast.error('Error approving event');
-                    });
             }).catch(error => {
                 toast.error('Error approving event');
             });
+
         }
     };
 
     // Inside the rejectEvent function, add a dialog prompt for admin comments
     const rejectEvent = (eventId) => {
+
         setIsDialogOpen(false);
         showToast("Event Rejecting", () => undoRejection());
 
         function undoRejection() {
             clearTimeout(rejectionTimeout);
-            return;
+            return
         }
 
         const rejectionTimeout = setTimeout(() => {
             performRejection(eventId);
         }, 4000);
 
+
         function performRejection(eventId) {
             http.get('/user/auth').then((res) => {
                 const adminId = res.data.user.id;
-                const updateData = { eventStatus: 'Rejected', adminId: adminId };
                 if (comment) {
-                    updateData.adminComment = comment;
+                    http.put(`/event/${eventId}`, { eventStatus: 'Rejected', adminComment: comment, adminId: adminId })
+                        .then(() => {
+                            setEventsToReview(eventsToReview.filter(event => event.id !== eventId));
+                        })
+                } else {
+                    http.put(`/event/${eventId}`, { eventStatus: 'Rejected', adminId: adminId })
+                        .then(() => {
+                            setEventsToReview(eventsToReview.filter(event => event.id !== eventId));
+                        })
                 }
-                http.put(`/event/${eventId}`, updateData)
-                    .then(() => {
-                        setEventsToReview(eventsToReview.map(event =>
-                            event.id === eventId ? { ...event, eventStatus: 'Rejected' } : event
-                        ));
-                        fetchAndFilterEvents();
-                    })
-                    .catch(error => {
-                        toast.error('Error rejecting event');
-                    });
             }).catch(error => {
                 toast.error('Error rejecting event');
             });
@@ -244,20 +186,17 @@ function ReviewEvents() {
         function performRequestChange(eventId) {
             http.get('/user/auth').then((res) => {
                 const adminId = res.data.user.id;
-                const updateData = { eventStatus: 'Action Needed', adminId: adminId, requestChangefields: selectedFields };
                 if (comment) {
-                    updateData.adminComment = comment;
+                    http.put(`/event/${eventId}`, { eventStatus: 'Action Needed', adminComment: comment, adminId: adminId, requestChangefields: selectedFields })
+                        .then(() => {
+                            setEventsToReview(eventsToReview.filter(event => event.id !== eventId));
+                        })
+                } else {
+                    http.put(`/event/${eventId}`, { eventStatus: 'Action Needed', adminId: adminId, requestChangefields: selectedFields })
+                        .then(() => {
+                            setEventsToReview(eventsToReview.filter(event => event.id !== eventId));
+                        })
                 }
-                http.put(`/event/${eventId}`, updateData)
-                    .then(() => {
-                        setEventsToReview(eventsToReview.map(event =>
-                            event.id === eventId ? { ...event, eventStatus: 'Action Needed', adminComment: comment, requestChangefields: selectedFields } : event
-                        ));
-                        fetchAndFilterEvents();
-                    })
-                    .catch(error => {
-                        toast.error('Error requesting changes for event');
-                    });
             }).catch(error => {
                 toast.error('Error requesting changes for event');
             });
@@ -271,7 +210,7 @@ function ReviewEvents() {
 
     useEffect(() => {
         fetchAndFilterEvents();
-    }, [selectedActivities, selectedTab]);
+    }, [selectedActivities]);
 
     const capitalizeWords = (str) => {
         // Ensure all words start with an uppercase letter
@@ -286,239 +225,139 @@ function ReviewEvents() {
             <Typography variant="h5" sx={{ my: 2 }}>
                 Review Events
             </Typography>
-            <Container>
-                {/* Parent Box for alignment */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 4 }}>
-                    {/* Search Bar Section */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Input
-                            value={search}
-                            placeholder="Search"
-                            onChange={onSearchChange}
-                            onKeyDown={onSearchKeyDown}
-                        />
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <IconButton color="primary" onClick={onClickSearch}>
-                                <Search />
-                            </IconButton>
-                            <IconButton color="default" onClick={onClickClear}>
-                                <Clear />
-                            </IconButton>
-                        </div>
-                    </Box>
-                    <Tabs value={selectedTab} onChange={handleTabChange}>
-                        <Tab label={`All (${eventCounts.All})`} value="All" />
-                        <Tab label={`Pending Review (${eventCounts['Pending Review']})`} value="Pending Review" />
-                        <Tab label={`Approved (${eventCounts.Approved})`} value="Approved" />
-                        <Tab label={`Rejected (${eventCounts.Rejected})`} value="Rejected" />
-                        <Tab label={`Action Needed (${eventCounts['Action Needed']})`} value="Action Needed" />
-                    </Tabs>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Tooltip title={displayMode === 'list' ? 'Show as Cards' : 'Show as List'}>
-                            <IconButton onClick={toggleDisplayMode} color="primary">
-                                {displayMode === 'list' ? <ViewModule /> : <ViewList />}
-                            </IconButton>
-                        </Tooltip>
-                    </Box>
-                </Box>
-
-                {/* Filter and Display Mode Section */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between', width: '100%' }}>
-                    <Menu
-                        id="activity-menu"
-                        anchorEl={anchorEl}
-                        keepMounted
-                        open={Boolean(anchorEl)}
-                        onClose={handleClose}
-                    >
-                        <FormControl component="fieldset">
-                            <FormGroup>
-                                {activities.map((activity) => (
-                                    <MenuItem key={activity.value} onClick={(e) => e.stopPropagation()}>
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={selectedActivities.includes(activity.value)}
-                                                    onChange={handleActivityChange}
-                                                    name={activity.value}
-                                                />
-                                            }
-                                            label={activity.label}
+            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Button aria-controls="activity-menu" aria-haspopup="true" onClick={handleClick} variant='contained' sx={{ mr: { xs: 0.5, sm: 1.5, md: 2.5 } }}>
+                Sort by Activities
+            </Button>
+            <Menu
+                id="activity-menu"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+            >
+                <FormControl component="fieldset">
+                    <FormGroup>
+                        {activities.map((activity) => (
+                            <MenuItem key={activity.value} onClick={(e) => e.stopPropagation()}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={selectedActivities.includes(activity.value)}
+                                            onChange={handleActivityChange}
+                                            name={activity.value}
                                         />
-                                    </MenuItem>
-                                ))}
-                            </FormGroup>
-                        </FormControl>
-                    </Menu>
-                </Box>
-            </Container>
-            {displayMode === 'list' ? (
-                <List>
-                    {eventsToReview.map((event) => (
-                        <ListItem
-                            key={event.id}
-                            onClick={() => handleEventClick(event)}
-                            sx={{
-                                display: 'flex', // Make the ListItem a flex container
-                                justifyContent: 'space-between', // Space between children
-                                '&:hover': {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                                },
-                                cursor: 'pointer',
-                                padding: '10px',
-                                borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-                            }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <ListItemAvatar>
-                                    {event.eventImage && (
-                                        <Avatar
-                                            src={`${import.meta.env.VITE_FILE_BASE_URL}${event.eventImage}`}
-                                            alt="event"
-                                        />
-                                    )}
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={event.eventName}
-                                    secondary={
-                                        <>
-                                            <Box mb={0.5}> {/* Adjust the value as needed */}
-                                                <Typography component="span" variant="body2" color="text.primary">
-                                                    {event.eventOrganizerName}
-                                                </Typography>
-                                            </Box>
-                                            <Box display="flex" flexDirection="row">
-                                                <Box display="flex" flexDirection="column" alignItems="start" mr={2}>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }} >
-                                                        <AccessTime sx={{ mr: 1, fontSize: '1rem' }} />
-                                                        <span>{dayjs(event.eventStartDate).format('YYYY-MM-DD')} - {dayjs(event.eventEndDate).format('YYYY-MM-DD')}</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <Timer sx={{ mr: 1, fontSize: '1rem' }} />
-                                                        <span>{event.eventStartTime} - {event.eventEndTime}</span>
-                                                    </div>
-                                                </Box>
-                                                <Box display="flex" flexDirection="column" alignItems="start" justifyContent="center">
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <LocationOn sx={{ mr: 1, fontSize: '1rem' }} />
-                                                        <span>{event.eventLocation}</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <AttachMoney sx={{ mr: 1, fontSize: '1rem' }} />
-                                                        <span>{`${event.participationFee}`}</span>
-                                                    </div>
-                                                </Box>
-                                            </Box>
-                                        </>
                                     }
+                                    label={activity.label}
                                 />
-                            </Box>
-                            <Box
+                            </MenuItem>
+                        ))}
+                    </FormGroup>
+                </FormControl>
+            </Menu>
+            </Box>
+            <Grid container spacing={2}>
+                {eventsToReview.map((event) => (
+                    <Grid item xs={12} md={6} lg={4} key={event.id} onClick={() => handleEventClick(event)}>
+                        <Card sx={{
+                            '&:hover': {
+                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.15)',
+                                transform: 'translateY(-5px)',
+                                transition: 'transform 0.3s, box-shadow 0.3s',
+                            },
+                            borderRadius: '8px',
+                            transition: 'transform 0.3s, box-shadow 0.3s',
+                            cursor: 'pointer',
+                        }}>
+                            {
+                                event.eventImage && (
+                                    <Box className="aspect-ratio-container">
+                                        <img
+                                            alt="event"
+                                            src={`${import.meta.env.VITE_FILE_BASE_URL}${event.eventImage}`}
+                                        />
+                                    </Box>
+                                )
+                            }
+                            <Typography
                                 sx={{
-                                    backgroundColor: event.eventStatus === 'Approved' ? '#28a745' : event.eventStatus === 'Pending Review' ? '#d39e00' : event.eventStatus === 'Rejected' ? '#dc3545' : event.eventStatus === 'Draft' ? '#6c757d' : event.eventStatus === 'Action Needed' ? '#007bff' : '#f44336',
-                                    alignSelf: 'right', // Align the status container vertically
-                                    padding: '4px 8px', // Add some padding around the text
-                                    borderRadius: '4px', // Optional: add a border radius for rounded corners
+                                    backgroundColor: event.eventStatus === 'Approved' ? '#28a745' :
+                                        event.eventStatus === 'Pending Review' ? '#d39e00' :
+                                            event.eventStatus === 'Rejected' ? '#dc3545' :
+                                                event.eventStatus === 'Draft' ? '#6c757d' :
+                                                    event.eventStatus === 'Action Needed' ? '#007bff' : '#f44336',
+                                    color: '#fff',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontWeight: 'bold',
                                 }}
                             >
-                                <Typography
-                                    component="span"
-                                    variant="body2"
-                                    sx={{
-                                        color: 'white', // Set text color to white
-                                    }}
-                                >
-                                    {event.eventStatus}
-                                </Typography>
-                            </Box>
-                        </ListItem>
-                    ))}
-                </List>
-            ) : (
-                <Grid container spacing={2}>
-                    {eventsToReview.map((event) => (
-                        <Grid item xs={12} md={6} lg={4} key={event.id} onClick={() => handleEventClick(event)}>
-                            <Card sx={{
-                                '&:hover': {
-                                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.15)',
-                                    transform: 'translateY(-5px)',
-                                    transition: 'transform 0.3s, box-shadow 0.3s',
-                                },
-                                borderRadius: '8px',
-                                transition: 'transform 0.3s, box-shadow 0.3s',
-                                cursor: 'pointer',
-                            }}>
-                                {
-                                    event.eventImage && (
-                                        <Box className="aspect-ratio-container">
-                                            <img
-                                                alt="event"
-                                                src={`${import.meta.env.VITE_FILE_BASE_URL}${event.eventImage}`}
-                                            />
-                                        </Box>
-                                    )
-                                }
-                                <Typography
-                                    sx={{
-                                        backgroundColor: event.eventStatus === 'Approved' ? '#28a745' :
-                                            event.eventStatus === 'Pending Review' ? '#d39e00' :
-                                                event.eventStatus === 'Rejected' ? '#dc3545' :
-                                                    event.eventStatus === 'Draft' ? '#6c757d' :
-                                                        event.eventStatus === 'Action Needed' ? '#007bff' : '#f44336',
-                                        color: '#fff',
-                                        padding: '4px 8px',
-                                        borderRadius: '4px',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {event.eventStatus}
-                                </Typography>
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', mb: 1 }}>
-                                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                                            {event.eventName}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <AccountCircle sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {event.eventOrganizerName}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <AccessTime sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {`${dayjs(event.eventStartDate).format('YYYY-MM-DD')} - ${dayjs(event.eventEndDate).format('YYYY-MM-DD')}`}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <Timer sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {`${event.eventStartTime} - ${event.eventEndTime}`}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <LocationOn sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {event.eventLocation}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
-                                        color="text.secondary">
-                                        <AttachMoney sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {`${event.participationFee}`}
-                                        </Typography>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>)}
+                                {event.eventStatus}
+                            </Typography>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', mb: 1 }}>
+                                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                                        {event.eventName}
+                                    </Typography>
+                                    {/* {
+                                                user && user.id === event.userId && (
+                                                    <>
+                                                        <IconButton color="primary" sx={{ padding: '4px' }} href={`/editevent/${event.id}`} >
+                                                            <Edit />
+                                                        </IconButton>
+                                                        {event.eventStatus !== "Pending Review" && (
+                                                            <IconButton color="error" sx={{ padding: '4px' }} onClick={() => onDeleteEvent(event.id)}>
+                                                                <Delete />
+                                                            </IconButton>
+                                                        )}
+                                                        <IconButton color="primary" sx={{ padding: '4px' }} href={`/event/${event.id}`}>
+                                                            <Visibility />
+                                                        </IconButton>
+                                                    </>
+                                                )
+                                            } */}
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                                    color="text.secondary">
+                                    <AccountCircle sx={{ mr: 1 }} />
+                                    <Typography>
+                                        {event.eventOrganizerName}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                                    color="text.secondary">
+                                    <AccessTime sx={{ mr: 1 }} />
+                                    <Typography>
+                                        {`${dayjs(event.eventStartDate).format('YYYY-MM-DD')} - ${dayjs(event.eventEndDate).format('YYYY-MM-DD')}`}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                                    color="text.secondary">
+                                    <Timer sx={{ mr: 1 }} />
+                                    <Typography>
+                                        {`${event.eventStartTime} - ${event.eventEndTime}`}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                                    color="text.secondary">
+                                    <LocationOn sx={{ mr: 1 }} />
+                                    <Typography>
+                                        {event.eventLocation}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                                    color="text.secondary">
+                                    <AttachMoney sx={{ mr: 1 }} />
+                                    <Typography>
+                                        {`${event.participationFee}`}
+                                    </Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
             {selectedEvent && (
                 <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} fullWidth={true} maxWidth="md">
                     <IconButton
@@ -609,7 +448,6 @@ function ReviewEvents() {
                                         <Typography variant="h6">Participation Fee</Typography>
                                         <Typography variant="body1">{selectedEvent.participationFee}</Typography>
                                     </Grid>
-
                                     <Grid item xs={12} md={6}>
                                         <Typography variant="h6">Funding Request</Typography>
                                         {selectedEvent.fundingRequests && selectedEvent.fundingRequests.length > 0 ? (
@@ -645,7 +483,6 @@ function ReviewEvents() {
                                         <Typography variant="h6">Contact Number</Typography>
                                         <Typography variant="body1">{selectedEvent.contactNumber}</Typography>
                                     </Grid>
-
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Typography variant="h6">Supporting Documents</Typography>
@@ -664,10 +501,6 @@ function ReviewEvents() {
                                     ) : (
                                         <Typography variant="body1">No supporting documents</Typography>
                                     )}
-                                    <Grid item xs={12} md={6}>
-                                        <Typography variant="h6">Username</Typography>
-                                        <Typography variant="body1">{selectedEvent.user.name}</Typography>
-                                    </Grid>
                                     <>
                                         <TextField
                                             label="Admin's comment"
@@ -706,8 +539,8 @@ function ReviewEvents() {
                                     <label htmlFor="eventName">Event Name</label>
                                 </div>
                                 <div style={{ textAlign: 'center' }}>
-                                    <input type="checkbox" id="eventDate" onChange={() => handleFieldChange('eventDateandTime')} />
-                                    <label htmlFor="eventDate">Event Date and Time</label>
+                                    <input type="checkbox" id="eventDate" onChange={() => handleFieldChange('eventDate')} />
+                                    <label htmlFor="eventDate">Event Date</label>
                                 </div>
                                 <div style={{ textAlign: 'center' }}>
                                     <input type="checkbox" id="eventLocation" onChange={() => handleFieldChange('eventLocation')} />

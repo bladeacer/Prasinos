@@ -61,7 +61,6 @@ router.get('/', async (req, res) => {
             [Op.or]: [
                 { eventName: { [Op.like]: `%${search}%` } }, // Case-insensitive search for event name
                 { eventOrganizerName: { [Op.like]: `%${search}%` } } // Case-insensitive search for organizer name
-                // Add more fields as needed for searching
             ]
         };
     }

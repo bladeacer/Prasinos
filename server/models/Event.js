@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false
             },
             eventScope: {
-                type: DataTypes.ENUM('open', 'invitiation'),
+                type: DataTypes.ENUM('open', 'invitation'),
                 allowNull: false
             },
             expectedAttendance: {

@@ -191,6 +191,12 @@ function ViewEvent() {
                             <Typography variant="body1">No supporting documents</Typography>
                         )}
                     </Grid>
+                    {["Approved", "Rejected", "Action Needed"].includes(event.eventStatus) && (
+                        <Grid item xs={12} style={{ textAlign: 'center' }}>
+                            <Typography variant="h6">Admin Comment</Typography>
+                            <Typography variant="body1" style={{ fontWeight: 'bold' }}>{event.adminComment || "-"}</Typography>
+                        </Grid>
+                    )}
                 </CardContent>
             </Card>
             <Box mt={2} mb={2}>
@@ -210,7 +216,7 @@ function ViewEvent() {
                         )}
                     </Grid>
                     <Grid item>
-                        {user && user.id === event.userId && event.eventStatus !== "Pending Review" && (
+                        {user && user.id === event.userId && (event.eventStatus === "Draft" || event.eventStatus === "Rejected") && (
                             <Button variant="contained" onClick={() => onDeleteEvent(event.id)} startIcon={<Delete />} color="secondary">
                                 Delete Event
                             </Button>
