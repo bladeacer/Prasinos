@@ -19,7 +19,6 @@ function EditEventFeedback() {
 
     const [eventfblist, setEventfblist] = useState({
         comment: "",
-        feedback: "",
         rating: 0
     });
 
@@ -34,7 +33,6 @@ function EditEventFeedback() {
 
     const validationSchema = Yup.object({
         comment: Yup.string().trim().min(3).max(500).required('Comment is required'),
-        feedback: Yup.string().trim().min(3).max(500).required('Feedback is required'),
         rating: Yup.number().min(1, 'Rating is required').max(5).required('Rating is required'),
     });
 
@@ -50,11 +48,10 @@ function EditEventFeedback() {
         <>
             {!loading && (
                 <Formik
-                    initialValues={{ comment: eventfblist.comment, feedback: eventfblist.feedback, rating: eventfblist.rating }}
+                    initialValues={{ comment: eventfblist.comment, rating: eventfblist.rating }}
                     validationSchema={validationSchema}
                     onSubmit={(values) => {
                         values.comment = values.comment.trim();
-                        values.feedback = values.feedback.trim();
                         http.put(`/eventfb/${id}`, values)
                             .then((res) => {
                                 console.log(res.data);
@@ -88,13 +85,8 @@ function EditEventFeedback() {
                                         </Form.Group>
                                         <Form.Group controlId="formComment">
                                             <Form.Label>Comment</Form.Label>
-                                            <Field name="comment" as="textarea" className="form-control" />
+                                            <Field name="comment" as="textarea" className="form-control" style={{ height: "130px"}} />
                                             <ErrorMessage name="comment" component="div" className="text-danger" />
-                                        </Form.Group>
-                                        <Form.Group controlId="formFeedback">
-                                            <Form.Label className="mt-3">Additional Feedback for Improvement</Form.Label>
-                                            <Field name="feedback" as="textarea" className="form-control" />
-                                            <ErrorMessage name="feedback" component="div" className="text-danger" />
                                         </Form.Group>
                                         <Button variant="success" type="submit" className="mt-4" style={{ width: "80%", marginLeft: "10%" }} onClick={handleSubmit}>
                                             Update

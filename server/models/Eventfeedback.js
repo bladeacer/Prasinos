@@ -8,14 +8,6 @@ module.exports = (sequelize, DataTypes) => {
                 len: [3, 500]
             }
         },
-        feedback: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-            validate: {
-                notEmpty: true,
-                len: [3, 500]
-            }
-        },
         rating: {
             type: DataTypes.INTEGER,
             allowNull: false,

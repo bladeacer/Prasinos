@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Input, IconButton, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
-import { Search, Clear, MoreVert } from '@mui/icons-material';
+import { Search, Clear, MoreVert, FilterList } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { DataGrid } from '@mui/x-data-grid';
 import http from '../http';
 import dayjs from 'dayjs';
 import global from '../global';
+import emailjs from '@emailjs/browser';
 
 function RetrieveWebsiteFbS() {
   const [websitefblist, setWebsitefblist] = useState([]);
   const [search, setSearch] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [reply, setReply] = useState('');
+  const [selectedEmail, setSelectedEmail] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const navigate = useNavigate();
 
   const onSearchChange = (e) => {
@@ -54,11 +58,13 @@ function RetrieveWebsiteFbS() {
   const handleMenuClick = (event, row) => {
     setAnchorEl(event.currentTarget);
     setSelectedRow(row);
+    setSelectedEmail(row.email);
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedRow(null);
+    setSelectedEmail('');
   };
 
   const handleResolvedClick = () => {
@@ -102,10 +108,49 @@ function RetrieveWebsiteFbS() {
   };
 
   const handleDialogSubmit = () => {
-    // Add your reply submission logic here
-    console.log('Reply submitted:', reply);
-    setShowDialog(false);
-    setReply('');
+    const templateParams = {
+      from_name: "PrásinosSG",
+      message: reply,
+      email: selectedEmail // Make sure to include the email in the template params
+    };
+
+    emailjs.send('service_60gzlnq', 'template_n0yggcn', templateParams, 'JhO9fMrH4RAMOtWBc')
+      .then((result) => {
+        console.log('Email successfully sent!', result.status, result.text);
+        setShowDialog(false);
+        setReply('');
+      }, (error) => {
+        console.error('Failed to send email:', error);
+      });
+  };
+
+  const handleFilterMenuOpen = (event) => {
+    setFilterAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterMenuClose = () => {
+    setFilterAnchorEl(null);
+  };
+
+  const handleFilterStatus = (status) => {
+    setFilterStatus(status);
+    handleFilterMenuClose();
+  };
+
+  const getProcessedWebsiteFbList = () => {
+    let filteredList = websitefblist.filter((websitefb) => {
+      if (filterStatus === 'all') return true;
+      return websitefb.status.toLowerCase() === filterStatus.toLowerCase();
+    });
+  
+    filteredList = filteredList.filter((websitefb) => {
+      if (!search) return true;
+      return Object.values(websitefb).some(value =>
+        value && value.toString().toLowerCase().includes(search.toLowerCase())
+      );
+    });
+  
+    return filteredList;
   };
 
   const columns = [
@@ -184,11 +229,22 @@ function RetrieveWebsiteFbS() {
         <IconButton color="primary" onClick={onClickClear}>
           <Clear />
         </IconButton>
+        <IconButton color="primary" onClick={handleFilterMenuOpen}>
+          <FilterList />
+        </IconButton>
+        <Menu
+          anchorEl={filterAnchorEl}
+          open={Boolean(filterAnchorEl)}
+          onClose={handleFilterMenuClose}
+        >
+          <MenuItem onClick={() => handleFilterStatus('resolved')}>Resolved</MenuItem>
+          <MenuItem onClick={() => handleFilterStatus('unresolved')}>Unresolved</MenuItem>
+          <MenuItem onClick={() => handleFilterStatus('all')}>All</MenuItem>
+        </Menu>
       </Box>
       <Box sx={{ height: 550, width: '100%', marginTop: "10px" }}>
         <DataGrid
-          rows={websitefblist}
-          style={{ }}
+          rows={getProcessedWebsiteFbList()}
           columns={columns}
           getRowId={(row) => row.id}
           initialState={{

@@ -38,7 +38,7 @@ function Header() {
                                 <LinkContainer to="/" style={{ paddingRight: "3%" }}>
                                     <Nav.Link>Home</Nav.Link>
                                 </LinkContainer>
-                                <LinkContainer to="/bookings" style={{ paddingRight: "3%" }}>
+                                <LinkContainer to="/" style={{ paddingRight: "3%" }}>
                                     <Nav.Link>Bookings</Nav.Link>
                                 </LinkContainer>
                                 <LinkContainer to="/eventfeedback" style={{ paddingRight: "3%" }}>
@@ -48,7 +48,7 @@ function Header() {
                                     <Nav.Link>Rewards</Nav.Link>
                                 </LinkContainer>
                                 <LinkContainer to="/websitefeedback" style={{ paddingRight: "3%" }}>
-                                    <Nav.Link>Support</Nav.Link>
+                                    <Nav.Link>Contact</Nav.Link>
                                 </LinkContainer>
                                 {user && (
                                     <>

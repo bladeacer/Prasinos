@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Input, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Menu, MenuItem, Modal, Button } from '@mui/material';
-import { MoreVert, Search, Clear, ArrowUpward, ArrowDownward, FilterList } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Box, Typography, Input, IconButton, Menu, MenuItem, Modal, Button } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import { MoreVert, Search, Clear, FilterList } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import http from '../http';
 import dayjs from 'dayjs';
 import global from '../global';
@@ -10,13 +11,12 @@ function RetrieveWebsiteFbU() {
   const [websitefblist, setWebsitefblist] = useState([]);
   const [search, setSearch] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null); // For filter dropdown
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
-  const [sortOrder, setSortOrder] = useState('asc');
-  const [sortColumn, setSortColumn] = useState('id');
-  const [filterStatus, setFilterStatus] = useState('all'); // State for filtering by status
-  const [deleteConfirmShow, setDeleteConfirmShow] = useState(false); // State for showing delete confirmation modal
-  const [deleteId, setDeleteId] = useState(null); // State to store ID of feedback to be deleted
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [deleteConfirmShow, setDeleteConfirmShow] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const navigate = useNavigate();
 
   const onSearchChange = (e) => {
     setSearch(e.target.value);
@@ -58,61 +58,29 @@ function RetrieveWebsiteFbU() {
 
   const handleEditClick = () => {
     handleMenuClose();
-    // Redirect to edit page
+    navigate(`/editwebsitefeedback/${selectedFeedbackId}`);
   };
 
   const handleViewClick = () => {
-    navigate(`/viewwebsitefb/${selectedFeedbackId}`);
     handleMenuClose();
+    navigate(`/viewwebsitefb/${selectedFeedbackId}`);
   };
 
-  const handleDeleteClick = (id) => {
-    setDeleteId(id);
+  const handleDeleteClick = () => {
+    setDeleteId(selectedFeedbackId);
     setDeleteConfirmShow(true);
+    handleMenuClose();
   };
 
   const deleteWebsiteFeedback = () => {
     if (deleteId) {
       http.delete(`/websitefb/${deleteId}`).then((res) => {
-        // Assuming deletion was successful
         console.log('Feedback deleted successfully');
         setDeleteConfirmShow(false);
-        getWebsitefb(); // Refresh the feedback list
+        getWebsitefb();
       }).catch((error) => {
         console.error('Error deleting feedback:', error);
-        // Handle error if needed
       });
-    }
-  };
-
-  const toggleSortOrder = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-  };
-
-  const sortIcon = (columnName) => {
-    if (sortColumn === columnName) {
-      return sortOrder === 'asc' ? <ArrowUpward /> : <ArrowDownward />;
-    }
-    return null;
-  };
-
-  const sortWebsitefbList = (list) => {
-    const sortedList = [...list].sort((a, b) => {
-      if (sortOrder === 'asc') {
-        return a[sortColumn] > b[sortColumn] ? 1 : -1;
-      } else {
-        return a[sortColumn] < b[sortColumn] ? 1 : -1;
-      }
-    });
-    return sortedList;
-  };
-
-  const handleSort = (columnName) => {
-    if (sortColumn === columnName) {
-      toggleSortOrder();
-    } else {
-      setSortColumn(columnName);
-      setSortOrder('asc');
     }
   };
 
@@ -146,16 +114,56 @@ function RetrieveWebsiteFbU() {
       if (filterStatus === 'all') return true;
       return websitefb.status.toLowerCase() === filterStatus.toLowerCase();
     });
-
+  
     filteredList = filteredList.filter((websitefb) => {
       if (!search) return true;
-      return Object.values(websitefb).some(value => 
-        value.toString().toLowerCase().includes(search.toLowerCase())
+      return Object.values(websitefb).some(value =>
+        value && value.toString().toLowerCase().includes(search.toLowerCase())
       );
     });
-
-    return sortWebsitefbList(filteredList);
+  
+    return filteredList;
   };
+  
+
+  const columns = [
+    {
+      field: 'id',
+      headerName: <span className="boldHeader">Report ID</span>,
+      flex: 0.7,
+      sx: { fontWeight: 'bold' },
+      renderCell: (params) => (
+        <Box sx={{ marginLeft: "20%" }}>
+          {params.value}
+        </Box>
+      ),
+    },
+    { field: 'email', headerName: <span className="boldHeader">Email</span>, flex: 1.5 },
+    { field: 'reporttype', headerName: <span className="boldHeader">Report Type</span>, flex: 1 },
+    {
+      field: 'elaboration', headerName: <span className="boldHeader">Elaboration</span>, flex: 1, renderCell: (params) => (
+        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{params.value}</span>
+      )
+    },
+    { field: 'createdAt', headerName: <span className="boldHeader">Created Date</span>, flex: 1, valueFormatter: (params) => dayjs(params).format(global.datetimeFormat) },
+    {
+      field: 'updatedAt', headerName: <span className="boldHeader">Last Updated</span>,
+      flex: 1, valueFormatter: (params) => dayjs(params).format(global.datetimeFormat)
+    },
+    { field: 'status', headerName: <span className="boldHeader">Status</span>, flex: 1 },
+    {
+      field: 'actions',
+      headerName: '',
+      width: 90,
+      renderCell: (params) => (
+        <IconButton
+          onClick={(event) => handleMenuOpen(event, params.row.id)}
+        >
+          <MoreVert />
+        </IconButton>
+      )
+    }
+  ];
 
   return (
     <Box style={{ paddingTop: "100px", paddingLeft: "7%", width: "100vw" }}>
@@ -188,66 +196,34 @@ function RetrieveWebsiteFbU() {
           <MenuItem onClick={() => handleFilterStatus('all')}>All</MenuItem>
         </Menu>
       </Box>
-      <TableContainer component={Paper} sx={{ maxHeight: 500, width: '95%', overflow: 'auto' }}>
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}>
-                Report ID
-                <IconButton onClick={() => handleSort('id')}>
-                  {sortIcon('id')}
-                </IconButton>
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}>Email</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}>Report Type</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: "16px" }}>Elaboration</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}>Created At</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}>Last Updated</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, fontSize: "16px" }}></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {getProcessedWebsiteFbList().map((websitefb, index) => (
-              <TableRow key={websitefb.id} sx={{ '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.05)' } }}>
-                <TableCell style={{ paddingLeft: "2.5%" }}>{websitefb.id}</TableCell>
-                <TableCell>{websitefb.email}</TableCell>
-                <TableCell>{websitefb.reporttype}</TableCell>
-                <TableCell sx={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{websitefb.elaboration}</TableCell>
-                <TableCell>{dayjs(websitefb.createdAt).format(global.datetimeFormat)}</TableCell>
-                <TableCell>{dayjs(websitefb.updatedAt).format(global.datetimeFormat)}</TableCell>
-                <TableCell>{websitefb.status}</TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={(event) => handleMenuOpen(event, websitefb.id)}
-                  >
-                    <MoreVert />
-                  </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl) && selectedFeedbackId === websitefb.id}
-                    onClose={handleMenuClose}
-                  >
-                    <MenuItem onClick={handleViewClick}>
-                      <Link to={`/viewwebsitefb/${websitefb.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                        View
-                      </Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleEditClick}>
-                      <Link to={`/editwebsitefeedback/${websitefb.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                        Edit
-                      </Link>
-                    </MenuItem>
-                    <MenuItem onClick={() => handleDeleteClick(websitefb.id)}>Delete</MenuItem>
-                  </Menu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box sx={{ height: 500, width: '95%' }}>
+        <DataGrid
+          rows={getProcessedWebsiteFbList()}
+          columns={columns}
+          getRowId={(row) => row.id}
+          initialState={{
+            pagination: {
+              paginationModel: { page: 0, pageSize: 10 },
+            },
+          }}
+          pageSizeOptions={[10, 25]}
+          disableSelectionOnClick
+          getRowClassName={(params) =>
+            params.indexRelativeToCurrentPage % 2 === 0 ? 'even-row' : 'odd-row'
+          }
+        />
+      </Box>
 
-      {/* Delete confirmation modal */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleViewClick}>View</MenuItem>
+        <MenuItem onClick={handleEditClick}>Edit</MenuItem>
+        <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
+      </Menu>
+
       <Modal open={deleteConfirmShow} onClose={handleDeleteConfirmClose}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4 }}>
           <Typography variant="h6" component="h2">

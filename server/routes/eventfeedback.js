@@ -8,7 +8,6 @@ const { validateToken } = require('../middlewares/auth');
 // Validation Schema
 const validationSchema = yup.object({
     comment: yup.string().trim().min(3).max(500).required('Comment is required'),
-    feedback: yup.string().trim().min(3).max(500).required('Feedback is required'),
     rating: yup.number().min(0).max(5).required('Rating is required')
 });
 
@@ -30,7 +29,6 @@ router.get("/", async (req, res) => {
     if (search) {
         condition[Op.or] = [
             { comment: { [Op.like]: `%${search}%` } },
-            { feedback: { [Op.like]: `%${search}%` } },
             { rating: { [Op.like]: `%${search}%` } }
         ];
     }

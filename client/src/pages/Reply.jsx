@@ -1,19 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, TextField, Button, Typography } from '@mui/material';
 
-function Reply() {
-  const [reply, setReply] = useState('');
-
+function Reply({ reply, setReply }) {
   const handleReplyChange = (event) => {
     setReply(event.target.value);
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Add your submit logic here
-    console.log('Reply submitted:', reply);
-    // You can also clear the input field after submission
-    setReply('');
   };
 
   return (

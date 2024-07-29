@@ -49,135 +49,6 @@
   position: absolute;
 }
 
-.react-chatbot-kit-chat-container {
-    width: 57% !important;  /* Ensuring that the width is enforced */
-    max-width: 100% !important; /* Override any max-width constraints */
-    margin: 0 auto;  /* Centering the chatbot container */
-    border-radius: 10px;
-    background-color: red;
-    padding: 20px;
-}
-
-.react-chatbot-kit-chat-inner-container {
-    background-color: blue;
-}
-
-.react-chatbot-kit-chat-header {
-    background-color: aqua;
-    width: 400px;
-    color: white;
-    font-size: 18px;
-    padding: 10px;
-    border-bottom: 1px solid aqua;
-}
-
-.react-chatbot-kit-chat-input-container {
-    background-color: aquamarine;
-    padding: 10px;
-    border-top: 1px solid aquamarine;
-}
-
-.react-chatbot-kit-chat-message-container {
-    background-color: orange;
-    color: white;
-    padding: 10px;
-    width: 400px;
-}
-
-.react-chatbot-kit-chat-input {
-    background-color: pink;
-    color: white;
-    border: none;
-    padding: 10px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.react-chatbot-kit-chat-input::placeholder {
-    color: #aaa;
-}
-
-.react-chatbot-kit-chat-btn-send {
-    background-color: green;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-}
-
-.react-chatbot-kit-chat-btn-send-icon {
-    fill: white;
-}
-
-.react-chatbot-kit-chat-bot-message-container {
-    background-color: beige;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 5px 0;
-}
-
-.react-chatbot-kit-chat-bot-avatar-container {
-    background-color:navy;
-    margin-top: 5px;
-}
-
-.react-chatbot-kit-chat-bot-avatar-icon {
-    fill: white;
-}
-
-.react-chatbot-kit-chat-bot-avatar-letter {
-    color: white;
-}
-
-.react-chatbot-kit-chat-bot-message {
-    background-color: #555;
-    color: white;
-    padding: 10px;
-    border-radius: 10px;
-    margin: 5px 90px 6px;
-}
-
-.react-chatbot-kit-chat-bot-message-arrow {
-    border-left-color: #555;
-}
-
-.react-chatbot-kit-chat-bot-loading-icon-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chatbot-loader-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#chatbot-loader #chatbot-loader-dot1,
-#chatbot-loader #chatbot-loader-dot2,
-#chatbot-loader #chatbot-loader-dot3 {
-    background-color: white;
-}
-
-.react-chatbot-kit-error {
-    color: red;
-    font-size: 14px;
-}
-
-.react-chatbot-kit-error-container {
-    background-color: #fdd;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.react-chatbot-kit-error-header {
-    font-weight: bold;
-}
-
-.react-chatbot-kit-error-docs {
-    color: #555;
-}
-
 .data-grid-container {
     height: 300px;
     width: 100%;
@@ -194,4 +65,45 @@
 
 .MuiTablePagination-selectLabel.css-pdct74-MuiTablePagination-selectLabel{
     margin-bottom: 2px
+}
+
+.address{
+    text-decoration: none;
+}
+
+/* Remove default background color when accordion item is active */
+.accordion-button:not(.collapsed) {
+    background-color: transparent !important;
+    color: #000; /* Adjust text color if needed */
+  }
+  
+.accordion-button {
+    background-color: #f8f9fa; /* Set a different background color if needed */
+    font-weight: bold;
+}
+
+.accordion-button::after {
+    filter: invert(0%); /* Reset icon color if necessary */
+}
+
+.chatbot-icon-container {
+    position: fixed;
+    bottom: 30px;
+    right: 50px;
+    z-index: 1000;
+    width: 60px;
+    height: 60px;
+    border: 2px solid black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: "10px";
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add box shadow */
+}
+
+.chatbot-icon {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
 }

@@ -11,8 +11,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const validationSchema = Yup.object({
   comment: Yup.string().trim().min(3).max(500).required('Comment is required'),
-  feedback: Yup.string().trim().min(3).max(500).required('Feedback is required'),
-  rating: Yup.number().min(1, 'Rating is required').max(5).required('Rating is required'),
+  rating: Yup.number().min(1, 'Rating is required').max(5).required('Rating is required')
 });
 
 function EventFeedback() {
@@ -35,12 +34,11 @@ function EventFeedback() {
   return (
     <>
       <Formik
-        initialValues={{ comment: '', feedback: '', rating: 0 }}
+        initialValues={{ comment: '', rating: 0 }}
         validationSchema={validationSchema}
         onSubmit={(values) => {
           setLoading(true);
           values.comment = values.comment.trim();
-          values.feedback = values.feedback.trim();
           http.post("/eventfb", values)
             .then((res) => {
               console.log(res.data);
@@ -60,7 +58,7 @@ function EventFeedback() {
         {({ handleSubmit, setFieldValue }) => (
           <Modal show={show} onHide={handleClose} centered>
             <Modal.Header closeButton>
-              <Modal.Title style={{ marginLeft: "32%", fontWeight: "bold" }}>Event Feedback</Modal.Title>
+              <Modal.Title style={{ marginLeft: "32%", fontWeight: "bold" }}>Event Review</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               {loading ? (
@@ -93,13 +91,8 @@ function EventFeedback() {
                     </Form.Group>
                     <Form.Group controlId="formComment">
                       <Form.Label>Comment</Form.Label>
-                      <Field name="comment" as="textarea" className="form-control" />
+                      <Field name="comment" as="textarea" style={{ height: "130px"}} className="form-control" />
                       <ErrorMessage name="comment" component="div" className="text-danger" />
-                    </Form.Group>
-                    <Form.Group controlId="formFeedback">
-                      <Form.Label className="mt-3">Feedback for Improvement</Form.Label>
-                      <Field name="feedback" as="textarea" className="form-control" />
-                      <ErrorMessage name="feedback" component="div" className="text-danger" />
                     </Form.Group>
                     <Button variant="success" type="submit" className="mt-5" style={{ width: "80%", marginLeft: "10%", marginBottom: "5%" }} onClick={handleSubmit}>
                       Submit
