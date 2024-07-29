@@ -30,8 +30,8 @@ app.use("/user", userRoute);
 const fileRoute = require("./routes/file");
 app.use("/file", fileRoute);
 
-const redeemedRewardRoute = require("./routes/redeemedRewards"); // Ensure the file name is correct
-app.use("/redeemed-rewards", redeemedRewardRoute); // Use the new route
+const redeemedRewardsRouter = require("./routes/redeemedRewards");
+app.use("/redeemed-rewards", redeemedRewardsRouter);
 
 const db = require("./models");
 db.sequelize

@@ -30,20 +30,16 @@ import UserContext from "../contexts/UserContext";
 import InfoIcon from "@mui/icons-material/Info";
 import Confetti from "react-confetti";
 import Wheel from "./Wheel";
+import axios from "axios";
 
 function UserRewards() {
   const { userid } = useParams();
-  const { user } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
-  const [points, setPoints] = useState(0);
-  const [tier, setTier] = useState("");
   const [progress, setProgress] = useState(0);
   const [pointsNeeded, setPointsNeeded] = useState(0);
   const [eligibleRewards, setEligibleRewards] = useState([]);
   const [search, setSearch] = useState("");
   const [sortOptions, setSortOptions] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [selectedReward, setSelectedReward] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
   const navigate = useNavigate();
@@ -54,15 +50,47 @@ function UserRewards() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [TierOpen, setTierOpen] = useState(false);
 
-  const [redeemedRewards, setRedeemedRewards] = useState([]);
-  const [redeeming, setRedeeming] = useState(false);
-
   const [showConfetti, setShowConfetti] = useState(false);
 
   const [popupOpen, setPopupOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const rewardsPerPage = 5;
+
+  const { user } = useContext(UserContext); // Get the user from context
+  const userId = user?.id; // Assuming user object has an id property
+  const [redeemedRewards, setRedeemedRewards] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [selectedReward, setSelectedReward] = useState(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [points, setPoints] = useState(user?.points || 0);
+  const [tier, setTier] = useState(user?.tier || "");
+
+  useEffect(() => {
+    if (user) {
+      fetchRedeemedRewards(user.id);
+    }
+  }, [user]);
+
+  const fetchRedeemedRewards = async () => {
+    try {
+      const response = await http.get(`/redeemed-rewards/${user.id}`);
+      const data = response.data;
+
+      console.log("Fetched redeemed rewards:", data);
+
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setRedeemedRewards(data);
+      } else {
+        console.error("Unexpected data format:", data);
+        setRedeemedRewards([]); // Reset if data is not as expected
+      }
+    } catch (error) {
+      console.error("Error fetching redeemed rewards:", error);
+      toast.error("Failed to fetch redeemed rewards.");
+    }
+  };
 
   const handleClick = () => {
     setShowConfetti(true);
@@ -302,49 +330,60 @@ function UserRewards() {
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedReward(null);
+  };
+
+  const handleOpenDialog = (reward) => {
+    setSelectedReward(reward);
+    setOpen(true);
   };
 
   const handlePurchaseReward = async () => {
-    if (selectedReward && points >= selectedReward.points_needed) {
-      setRedeeming(true);
-      try {
-        // Update points and redeemed rewards on the server
-        const updatedRewards = [
-          ...redeemedRewards,
-          {
-            id: selectedReward.id,
-            name: selectedReward.name,
-            description: selectedReward.description,
-            points_needed: selectedReward.points_needed,
-            tier: tier,
-            time_redeemed: new Date(),
-          },
-        ];
+    if (!selectedReward || !user) {
+      toast.error("Invalid reward or user data.");
+      return;
+    }
 
-        await http.put(`/user/user-rewards/${userid}`, {
-          points: points - selectedReward.points_needed,
-          tier: tier,
-          redeemedRewards: updatedRewards,
-        });
-
-        // Add the redeemed reward to the list of redeemed rewards locally
-        setRedeemedRewards(updatedRewards);
-
-        // Fetch updated user data after successful purchase
-        fetchUserData();
-        toast.success(
-          `Reward "${selectedReward.name}" purchased successfully!`
-        );
-        handleClose();
-      } catch (err) {
-        console.error("Error updating points:", err);
-        toast.error("Failed to update points.");
-      } finally {
-        setRedeeming(false);
-      }
-    } else {
+    if (points < selectedReward.points_needed) {
       toast.error("Insufficient points to purchase this reward.");
+      return;
+    }
+
+    setRedeeming(true);
+
+    try {
+      // Prepare the redeemed reward data
+      const redeemedReward = {
+        userId: user.id,
+        rewardId: selectedReward.id,
+        name: selectedReward.name,
+        description: selectedReward.description,
+        pointsNeeded: selectedReward.points_needed,
+        tier: tier,
+        timeRedeemed: new Date().toISOString(), // Format the date as ISO string
+      };
+
+      // Update points and redeemed rewards on the server
+      await http.put(`/user/user-rewards/${user.id}`, {
+        points: points - selectedReward.points_needed,
+        tier: tier,
+      });
+
+      // Post the redeemed reward to the server
+      await http.post(`/redeemed-rewards`, redeemedReward);
+
+      // Add the redeemed reward to the list of redeemed rewards locally
+      setRedeemedRewards((prevRewards) => [...prevRewards, redeemedReward]);
+
+      // Fetch updated user data after successful purchase
+      fetchUserData();
+
+      toast.success(`Reward "${selectedReward.name}" purchased successfully!`);
+      handleClose();
+    } catch (error) {
+      console.error("Error processing reward purchase:", error);
+      toast.error("Failed to process reward purchase.");
+    } finally {
+      setRedeeming(false);
     }
   };
 
@@ -880,29 +919,34 @@ function UserRewards() {
           Redeemed Rewards
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          Note: Redeemed Rewards are not stored permanently!
+          Note: Redeemed Rewards are stored permanently!
         </Typography>
+
         <Grid container spacing={2} sx={{ mb: 4, justifyContent: "center" }}>
           {redeemedRewards.length > 0 ? (
             redeemedRewards.map((reward) => (
               <Grid item xs={12} sm={6} md={4} key={reward.id}>
+                {" "}
+                {/* Ensure unique key */}
                 <Card sx={{ height: "100%" }}>
                   <CardContent>
                     <Typography variant="h6" component="div">
-                      {reward.name}
+                      {reward.name || "No Name"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {reward.description}
+                      {reward.description || "No Description"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      <b>Points:</b> {reward.points_needed}
+                      <b>Points:</b> {reward.pointsNeeded || "N/A"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      <b>Tier:</b> {reward.tier}
+                      <b>Tier:</b> {reward.tier || "N/A"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       <b>Time Redeemed:</b>{" "}
-                      {reward.time_redeemed.toLocaleString()}
+                      {reward.timeRedeemed
+                        ? new Date(reward.timeRedeemed).toLocaleString()
+                        : "N/A"}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -966,6 +1010,7 @@ function UserRewards() {
                 flex: 1,
                 marginLeft: "8px", // Adjust spacing as needed
               }}
+              disabled={redeeming}
             >
               <b>Redeem</b>
             </Button>
