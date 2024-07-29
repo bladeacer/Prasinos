@@ -54,7 +54,11 @@ function Register() {
                     window.location.reload();
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         }
     });

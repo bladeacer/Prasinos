@@ -1,26 +1,11 @@
 import { Typography, TextField, Box, Button } from "@mui/material"
 import { useFormik } from "formik";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import * as yup from 'yup';
-import http from '../http';
-import { useState, useEffect } from "react";
+import http from '../http'
 
 export default function ResetEndpoint() {
-    const [user, setUser] = useState({
-        name: "",
-        email: ""
-    });
-
-    useEffect(() => {
-        if (sessionStorage.getItem("accessToken")) {
-            http.get('/user/auth').then((res) => {
-                setUser(res.data.user);
-                if (res.data.status == 301) {
-                    navigate("/verify", { replace: true })
-                }
-            });
-        }
-    }, []);
+    // Refactor to send email skipping this process, e.g. http.post in use effect hook of ResetPassword directly (smth like verify.jsx but different)
 
     const formik = useFormik({
         initialValues: {
@@ -28,26 +13,24 @@ export default function ResetEndpoint() {
         },
         enableReinitialize: true,
         validationSchema: yup.object({
-            password: yup.string().trim()
-                .min(8, 'Password must be at least 8 characters')
-                .max(50, 'Password must be at most 50 characters')
-                .required('Password is required')
+            otp: yup.string().trim()
+                .max(6, 'Otp must be at most 50 characters')
+                .required('Otp is required')
         }),
         onSubmit: async (data) => {
             data.password = data.password.trim();
             try {
-                const response1 = await http.post("/user/resethandler", data); // Use await
-                console.log('Response from /user/resethandler:', response1.data);
-
-                // Handle response from first POST request (optional)
-
-                // Assuming successful response, trigger email sending
-                if (response1.data == "User was verified successfully.") {
-                    await http.post("/user/sendResetEmail"); // Use await with sendResetEmail function
-                    toast.success('Password reset email sent successfully!'); // Or similar success message
+                const response1 = await http.post("/user/resethandler", data);
+                if (response1.data === "User was verified successfully.") {
+                    await http.post("/user/sendResetEmail");
+                    toast.success('Password reset email sent successfully!');
                 }
-            } catch (error) {
-                console.error('Error:', error);
+            } catch (err) {
+                if (err.response.data.message) {
+                    toast.error(`${err.response.data.message}`);
+                } else {
+                    toast.error(`${err}`);
+                }
             }
         }
 
@@ -55,23 +38,32 @@ export default function ResetEndpoint() {
 
     return (
         <>
-            <Box component="form" onSubmit={formik.handleSubmit}>
-                <Typography variant='h6' sx={{ mt: 1 }}>Enter your current Password</Typography>
+            <Box component="form" sx={{ maxWidth: '500px' }} onSubmit={formik.handleSubmit}>
+                <Typography sx={{ my: 2, fontSize: '1.7em' }}>
+                    Welcome back!
+                </Typography>
+                <Typography sx={{ fontSize: '1.15em' }}>
+                    Enter your credientials to continue
+                </Typography>
+
+                <Typography variant='h6' sx={{ mt: 4 }}>Enter one-time password:</Typography>
                 <TextField
                     fullWidth margin="dense" autoComplete="off"
-                    label="Password"
-                    name="password" type="password"
-                    value={formik.values.password}
+                    label="OTP"
+                    name="otp"
+                    value={formik.values.otp}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={formik.touched.password && Boolean(formik.errors.password)}
-                    helperText={formik.touched.password && formik.errors.password}
+                    error={formik.touched.otp && Boolean(formik.errors.otp)}
+                    helperText={formik.touched.otp && formik.errors.otp}
                 />
 
-                <Button variant="contained" type="submit">
-                    Submit
+                <Button fullWidth variant="contained" sx={{ mt: 2, backgroundColor: '#8ab78f' }}
+                    type="submit">
+                    Verify
                 </Button>
             </Box>
+            <ToastContainer />
         </>
     )
 }

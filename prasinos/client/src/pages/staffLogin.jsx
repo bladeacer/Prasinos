@@ -13,7 +13,7 @@ import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/componen
 export default function StaffLogin() {
     const navigate = useNavigate();
     const { setStaff } = useContext(StaffContext);
-    const {setUser} = useContext(UserContext)
+    const { setUser } = useContext(UserContext)
 
     const formik = useFormik({
         initialValues: {
@@ -33,18 +33,22 @@ export default function StaffLogin() {
         onSubmit: (data) => {
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
-            if (sessionStorage.getItem("accessToken")) {
-                sessionStorage.removeItem("accessToken");
+            if (localStorage.getItem("accessToken")) {
+                localStorage.removeItem("accessToken");
             }
             http.post("/staff/login", data)
                 .then((res) => {
-                    sessionStorage.setItem("accessToken", res.data.accessToken);
+                    localStorage.setItem("accessToken", res.data.accessToken);
                     setStaff(res.data.staff);
                     setUser(null);
-                    navigate("/staffHome", {replace: true});
+                    navigate("/staffHome", { replace: true });
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         }
     });
@@ -92,9 +96,6 @@ export default function StaffLogin() {
                         </Button>
                     </Box>
                     <ToastContainer />
-                    <CustBox>
-                        {/* <Button sx={{opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': {opacity: 1}, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center'}} href="/home">Click on me to go back to the home page!</Button> */}
-                    </CustBox>
                     <CloseButton href="/">X</CloseButton>
                 </LogBox>
             </LoginWrapper>

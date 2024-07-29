@@ -20,12 +20,9 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'staff'
     });
 
-    // User.associate = (models) => {
-    //     User.hasMany(models.Tutorial, {
-    //         foreignKey: "userId",
-    //         onDelete: "cascade"
-    //     });
-    // };
+    Staff.associate = (models) => {
+        Staff.hasMany(models.Otp, { foreignKey: 'otpForId', as: 'otps', onDelete: 'CASCADE' });
+    }
 
     return Staff;
 }

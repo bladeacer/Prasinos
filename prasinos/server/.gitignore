@@ -2,7 +2,7 @@
 node_modules
 
 # environment
-.env
+# .env
 
 # Mac OS
 .DS_Store

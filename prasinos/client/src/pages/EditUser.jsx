@@ -1,14 +1,13 @@
 import { useFormik } from "formik"
 import * as yup from 'yup';
 import { LoginWrapper, LogBox, CloseButton } from "./reusables/components/login_components"
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Typography, Box, Button, TextField } from "@mui/material";
+import { Typography, Box, Button, TextField, Grid } from "@mui/material";
 import http from '../http'
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function EditUser() {
-    const { id } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState({
         name: "",
@@ -16,14 +15,15 @@ export default function EditUser() {
         phone: ""
     })
     const [loading, setLoading] = useState(true);
+    const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
         http.get("/user/auth").then((res) => {
             setUser(res.data.user);
+            setImageFile(res.data.user.imageFile);
             if (res.data.status == 301) {
                 navigate("/verify", { replace: true })
             }
-            // setImageFile(res.data.imageFile);
             setLoading(false);
         });
     }, []);
@@ -48,6 +48,10 @@ export default function EditUser() {
                     "Express in the form '+65 81234567'")
         }),
         onSubmit: (data) => {
+            if (imageFile) {
+                data.imageFile = imageFile;
+            }
+
             data.name = data.name.trim();
             data.email = data.email.trim().toLowerCase();
             data.password = user.password;
@@ -57,10 +61,38 @@ export default function EditUser() {
                     navigate("/settings", { replace: true });
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         }
     });
+
+    const onFileChange = (e) => {
+        let file = e.target.files[0];
+        if (file) {
+            if (file.size > 1024 * 1024) {
+                toast.error('Maximum file size is 1MB');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('file', file);
+            http.post('/file/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+                .then((res) => {
+                    setImageFile(res.data.filename);
+                })
+                .catch(function (error) {
+                    console.log(error.response);
+                });
+        }
+    };
     return (
         <>
             <LoginWrapper sx={{ borderRadius: '10px' }}>
@@ -111,10 +143,29 @@ export default function EditUser() {
                                     Save
                                 </Button>
                             </Box>
+                            <Grid item xs={12} md={6} lg={4}>
+                                <Box sx={{ textAlign: 'center', mt: 2 }} >
+                                    <Button variant="contained" component="label">
+                                        Upload Image
+                                        <input hidden accept="image/*" multiple type="file"
+                                            onChange={onFileChange} />
+                                    </Button>
+                                    {
+                                        imageFile && (
+                                            <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
+                                                <img alt="tutorial"
+                                                    src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}>
+                                                </img>
+                                            </Box>
+                                        )
+                                    }
+                                </Box>
+                            </Grid>
                         </>
                     )}
                 </LogBox>
             </LoginWrapper>
+            <ToastContainer />
             <CloseButton href="/settings">X</CloseButton>
         </>
     )

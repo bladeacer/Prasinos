@@ -7,7 +7,7 @@ const instance = axios.create({
 // Add a request interceptor
 instance.interceptors.request.use(function (config) {
     // Do something before request is sent
-    let accessToken = sessionStorage.getItem("accessToken");
+    let accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
         config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
@@ -29,7 +29,7 @@ instance.interceptors.response.use(function (response) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
     if (error.response.status === 401 || error.response.status === 403) {
-        sessionStorage.removeItem("accessToken");
+        localStorage.removeItem("accessToken");
         window.location = "/login";
     }
     return Promise.reject(error);

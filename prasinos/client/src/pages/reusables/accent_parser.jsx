@@ -5,21 +5,26 @@ let is_accent = [
     false, false, false, false, false,
     false, false, false, 
 ];
+let goof_check = false;
 // Add staff login, staff register and staff home accent parsers
 function falseAll() {
     is_accent.fill(false);
+    goof_check = true;
 }
 function setAccentN(n) {
     falseAll();
     is_accent[n] = true;
+    goof_check = false;
 }
 function setLogin() {
     is_accent[5] = true;
     is_accent[6] = false;
+    goof_check = false;
 }
 function setRegister() {
     is_accent[6] = true;
     is_accent[5] = false;
+    goof_check = false;
 }
 
 const accentRouteMap = new Map([
@@ -39,7 +44,7 @@ const accentRouteMap = new Map([
     ['/staffLogin', () => setAccentN(13)],
     ['/staffRegister', () => setAccentN(14)],
     ['/staffHome', () => setAccentN(15)],
-    ['/:uuid', () => setAccentN(16)],
+    ['/resetendpoint', () => setAccentN(16)],
     ['/verifyhandler', () => setAccentN(17)],
     ['*', () => falseAll()]
 ]);
@@ -55,6 +60,5 @@ const setAccentFromPath = (path) => {
 };
 
 setAccentFromPath(pathname);
-let goof_check = is_accent.includes(true);
 
 export { is_accent, goof_check, accentRouteMap };

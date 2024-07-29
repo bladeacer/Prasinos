@@ -54,7 +54,11 @@ export default function StaffRegister() {
                     navigate("/staffLogin", { replace: true });
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         }
     });

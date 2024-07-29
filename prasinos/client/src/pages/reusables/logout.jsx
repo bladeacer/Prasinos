@@ -1,10 +1,10 @@
 const logout = () => {
-    sessionStorage.removeItem("accessToken");
+    localStorage.removeItem("accessToken");
     window.location ="/home";
 };
 
 const staffLogout = () => {
-    sessionStorage.removeItem("accessToken");
+    localStorage.removeItem("accessToken");
     window.location ="/staffLogin"
 }
 

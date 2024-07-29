@@ -1,5 +1,3 @@
-import { useContext } from "react";
-import { UserContext } from "../contexts/Contexts";
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import http from '../http';
@@ -8,40 +6,34 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 
 
+// TODO: Refactor to use and retrieve otp
+
 export default function VerifyEmail() {
-    const { setUser } = useContext(UserContext);
     const navigate = useNavigate();
     const formik = useFormik({
         initialValues: {
-            uuid: "",
-            passphrase: ""
+            otp: ""
         },
         validationSchema: yup.object({
-            uuid: yup.string().trim()
-                .email('Enter a valid UUID')
-                .max(36, 'Email must be at most 36 characters')
-                .required('UUID is required'),
-            passphrase: yup.string().trim()
-                .min(8, 'Passphrase must be at least 8 characters')
-                .max(50, 'Passphrase must be at most 50 characters')
-                .required('Passphrase is required')
+            otp: yup.string().trim()
+                .max(6, 'Otp must be at most 36 characters')
+                .required('otp is required')
         }),
         onSubmit: (data) => {
-            data.email = data.email.trim().toLowerCase();
-            data.passphrase = data.passphrase.trim();
-
-            http.put("/verifyhandler", data)
+            http.put("/user/verifyhandler", data)
                 .then((res) => {
-                    sessionStorage.removeItem("accessToken");
-                    setUser(res.data.user);
-                    if (res.data.status !== 301) {
-                        navigate("/logout", { replace: true });
+                    if (res.data === "User was verified successfully") {
+                        localStorage.removeItem("accessToken");
+                        navigate("/login", { replace: true });
                         window.location.reload();
                     }
-
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         }
     })
@@ -55,37 +47,27 @@ export default function VerifyEmail() {
                     Welcome back!
                 </Typography>
                 <Typography sx={{ fontSize: '1.15em' }}>
-                    Enter your credientials to verify
+                    Enter your credientials to continue
                 </Typography>
 
-                <Typography variant='h6' sx={{ mt: 4 }}>Email address</Typography>
+                <Typography variant='h6' sx={{ mt: 4 }}>Enter one-time password:</Typography>
                 <TextField
                     fullWidth margin="dense" autoComplete="off"
-                    label="UUID"
-                    name="uuid"
-                    value={formik.values.uuid}
+                    label="OTP"
+                    name="otp"
+                    value={formik.values.otp}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={formik.touched.uuid && Boolean(formik.errors.uuid)}
-                    helperText={formik.touched.uuid && formik.errors.uuid}
-                />
-
-                <Typography variant='h6' sx={{ mt: 2 }}>Password</Typography>
-                <TextField
-                    fullWidth margin="dense" autoComplete="off"
-                    label="Passphrase"
-                    name="passphrase" type="password"
-                    value={formik.values.passphrase}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.passphrase && Boolean(formik.errors.passphrase)}
-                    helperText={formik.touched.passphrase && formik.errors.passphrase}
+                    error={formik.touched.otp && Boolean(formik.errors.otp)}
+                    helperText={formik.touched.otp && formik.errors.otp}
                 />
 
                 <Button fullWidth variant="contained" sx={{ mt: 2, backgroundColor: '#8ab78f' }}
                     type="submit">
-                    Login
+                    Verify
                 </Button>
+
+                <Typography variant='h6' sx={{ mt: 4 }}>After you verify, you will have to login again.</Typography>
             </Box>
             <ToastContainer />
         </>

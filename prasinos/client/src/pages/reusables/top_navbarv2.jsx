@@ -2,13 +2,13 @@ import * as React from 'react';
 import imgUrl from '../../assets/prasinos-logo.jpg';
 import { Box, Button } from '@mui/material';
 import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { UserContext } from '../../contexts/Contexts';
 import url from '../../assets/dimmed-logo.png'
 import { SidebarData } from './SideBarData';
 import { useState } from 'react';
 import './sidebar.css'
-import { goof_check, is_accent } from './accent_parser';
+import { is_accent } from './accent_parser';
 import { logout } from './logout';
 
 export default function TopNavbarV2() {
@@ -111,6 +111,7 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
+                                        <img className='smallImage' src={`${import.meta.env.VITE_FILE_BASE_URL}${user.imageFile}`} />
                                         <CustButton href="/settings">{user.name.slice(0, 8)}..</CustButton>
                                         <SignUpButton onClick={logout}>Logout</SignUpButton>
                                     </CustButtonsStack>
@@ -195,7 +196,8 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
-                                        <CustButton href="/settings">{user.name}</CustButton>
+                                        <img className='smallImage' src={`${import.meta.env.VITE_FILE_BASE_URL}${user.imageFile}`} />
+                                        <CustButton href="/settings">{user.name.slice(0, 8)}..</CustButton>
                                         <SignUpButton onClick={logout}>Logout</SignUpButton>
                                     </CustButtonsStack>
                                 </>

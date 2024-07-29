@@ -3,13 +3,13 @@ import { styled } from '@mui/material/styles';
 
 
 export const UserSiteButton = styled(Button)({
-    width: '50vw',
-    height: '75vh',
+    width: '35vw',
+    height: '70vh',
     backgroundColor: '#8ab78f',
     color: 'white',
     position: 'fixed',
-    left: '0%',
-    top: '25%',
+    right: '50vw',
+    bottom: '5vh',
     '&:hover': {
         backgroundColor: '#9f8e6255',
         borderColor: '#9f8e6255',
@@ -19,13 +19,13 @@ export const UserSiteButton = styled(Button)({
 });
 
 export const StaffLoginButton = styled(Button)({
-    width: '50vw',
-    height: '37.5vh',
+    width: '35vw',
+    height: '35vh',
     backgroundColor: '#9D8A62',
     color: 'white',
     position: 'fixed',
-    left: '50%',
-    top: '25%',
+    right: '15vw',
+    bottom: '40vh',
     '&:hover': {
         backgroundColor: '#9f8e6255',
         borderColor: '#9f8e6255',
@@ -35,12 +35,12 @@ export const StaffLoginButton = styled(Button)({
 });
 
 export const StaffRegisterButton = styled(Button)({
-    width: '50vw',
-    height: '37.5vh',
+    width: '35vw',
+    height: '35vh',
     backgroundColor: '#d9d9d9',
     color: 'white',
-    left: '50%',
-    top: '62.5%',
+    right: '15vw',
+    bottom: '5vh',
     position: 'fixed',
     '&:hover': {
         backgroundColor: '#9f8e6255',
@@ -51,12 +51,11 @@ export const StaffRegisterButton = styled(Button)({
 })
 
 export const ImageBox = styled(Box)({
-    width: '30vw',
+    width: '20vw',
     maxWidth: '650px',
     height: '20vh',
     maxHeight: '150px',
     position: 'fixed',
-    top: '2.5%',
-    left: '34vw',
+    right: '40vw',
     borderRadius: 'unset'
 })

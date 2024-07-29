@@ -1,13 +1,11 @@
 import { useFormik } from "formik"
 import * as yup from 'yup';
 import { LoginWrapper, LogBox, CloseButton } from "./reusables/components/login_components"
-import { useParams } from "react-router-dom";
 import { Typography, Box, Button, TextField } from "@mui/material";
 import http from '../http';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function ResetPassword() {
-    const { id } = useParams();
     const formik = useFormik({
         initialValues: {
             oldPassword: "",
@@ -30,11 +28,15 @@ export default function ResetPassword() {
             data.password = data.password.trim();
             http.put("/user/reset", data)
                 .then((res) => {
-                    sessionStorage.removeItem("accessToken");
+                    localStorage.removeItem("accessToken");
                     window.location = "/hoem"
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         },
     });
@@ -45,42 +47,41 @@ export default function ResetPassword() {
                     <Typography variant="h5" sx={{ my: 2 }}>
                         Edit User
                     </Typography>
-                    {/* {user.name} {user.email} {user.password} {user.createdAt} */}
+                    <Box component="form" onSubmit={formik.handleSubmit}>
 
-                    <>
-                        <Box component="form" onSubmit={formik.handleSubmit}>
+                        <Typography variant='h6' sx={{ mt: 1 }}>Password</Typography>
+                        <TextField
+                            fullWidth margin="dense" autoComplete="off"
+                            label="Password"
+                            name="password" type="password"
+                            value={formik.values.password}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.password && Boolean(formik.errors.password)}
+                            helperText={formik.touched.password && formik.errors.password}
+                        />
 
-                            <Typography variant='h6' sx={{ mt: 1 }}>Password</Typography>
-                            <TextField
-                                fullWidth margin="dense" autoComplete="off"
-                                label="Password"
-                                name="password" type="password"
-                                value={formik.values.password}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={formik.touched.password && Boolean(formik.errors.password)}
-                                helperText={formik.touched.password && formik.errors.password}
-                            />
+                        <Typography variant='h6' sx={{ mt: 1 }}>Confirm Password</Typography>
+                        <TextField
+                            fullWidth margin="dense" autoComplete="off"
+                            label="Confirm Password"
+                            name="confirmPassword" type="password"
+                            value={formik.values.confirmPassword}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                        />
 
-                            <Typography variant='h6' sx={{ mt: 1 }}>Confirm Password</Typography>
-                            <TextField
-                                fullWidth margin="dense" autoComplete="off"
-                                label="Confirm Password"
-                                name="confirmPassword" type="password"
-                                value={formik.values.confirmPassword}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                                helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-                            />
+                        <Button variant="contained" type="submit">
+                            Reset Password
+                        </Button>
 
-                            <Button variant="contained" type="submit">
-                                Save
-                            </Button>
-                        </Box>
-                    </>
+                        <Typography variant='h6' sx={{ mt: 4 }}>After you reset your password, you will have to login again.</Typography>
+                    </Box>
                 </LogBox>
             </LoginWrapper>
+            <ToastContainer />
             <CloseButton href="/settings">X</CloseButton>
         </>
     )

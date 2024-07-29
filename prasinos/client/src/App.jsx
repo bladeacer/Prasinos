@@ -22,26 +22,16 @@ import VerifyHandler from './pages/Verifyhandler';
 export default function App() {
   const [user, setUser] = useState(null);
   const [staff, setStaff] = useState(null);
-  const [uuid, setUUID] = useState("");
 
-  // UseEffect if current window location is not home
   useEffect(() => {
-    if (sessionStorage.getItem("accessToken")) {
+    if (localStorage.getItem("accessToken")) {
       http.get('/user/auth').then((res) => {
         setUser(res.data.user);
-        if (res.data.status === 301) {
-          window.history.pushState({}, document.title, "/verify");
-          window.location.href = window.location.href;
-        }
       });
       http.get('/staff/auth').then((res) => {
         setStaff(res.data.staff);
       });
     }
-    if (!sessionStorage.getItem("resetURL")) {
-      sessionStorage.setItem("resetURL", crypto.randomUUID())
-    }
-    setUUID(sessionStorage.getItem("resetURL"))
   }, []);
 
   return (
@@ -51,18 +41,19 @@ export default function App() {
           <Route path="/" element={
             SelectLogWrapper()
           } />
+
           <Route path="*" element={
             <>
-              {is_accent[1] && ((user && user.verified) || !user) && (
+              {is_accent[1] && !is_accent[12] && ((user && !user.verified) || !user) && (
                 Unauthorized(false)
               )}
-              {is_accent[2] && ((user && user.verified) || !user) && (
+              {is_accent[2] && !is_accent[12] && ((user && !user.verified) || !user) && (
                 Unauthorized(false)
               )}
-              {is_accent[3] && ((user && user.verified) || !user) && (
+              {is_accent[3] && !is_accent[12] && ((user && !user.verified) || !user) && (
                 Unauthorized(false)
               )}
-              {is_accent[4] && ((user && user.verified) || !user) && (
+              {is_accent[4] && !is_accent[12] && ((user && !user.verified) || !user) && (
                 Unauthorized(false)
               )}
 
@@ -73,7 +64,7 @@ export default function App() {
                 Unauthorized(true)
               )}
 
-              {is_accent[7] && ((user && user.verified) || !user) && (
+              {((user && !user.verified) || !user) && is_accent[7] && (
                 Unauthorized(false)
               )}
               {is_accent[9] && ((user && user.verified) || !user) && (
@@ -85,11 +76,11 @@ export default function App() {
               {((user && user.verified) || !user) && is_accent[11] && (
                 Unauthorized(-1)
               )}
-              {((user && user.verified) || !user) && is_accent[12] && (
-                Unauthorized(-1)
+
+              {(!user || user.verified) && is_accent[12] && (
+                Unauthorized(-3)
               )}
 
-              {/* Basic staff pages from 13 to 15 */}
               {staff && is_accent[13] && (
                 Unauthorized(3)
               )}
@@ -103,7 +94,7 @@ export default function App() {
               {!user && is_accent[16] && (
                 Unauthorized(-1)
               )}
-              {user && user.verified && is_accent[17] && (
+              {((user && user.verified) || !user) && is_accent[17] && (
                 Unauthorized(-1)
               )}
               {goof_check && (
@@ -113,13 +104,11 @@ export default function App() {
           } />
         </Routes>
       </Router>
-
       <UserContext.Provider value={{ user, setUser }}>
+        <TopNavbarV2 />
         <Router>
-          <TopNavbarV2 />
           <Routes>
-
-
+            <Route path="*" element={<></>} />
             <Route path={"/home"} element={HomeWrapper()} />
             <Route path={"/booking"} element={
               <>
@@ -197,18 +186,15 @@ export default function App() {
                 )}
               </>
             } />
-            <Route path={"/verify"} element={
+            <Route path="/verify" element={
               <>
-                {user && !user.verified && is_accent[12] && (
-                  <>
-                    <Verify />
-                  </>
+                {((user && !user.verified)) && is_accent[12] && (
+                  <Verify />
                 )}
-
               </>
             } />
 
-            <Route path="/:uuid" element={
+            <Route path="/resetendpoint" element={
               <>
                 {user && user.verified && !staff && is_accent[16] && (
                   <ResetEndpoint />
@@ -232,6 +218,7 @@ export default function App() {
       <StaffContext.Provider value={{ staff, setStaff }}>
         <Router>
           <Routes>
+            <Route path="*" element={<></>} />
             <Route path={"/staffLogin"} element={
               <>
                 {!staff && is_accent[13] && (

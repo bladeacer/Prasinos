@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { User } = require('../models');
+const { User, Otp } = require('../models');
 const yup = require("yup");
 const { sign } = require('jsonwebtoken');
 const { validateToken } = require('../middlewares/auth');
@@ -9,30 +9,8 @@ const dayjs = require('dayjs')
 require('dotenv').config();
 const { Op } = require("sequelize");
 const emailjs = require('@emailjs/nodejs');
-const { v4: uuidv4 } = require('uuid');
-const rateLimit = require('express-rate-limit'); // Assuming you're using express-rate-limit
+const { generateOTP } = require('../utils/methods')
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // Limit to 10 requests per 15 minutes
-    max: 10, // Allow a maximum of 10 requests within the window
-});
-
-
-
-// In-memory storage for passphrases (replace with a more robust solution)
-const passphrases = {};
-
-// Function to generate a random passphrase
-function generatePassphrase() {
-    const bytes = crypto.randomBytes(16);
-    const passphrase = bytes.toString('base64').slice(0, 10);
-    return passphrase;
-}
-
-// Function to generate a crypto UUID
-function generateTempId() {
-    return uuidv4();
-}
 
 router.post("/register", async (req, res) => {
     let data = req.body;
@@ -62,7 +40,6 @@ router.post("/register", async (req, res) => {
             return;
         }
 
-        // Hash passowrd
         data.password = await bcrypt.hash(data.password, 10);
         // Create user
         let result = await User.create(data);
@@ -82,17 +59,17 @@ router.post("/login", async (req, res) => {
         email: yup.string().trim().lowercase().email().max(50).required(),
         password: yup.string().trim().min(8).max(50).required()
     });
+    let errorMsg = "Email or password is not correct.";
     try {
         data = await validationSchema.validate(data,
             { abortEarly: false });
 
         // Check email and password
-        let errorMsg = "Email or password is not correct.";
         let status = 200;
         let user = await User.findOne({
             where: { email: data.email }
         });
-        let verified = user.verified == true;
+        let verified = user.verified && true;
         if (!verified) {
             status = 301;
         }
@@ -105,13 +82,13 @@ router.post("/login", async (req, res) => {
             status = 400;
         };
 
-        // Return user info
         let userInfo = {
             id: user.id,
             email: user.email,
             name: user.name,
             phone: user.phone,
             createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString(),
+            imageFile: user.imageFile
             // return with nice date format
         };
         let staffInfo = {
@@ -137,17 +114,21 @@ router.post("/login", async (req, res) => {
         });
     }
     catch (err) {
-        res.status(400).json({ errors: err.errors });
+        res.status(400).json({ message: errorMsg });
         return;
     }
 });
 
 router.get("/auth", validateToken, async (req, res) => {
     let user = await User.findByPk(req.user.id);
-    let verified = user.verified;
     let status = 200;
-    if (!verified) {
-        status = 301;
+    if (!user) {
+        status = 404
+    } else {
+        let verified = user.verified;
+        if (!verified) {
+            status = 301;
+        }
     }
 
     let userInfo = {
@@ -156,7 +137,8 @@ router.get("/auth", validateToken, async (req, res) => {
         name: user.name,
         phone: user.phone,
         createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString(),
-        verified: user.verified
+        verified: user.verified,
+        imageFile: user.imageFile
     };
     res.json({
         user: userInfo,
@@ -250,6 +232,8 @@ router.put("/reset", validateToken, async (req, res) => {
     let data = req.body;
     data.password = await bcrypt.hash(data.password, 10);
 
+    // TODO: Add logic to call OTP entity associated with user
+
     let validationSchema = yup.object({
         password: yup.string().trim().min(8).required()
             .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
@@ -280,52 +264,77 @@ router.put("/reset", validateToken, async (req, res) => {
     }
 });
 
-// Implement delete account (used in danger zone)
-
 router.post("/resethandler", validateToken, async (req, res) => {
-    let id = req.user.id;
-    let user = await User.findByPk(id);
-    if (!user) {
-        res.sendStatus(404);
+    try {
+        let id = req.user.id;
+        const otp = req.body.otp;
+        let status = 200;
+        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
+
+        const now = new Date();
+        if (now > otp_is_exists.expiresAt) {
+            await Otp.destroy({ where: { otpForId: id } });
+            status = 301;
+        }
+        else if (otp_is_exists && otp.toString() == otp_is_exists.otp.toString()) {
+            let num = await Otp.destroy({ where: { otpForId: id } });
+            if (num !== 1) {
+                status = 400;
+            }
+        }
+        else {
+            status = 401;
+        }
+        if (status === 200) {
+            res.json({
+                message: "User was verified successfully."
+            });
+        } else if (status === 400) {
+            res.status(400).json({
+                message: `Cannot verify user with id ${id}. Either because of OTP expiry or server error.`
+            });
+        } else if (status == 401) {
+            res.status(401).json({ message: 'Invalid verification attempt' });
+        } else if (status == 301) {
+            res.json({ message: "Reload" })
+        }
+    }
+    catch (err) {
+        res.status(400).json({ message: err.errors });
         return;
     }
-
-    let data = req.body;
-
-    let validationSchema = yup.object({
-        password: yup.string().trim().min(8)
-            .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
-                "password at least 1 letter and 1 number")
-    });
-    data = await validationSchema.validate(data,
-        { abortEarly: false });
-
-    if (!(bcrypt.compare(data.password, user.password))) {
-        console.log(data.password);
-        console.log(user.password);
-        res.status(400).json({
-            message: `Cannot verify user with id ${id}.`
-        });
-        return;
-    }
-    res.json({
-        message: "User was verified successfully."
-    });
 
 });
 
 router.post("/sendResetEmail", validateToken, async (req, res) => {
     try {
+
         let id = req.user.id;
         let user = await User.findByPk(id);
         if (!user) {
-            return res.status(404).send('User not found');
+            return res.status(404);
         }
+
+        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
+
+        if (!otp_is_exists) {
+            const otp = generateOTP();
+            const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+            const otpFor = "user";
+            const data = {
+                otp: otp,
+                expiresAt: expiresAt,
+                otpFor: otpFor,
+                otpForId: id
+            }
+            await Otp.create(data);
+        }
+
         const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
         const message_url = process.env.CLIENT_URL;
         const serviceId = process.env.EMAIL_JS_SERVICE_ID;
         const templateId = process.env.EMAIL_JS_TEMPLATE_ID;
-        var templateParams = {
+        const templateParams = {
             to_name: `${user.name}`,
             message: `To continue with resetting your password, use the following link:  ${message_url}/reset `,
             reply_to: `${user.email}`,
@@ -338,125 +347,122 @@ router.post("/sendResetEmail", validateToken, async (req, res) => {
     }
 });
 
-router.post("/verify", limiter, validateToken, async (req, res) => {
+
+router.post("/sendVerifyEmail", validateToken, async (req, res) => {
     try {
+        // TODO: Refactor code with OTP as database entity associated with each user
         let id = req.user.id;
         let user = await User.findByPk(id);
-        let email = user.email;
         if (!user) {
             res.sendStatus(404);
             return;
         }
-        const tempId = generateTempId();
-        // Store tempId in localstorage for a short while
-        const passphrase = generatePassphrase();
+        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
 
-        if (passphrases[email]) {
-            return res.status(429).json({ message: 'Verification email already sent for this address' });
+        if (!otp_is_exists) {
+            const otp = generateOTP();
+            const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+            const otpFor = "user";
+            const data = {
+                otp: otp,
+                expiresAt: expiresAt,
+                otpFor: otpFor,
+                otpForId: id
+            }
+            await Otp.create(data);
         }
         else {
-            passphrases[email] = { passphrase, tempId, expiresAt: Date.now() + 10 * 60 * 1000 }; // Expires in 10 minutes
-
-            var templateParams = {
+            const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
+            const message_url = process.env.CLIENT_URL;
+            const serviceId = process.env.EMAIL_JS_SERVICE_ID;
+            const templateId = process.env.EMAIL_JS_TEMPLATE_ID;
+            let templateParams = {
                 to_name: `${user.name}`,
-                message: `To finish the verification process, verify at:  ${process.env.CLIENT_URL}/verifyhandler with the passphrase ${passphrase}. 
-                Note this is a one-time passphrase that will expire within 10 minutes.`,
+                message: `To finish the verification process, verify at:  ${message_url}/verifyhandler with the one-time password ${otp_is_exists.otp}. 
+                Note this is a one-time password that will expire within 10 minutes.`,
                 reply_to: `${user.email}`,
                 subject: "Prasinos: Verify user"
             };
-
-            await emailjs.send(process.env.EMAIL_JS_SERVICE_ID, process.env.EMAIL_JS_TEMPLATE_ID, templateParams, { publicKey: process.env.EMAIL_JS_PUBLIC_KEY });
-
-            res.json({
-                message: "User was verified successfully."
-            });
+            await emailjs.send(serviceId, templateId, templateParams, { publicKey: publicKey });
         }
+
     }
     catch (err) {
         res.status(400).json({ errors: err.errors });
     }
 });
 
-router.patch("/verifyhandler", validateToken, async (req, res) => {
+router.put("/verifyhandler", validateToken, async (req, res) => {
+
     try {
         let id = req.user.id;
-        const tempId = req.body.tempId;
-        const enteredPassphrase = req.body.passphrase;
+        let otp = req.body.otp;
+        let status = 200;
 
-        if (!passphrases[tempId] || Date.now() > passphrases[tempId].expiresAt) {
-            return res.status(401).json({ message: 'Invalid verification attempt' });
+        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
+
+        const now = new Date();
+        if (now > otp_is_exists.expiresAt) {
+            await Otp.destroy({ where: { otpForId: id } });
+            status = 301;
         }
-
-        const { email, passphrase } = passphrases[tempId];
-
-        if (enteredPassphrase === passphrase) {
-            // Verification successful (mark user as verified, remove passphrase from memory)
+        else if (otp_is_exists && otp == otp_is_exists.otp) {
             let num = await User.update({ verified: true }, {
                 where: { id: id }
             });
 
-
-            if (num !== 1) {
-                res.status(400).json({
-                    message: `Cannot verify user with id ${id}.`
-                });
+            if (num != 1) {
+                status = 400;
             }
             else {
-                res.json({
-                    message: "User was verified successfully."
-                });
+                await Otp.destroy({ where: { otpForId: id } });
             }
-
-            console.log(`User ${email} verified successfully!`);
-            delete passphrases[tempId];
-            res.json({ message: 'Verification successful!' });
-        } else {
-            res.status(401).json({ message: 'Incorrect passphrase' });
         }
-
-
+        else {
+            status = 401;
+        }
+        if (status === 200) {
+            res.json({
+                message: "User was verified successfully."
+            });
+        } else if (status === 400) {
+            res.status(400).json({
+                message: `Cannot verify user with id ${id}. Either because of OTP expiry or server error.`
+            });
+        } else if (status == 401) {
+            res.status(401).json({ message: 'Invalid verification attempt' });
+        } else if (status == 301) {
+            res.json({ message: "Reload" })
+        }
 
     }
     catch (err) {
-        res.status(400).json({ errors: err.erros });
+        res.status(400).json({ errors: err.errors });
     }
 })
 
+router.delete("/delete", validateToken, async (req, res) => {
+    let id = req.user.id;
+    // Check id not found
+    let user = await User.findByPk(id);
+    if (!user) {
+        res.sendStatus(404);
+        return;
+    }
 
-// app.post('/verify', (req, res) => {
-//     const tempId = req.body.tempId;
-//     const enteredPassphrase = req.body.passphrase;
-
-//     if (!passphrases[tempId] || Date.now() > passphrases[tempId].expiresAt) {
-//       return res.status(401).json({ message: 'Invalid verification attempt' });
-//     }
-
-//     const { email, passphrase } = passphrases[tempId];
-
-//     if (enteredPassphrase === passphrase) {
-//       // Verification successful (mark user as verified, remove passphrase from memory)
-//       console.log(`User ${email} verified successfully!`);
-//       delete passphrases[tempId];
-//       res.json({ message: 'Verification successful!' });
-//     } else {
-//       res.status(401).json({ message: 'Incorrect passphrase' });
-//     }
-//   });
-
-// const email = req.body.email;
-// const enteredPassphrase = req.body.passphrase;
-// const verificationTempId = req.body.verificationTempId;
-
-// // ... Lookup user by email ...
-
-// if (!user || user.passphrase !== enteredPassphrase || user.verificationTempId !== verificationTempId) {
-//   // Handle error: Invalid passphrase or tempId mismatch
-//   return;
-// }
-
-// const user = await User.findOne({
-//     where: { email },
-//   });
-
+    let num = await User.destroy({
+        where: { id: id }
+    })
+    if (num == 1) {
+        res.json({
+            message: "User was deleted successfully."
+        });
+    }
+    else {
+        res.status(400).json({
+            message: `Cannot delete user with id ${id}.`
+        });
+    }
+});
 
 module.exports = router;

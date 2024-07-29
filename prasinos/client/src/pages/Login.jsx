@@ -13,7 +13,7 @@ import { LogBox, CustBox, LoginWrapper, CloseButton } from './reusables/componen
 function Login() {
     const navigate = useNavigate();
     const { setUser } = useContext(UserContext);
-    const {setStaff} = useContext(StaffContext);
+    const { setStaff } = useContext(StaffContext);
 
     const formik = useFormik({
         initialValues: {
@@ -33,22 +33,31 @@ function Login() {
         onSubmit: (data) => {
             data.email = data.email.trim().toLowerCase();
             data.password = data.password.trim();
-            if (sessionStorage.getItem("accessToken")) {
-                sessionStorage.removeItem("accessToken");
+            if (localStorage.getItem("accessToken")) {
+                localStorage.removeItem("accessToken");
             }
 
             http.post("/user/login", data)
                 .then((res) => {
-                    sessionStorage.setItem("accessToken", res.data.accessToken);
+                    localStorage.setItem("accessToken", res.data.accessToken);
                     setUser(res.data.user);
                     setStaff(null);
                     if (res.data.status !== 301) {
                         navigate("/home", { replace: true });
                         window.location.reload();
                     }
+                    else {
+                        navigate("/verify", { replace: true });
+                        window.location.reload();
+                        window.location.reload();
+                    }
                 })
                 .catch(function (err) {
-                    toast.error(`${err.response.data.message}`);
+                    if (err.response.data.message) {
+                        toast.error(`${err.response.data.message}`);
+                    } else {
+                        toast.error(`${err}`);
+                    }
                 });
         }
     });

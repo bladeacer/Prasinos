@@ -19,12 +19,18 @@ module.exports = (sequelize, DataTypes) => {
         verified: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
+        },
+        imageFile: {
+            type: DataTypes.STRING(20),
+            defaultValue: null
         }
-        // Add verified field
     }, {
         tableName: 'users',
     });
 
+    User.associate = (models) => {
+        User.hasMany(models.Otp, { foreignKey: 'otpForId', as: 'otps', onDelete: 'CASCADE' });
+    }
     // User.associate = (models) => {
     //     User.hasMany(models.Tutorial, {
     //         foreignKey: "userId",
