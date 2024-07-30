@@ -1,3 +1,4 @@
+// Branden
 module.exports = (sequelize, DataTypes) => {
     const EventFeedback = sequelize.define("EventFeedback", {
         comment: {

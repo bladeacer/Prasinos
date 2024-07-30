@@ -1,3 +1,4 @@
+// Branden
 module.exports = (sequelize, DataTypes) => {
     const WebsiteFeedback = sequelize.define("WebsiteFeedback", {
         name: {

@@ -10,12 +10,19 @@
 
 .sign{
   width: 140px;
-  margin-right: 15px;
+  margin-right: 5px;
 }
 
 .sign2{
-  width: 110px;
-  height: 45px;
+  width: 140px;
+  margin-right: 15px;
+}
+
+.sign2.btn.btn-secondary{
+  padding: 10px 0 0px 0px;
+}
+.sign2.btn.btn-success{
+  padding: 10px 0 0px 0px;
 }
 
 .aspect-ratio-container {
@@ -94,6 +101,7 @@
     width: 60px;
     height: 60px;
     border: 2px solid black;
+    background-color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;

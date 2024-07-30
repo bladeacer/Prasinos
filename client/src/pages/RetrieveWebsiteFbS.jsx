@@ -1,3 +1,4 @@
+// Branden
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Input, IconButton, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { Search, Clear, MoreVert, FilterList } from '@mui/icons-material';
@@ -61,10 +62,13 @@ function RetrieveWebsiteFbS() {
     setSelectedEmail(row.email);
   };
 
+  useEffect(() => {
+    console.log('Selected Email:', selectedEmail);
+  }, [selectedEmail]);
+
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedRow(null);
-    setSelectedEmail('');
   };
 
   const handleResolvedClick = () => {
@@ -108,13 +112,14 @@ function RetrieveWebsiteFbS() {
   };
 
   const handleDialogSubmit = () => {
+
     const templateParams = {
       from_name: "PrásinosSG",
       message: reply,
-      email: selectedEmail // Make sure to include the email in the template params
+      email: selectedEmail, // Make sure to include the email in the template params
     };
 
-    emailjs.send('service_60gzlnq', 'template_n0yggcn', templateParams, 'JhO9fMrH4RAMOtWBc')
+    emailjs.send('service_v19cj05', 'template_zbxnmeb', templateParams, '_9k74a0UPRk_HmD_F')
       .then((result) => {
         console.log('Email successfully sent!', result.status, result.text);
         setShowDialog(false);
