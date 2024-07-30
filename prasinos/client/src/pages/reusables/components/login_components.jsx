@@ -7,19 +7,18 @@ export const CustBox = styled(Box)({
     position: 'fixed',
     right: '8.3vw',
     width: '43vw',
-    maxWidth: { xs: 0, sm: 0, md: 0, lg: 450, xl: 550 },
-    height: '94vh',
-    maxHeight: { xs: 0, sm: 0, md: 0, lg: 662, xl: 850 },
+    maxWidth: { xs: 0, sm: 0, md: 0, lg: 450, xl: 520 },
+    height: '93vh',
     overflow: 'unset',
     zIndex: 2,
-    top: '0%',
-    marginTop: '35px',
+    bottom: '0%',
+    marginBottom: '4.25vh',
     borderRadius: '10px',
     flex: '1 0 auto', // Flex grow, no shrink, auto basis
 })
 
 export const LogBox = styled(Box)({
-    marginTop: '20px',
+    marginTop: '10px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'left',
@@ -36,7 +35,7 @@ export const LoginWrapper = styled(Box)({
     width: '85%',
     position: 'fixed',
     textAlign: 'left',
-    top: '40px',
+    top: '20px',
     left: '6.5%',
     borderRadius: '10px',
     flex: '1 0 auto', // Flex grow, no shrink, auto basis
@@ -58,10 +57,11 @@ export const CloseButton = styled(Button)({
 export const DangerHeader = styled(Box) ({
     position: 'fixed',
     height: '175px',
-    width: '84.5vw',
+    width: '84vw',
     right: '8.45vw',
+    marginTop: '-20px',
     borderRadius: '30px',
     backgroundColor: 'rgba(19, 57, 16, 0.85)',
     textAlign: 'center',
-    color: 'white',
+    color: 'white'
 })

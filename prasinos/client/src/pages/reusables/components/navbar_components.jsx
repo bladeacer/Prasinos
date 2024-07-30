@@ -59,7 +59,8 @@ export const AccentedButton = styled(Button)({
 export const CustButtonsStack = styled(Stack)({
     backgroundColor: 'transparent',
     position: 'absolute',
-    right: '-37vw',
+    right: '0%',
+    marginRight: '-45vw',
     overflow: 'hidden',
     zIndex: '0'
 })

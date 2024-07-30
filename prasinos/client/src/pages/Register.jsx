@@ -40,7 +40,7 @@ function Register() {
                 .oneOf([yup.ref('password')], 'Passwords must match'),
             phone: yup.string()
                 .required("Phone number is required")
-                .matches(/^\+65\s?([689]\d{7}|[1][-\s]\d{7}|[3]\d{3}[-\s]\d{4})$/, 
+                .matches(/^\+65\s?([689]\d{7}|[1][-\s]\d{7}|[3]\d{3}[-\s]\d{4})$/,
                     "Express in the form '+65 81234567'")
         }),
         onSubmit: (data) => {
@@ -67,12 +67,11 @@ function Register() {
         <>
             <LoginWrapper>
                 <LogBox>
-                    <Typography sx={{ my: 2, fontSize: '1.7em' }}>
-                        Get Started
-                    </Typography>
-                    <Box component="form" sx={{ maxWidth: '500px' }}
+                    <Box component="form" sx={{ maxWidth: '500px', scale: '90%' }}
                         onSubmit={formik.handleSubmit}>
-
+                        <Typography sx={{ mt: -3, fontSize: '1.7em' }}>
+                            Get Started
+                        </Typography>
                         <Typography variant='h6' sx={{ mt: 0 }}>Name</Typography>
                         <TextField
                             fullWidth margin="dense" autoComplete="off"
@@ -95,6 +94,18 @@ function Register() {
                             onBlur={formik.handleBlur}
                             error={formik.touched.email && Boolean(formik.errors.email)}
                             helperText={formik.touched.email && formik.errors.email}
+                        />
+
+                        <Typography variant='h6' sx={{ mt: 1 }}>Mobile Number</Typography>
+                        <TextField
+                            fullWidth margin="dense" autoComplete="off"
+                            label="Phone number"
+                            name="phone"
+                            value={formik.values.phone}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.phone && Boolean(formik.errors.phone)}
+                            helperText={formik.touched.phone && formik.errors.phone}
                         />
 
                         <Typography variant='h6' sx={{ mt: 1 }}>Password</Typography>
@@ -121,25 +132,19 @@ function Register() {
                             helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                         />
 
-                        <Typography variant='h6' sx={{ mt: 1 }}>Mobile Number</Typography>
-                        <TextField
-                            fullWidth margin="dense" autoComplete="off"
-                            label="Phone number"
-                            name="phone" 
-                            value={formik.values.phone}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.phone && Boolean(formik.errors.phone)}
-                            helperText={formik.touched.phone && formik.errors.phone}
-                        />
                         <Button fullWidth variant="contained" sx={{ mt: 1, backgroundColor: '#8ab78f' }}
                             type="submit">
                             Register
                         </Button>
 
+                        <Typography variant='h6' sx={{ mt: 2 }}>Have an account? <a href="/login">Login here</a></Typography>
                     </Box>
                     <ToastContainer />
-                    <CustBox sx={{ bottom: { xs: '734px', sm: '662px', md: '629px', lg: '629px', xl: '629px' } }}></CustBox>
+                    <CustBox>
+                        <Box sx={{ zIndex: '4', width: '100%', height: '100%', '&:hover': { backdropFilter: 'blur(9px)' } }}>
+                            <Typography sx={{ position: 'relative', opacity: 0, zIndex: '5', width: '100%', height: '100%', color: '#fff', '&:hover': { opacity: 1 }, textTransform: 'unset', fontSize: '36px', fontWeight: 'bold', textAlign: 'center', transform: 'translate(0%, 35%)' }}>Prasinos does not use cookies.</Typography>
+                        </Box>
+                    </CustBox>
                     <CloseButton href="/home">X</CloseButton>
                 </LogBox>
             </LoginWrapper>

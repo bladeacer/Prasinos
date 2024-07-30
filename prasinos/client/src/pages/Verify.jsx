@@ -27,6 +27,7 @@ export default function Verify() {
                 <Typography>Check your email for the next verification step</Typography>
                 <Typography>If you do not see the email, please contact our admin support.</Typography>
                 <Typography>If you see two emails, only take the otp from the latest one and ignore the first one.</Typography>
+                <Typography>If do not see an email, reload and try again</Typography>
                 <Button href={"/home"} onClick={logout}>Click here to go back to homepage</Button>
                 <ToastContainer />
             </Box >

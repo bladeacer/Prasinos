@@ -1,6 +1,6 @@
 import { useFormik } from "formik"
 import * as yup from 'yup';
-import { LoginWrapper, LogBox, CloseButton } from "./reusables/components/login_components"
+import { LoginWrapper, LogBox, CloseButton, CustBox } from "./reusables/components/login_components"
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Typography, Box, Button, TextField, Grid } from "@mui/material";
@@ -139,32 +139,31 @@ export default function EditUser() {
                                     error={formik.touched.phone && Boolean(formik.errors.phone)}
                                     helperText={formik.touched.phone && formik.errors.phone}
                                 />
-                                <Button variant="contained" type="submit">
+                                <Button variant="contained" type="submit" sx={{mt: 2}}>
                                     Save
                                 </Button>
+
+                                <Typography variant='h6' sx={{ mt: 4 }}>Upload profile picture</Typography>
+                                <Button variant="contained" component="label">
+                                    Upload Image
+                                    <input hidden accept="image/*" multiple type="file"
+                                        onChange={onFileChange} />
+                                </Button>
+                                {
+                                    imageFile && (
+                                        <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
+                                            <img alt="tutorial"
+                                                src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}>
+                                            </img>
+                                        </Box>
+                                    )
+                                }
                             </Box>
-                            <Grid item xs={12} md={6} lg={4}>
-                                <Box sx={{ textAlign: 'center', mt: 2 }} >
-                                    <Button variant="contained" component="label">
-                                        Upload Image
-                                        <input hidden accept="image/*" multiple type="file"
-                                            onChange={onFileChange} />
-                                    </Button>
-                                    {
-                                        imageFile && (
-                                            <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
-                                                <img alt="tutorial"
-                                                    src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}>
-                                                </img>
-                                            </Box>
-                                        )
-                                    }
-                                </Box>
-                            </Grid>
                         </>
                     )}
                 </LogBox>
             </LoginWrapper>
+            <CustBox />
             <ToastContainer />
             <CloseButton href="/settings">X</CloseButton>
         </>

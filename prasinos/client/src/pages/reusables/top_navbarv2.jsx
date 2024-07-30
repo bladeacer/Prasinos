@@ -1,6 +1,6 @@
 import * as React from 'react';
 import imgUrl from '../../assets/prasinos-logo.jpg';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
 import { useContext } from 'react';
 import { UserContext } from '../../contexts/Contexts';
@@ -20,7 +20,7 @@ export default function TopNavbarV2() {
         <>
             <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-                {!is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[10] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && (
+                {!is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && (
                     <>
                         <ImageBox
                             component="img"
@@ -111,16 +111,27 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
-                                        <img className='smallImage' src={`${import.meta.env.VITE_FILE_BASE_URL}${user.imageFile}`} />
+                
+
                                         <CustButton href="/settings">{user.name.slice(0, 8)}..</CustButton>
                                         <SignUpButton onClick={logout}>Logout</SignUpButton>
+                                        <>
+                                            {user.imageFile && (
+                                                <img className='smallImage' src={`${import.meta.env.VITE_FILE_BASE_URL}${user.imageFile}`} />
+                                            )}
+                                        </>
+                                        <>
+                                            {!user.imageFile && (
+                                                <CustButton href="/settings" sx={{fontSize: '0.75rem', height: '50px', width: '90px', borderRadius: '50%' }}>No profile picture yet</CustButton>
+                                            )}
+                                        </>
                                     </CustButtonsStack>
                                 </>
                             )}
                         </CustomAppBar>
                     </>
                 )}
-                {(is_accent[5] || is_accent[6] || is_accent[9] || is_accent[10] || is_accent[11]) && (
+                {(is_accent[5] || is_accent[6] || is_accent[9] || is_accent[11]) && (
                     <>
                         <ImageBox
                             component="img"
@@ -196,9 +207,19 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
-                                        <img className='smallImage' src={`${import.meta.env.VITE_FILE_BASE_URL}${user.imageFile}`} />
-                                        <CustButton href="/settings">{user.name.slice(0, 8)}..</CustButton>
-                                        <SignUpButton onClick={logout}>Logout</SignUpButton>
+                                        <CustButton>{user.name.slice(0, 8)}..</CustButton>
+                                        <SignUpButton>Logout</SignUpButton>
+
+                                        <>
+                                            {user.imageFile && (
+                                                <img className='smallImage' src={`${import.meta.env.VITE_FILE_BASE_URL}${user.imageFile}`} />
+                                            )}
+                                        </>
+                                        <>
+                                            {!user.imageFile && (
+                                                <CustButton sx={{fontSize: '0.75rem', height: '50px', width: '90px', borderRadius: '50%' }}>No profile picture yet</CustButton>
+                                            )}
+                                        </>
                                     </CustButtonsStack>
                                 </>
                             )}

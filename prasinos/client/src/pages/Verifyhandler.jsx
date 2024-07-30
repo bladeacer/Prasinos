@@ -29,11 +29,7 @@ export default function VerifyEmail() {
                     }
                 })
                 .catch(function (err) {
-                    if (err.response.data.message) {
-                        toast.error(`${err.response.data.message}`);
-                    } else {
-                        toast.error(`${err}`);
-                    }
+                    window.location.reload();
                 });
         }
     })

@@ -9,13 +9,11 @@ import Settings from './pages/Settings';
 import Unauthorized from './pages/Unauthorized';
 import DangerZone from './pages/dangerZone'
 import EditUser from './pages/EditUser';
-import ResetPassword from './pages/ResetPassword';
 import { is_accent, goof_check } from './pages/reusables/accent_parser';
 import { HomeWrapper, BookingWrapper, EventWrapper, RewardsWrapper, SupportWrapper, SelectLogWrapper, EverythingWrapper } from './pages/reusables/wrappers';
 import StaffLogin from './pages/staffLogin';
 import StaffRegister from './pages/staffRegister';
 import StaffHome from './pages/staffHomev2';
-import ResetEndpoint from './pages/ResetEndpoints';
 import Verify from './pages/Verify';
 import VerifyHandler from './pages/Verifyhandler';
 
@@ -67,13 +65,13 @@ export default function App() {
               {((user && !user.verified) || !user) && is_accent[7] && (
                 Unauthorized(false)
               )}
-              {is_accent[9] && ((user && user.verified) || !user) && (
+              {is_accent[9] && ((user && !user.verified) || !user) && (
                 Unauthorized(false)
               )}
-              {((user && user.verified) || !user) && is_accent[10] && (
+              {((user && !user.verified) || !user) && is_accent[10] && (
                 Unauthorized(-1)
               )}
-              {((user && user.verified) || !user) && is_accent[11] && (
+              {user && is_accent[11] && (
                 Unauthorized(-1)
               )}
 
@@ -181,8 +179,8 @@ export default function App() {
             } />
             <Route path={"/reset"} element={
               <>
-                {user && user.verified && is_accent[11] && (
-                  <ResetPassword />
+                {!user && (
+                  EverythingWrapper()
                 )}
               </>
             } />
@@ -197,7 +195,7 @@ export default function App() {
             <Route path="/resetendpoint" element={
               <>
                 {user && user.verified && !staff && is_accent[16] && (
-                  <ResetEndpoint />
+                  <></>
                 )}
               </>
             } />

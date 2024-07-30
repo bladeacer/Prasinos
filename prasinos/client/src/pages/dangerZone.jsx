@@ -2,6 +2,7 @@ import { LoginWrapper, LogBox, CloseButton, DangerHeader } from "./reusables/com
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material"
 import http from '../http'
 import { useState } from "react";
+import { logout } from "./reusables/logout";
 
 export default function DangerZone() {
     // TODO: Refactor delete confirmation dialogue
@@ -20,7 +21,8 @@ export default function DangerZone() {
         http.delete('/user/delete')
             .then((res) => {
                 console.log(res.data);
-                navigate("/tutorials");
+                navigate("/home", {replace: true});
+                window.location.reload();
             })
             .catch((err) =>{
 
@@ -53,7 +55,7 @@ export default function DangerZone() {
                         <Button href={"/edit"} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Edit Details</Button>
                     </Box>
                     <Box sx={{ positon: 'absolute', mt: -4.75, ml: 95, width: '35vw' }}>
-                        <Button href={"/reset"} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
+                        <Button href={"/reset"} onClick={logout} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
                     </Box>
 
                     <Box sx={{ positon: 'absolute', mt: 14.75, ml: 95, width: '35vw' }}>

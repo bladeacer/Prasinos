@@ -6,6 +6,7 @@ import Events from '../Events'
 import Rewards from '../Rewards'
 import Support from '../Support'
 import SelectLogin from '../selectLogin';
+import ForgetPassword from '../ForgetPassword';
 import { is_accent } from './accent_parser';
 
 export function HomeWrapper() {
@@ -87,6 +88,18 @@ function RegisterWrapper() {
     )
 }
 
+function ForgetWrapper() {
+    return (
+        <>
+            {is_accent[11] && (
+                <>
+                    <ForgetPassword />
+                </>
+            )}
+        </>
+    )
+}
+
 export function SelectLogWrapper() {
     return (
         <>
@@ -98,6 +111,7 @@ export function SelectLogWrapper() {
         </>
     )
 }
+
 
 export function EverythingWrapper() {
     // Used in overlay effect
@@ -111,6 +125,7 @@ export function EverythingWrapper() {
             {SupportWrapper()}
             {HomeWrapper()}
             {SelectLogWrapper()}
+            {ForgetWrapper()}
         </>
     )
 }

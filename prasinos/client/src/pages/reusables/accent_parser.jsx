@@ -19,10 +19,18 @@ function setAccentN(n) {
 function setLogin() {
     is_accent[5] = true;
     is_accent[6] = false;
+    is_accent[11] = false;
     goof_check = false;
 }
 function setRegister() {
     is_accent[6] = true;
+    is_accent[5] = false;
+    is_accent[11] = false;
+    goof_check = false;
+}
+function setForget() {
+    is_accent[11] = true;
+    is_accent[6] = false;
     is_accent[5] = false;
     goof_check = false;
 }
@@ -39,7 +47,7 @@ const accentRouteMap = new Map([
     ['/', () => setAccentN(8)],
     ['/dangerZone', () => setAccentN(9)],
     ['/edit', () => setAccentN(10)],
-    ['/reset', () => setAccentN(11)],
+    ['/reset', () => setForget()],
     ['/verify', () => setAccentN(12)],
     ['/staffLogin', () => setAccentN(13)],
     ['/staffRegister', () => setAccentN(14)],

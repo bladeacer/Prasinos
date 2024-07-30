@@ -88,8 +88,10 @@ router.post("/login", async (req, res) => {
             name: user.name,
             phone: user.phone,
             createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString(),
-            imageFile: user.imageFile
-            // return with nice date format
+            imageFile: user.imageFile,
+            points: user.points,
+            eventsJoined: user.eventsJoined,
+            company: user.company
         };
         let staffInfo = {
             id: null,
@@ -129,21 +131,25 @@ router.get("/auth", validateToken, async (req, res) => {
         if (!verified) {
             status = 301;
         }
+
+        let userInfo = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString(),
+            verified: user.verified,
+            imageFile: user.imageFile,
+            points: user.points,
+            eventsJoined: user.eventsJoined,
+            company: user.company
+        };
+        res.json({
+            user: userInfo,
+            status: status
+        });
     }
 
-    let userInfo = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phone: user.phone,
-        createdAt: dayjs(user.createdAt.toString()).format("DD MMM YYYY").toString(),
-        verified: user.verified,
-        imageFile: user.imageFile
-    };
-    res.json({
-        user: userInfo,
-        status: status
-    });
 });
 
 router.get("/", async (req, res) => {
@@ -249,12 +255,12 @@ router.put("/reset", validateToken, async (req, res) => {
 
         if (num == 1) {
             res.json({
-                message: "User was updated successfully."
+                message: "Password was reset successfully."
             });
         }
         else {
             res.status(400).json({
-                message: `Cannot update user with id ${id}.`
+                message: `Cannot reset password.`
             });
         }
 
@@ -263,90 +269,6 @@ router.put("/reset", validateToken, async (req, res) => {
         res.status(400).json({ errors: err.errors });
     }
 });
-
-router.post("/resethandler", validateToken, async (req, res) => {
-    try {
-        let id = req.user.id;
-        const otp = req.body.otp;
-        let status = 200;
-        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
-
-        const now = new Date();
-        if (now > otp_is_exists.expiresAt) {
-            await Otp.destroy({ where: { otpForId: id } });
-            status = 301;
-        }
-        else if (otp_is_exists && otp.toString() == otp_is_exists.otp.toString()) {
-            let num = await Otp.destroy({ where: { otpForId: id } });
-            if (num !== 1) {
-                status = 400;
-            }
-        }
-        else {
-            status = 401;
-        }
-        if (status === 200) {
-            res.json({
-                message: "User was verified successfully."
-            });
-        } else if (status === 400) {
-            res.status(400).json({
-                message: `Cannot verify user with id ${id}. Either because of OTP expiry or server error.`
-            });
-        } else if (status == 401) {
-            res.status(401).json({ message: 'Invalid verification attempt' });
-        } else if (status == 301) {
-            res.json({ message: "Reload" })
-        }
-    }
-    catch (err) {
-        res.status(400).json({ message: err.errors });
-        return;
-    }
-
-});
-
-router.post("/sendResetEmail", validateToken, async (req, res) => {
-    try {
-
-        let id = req.user.id;
-        let user = await User.findByPk(id);
-        if (!user) {
-            return res.status(404);
-        }
-
-        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
-
-        if (!otp_is_exists) {
-            const otp = generateOTP();
-            const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-            const otpFor = "user";
-            const data = {
-                otp: otp,
-                expiresAt: expiresAt,
-                otpFor: otpFor,
-                otpForId: id
-            }
-            await Otp.create(data);
-        }
-
-        const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
-        const message_url = process.env.CLIENT_URL;
-        const serviceId = process.env.EMAIL_JS_SERVICE_ID;
-        const templateId = process.env.EMAIL_JS_TEMPLATE_ID;
-        const templateParams = {
-            to_name: `${user.name}`,
-            message: `To continue with resetting your password, use the following link:  ${message_url}/reset `,
-            reply_to: `${user.email}`,
-            subject: "Prasinos: Reset Password"
-        };
-        await emailjs.send(serviceId, templateId, templateParams, { publicKey: publicKey });
-    }
-    catch (error) {
-        res.status(500).send('Internal server error');
-    }
-});
-
 
 router.post("/sendVerifyEmail", validateToken, async (req, res) => {
     try {
@@ -414,9 +336,7 @@ router.put("/verifyhandler", validateToken, async (req, res) => {
             if (num != 1) {
                 status = 400;
             }
-            else {
-                await Otp.destroy({ where: { otpForId: id } });
-            }
+            await Otp.destroy({ where: { otpForId: id } });
         }
         else {
             status = 401;
@@ -437,7 +357,7 @@ router.put("/verifyhandler", validateToken, async (req, res) => {
 
     }
     catch (err) {
-        res.status(400).json({ errors: err.errors });
+        res.status(400).json({ errors: "Try reloading the page" });
     }
 })
 
@@ -465,4 +385,149 @@ router.delete("/delete", validateToken, async (req, res) => {
     }
 });
 
+// Reset password from forget password, get email check if exists, send email if email does exist with otp created.
+router.post("/getResetUser", async (req, res) => {
+    let data = req.body;
+    try {
+        let user = await User.findOne({ where: { email: data.email.toLowerCase() } });
+        let id = user.id;
+        if (user && user.verified) {
+            const otp = generateOTP();
+            const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+            const otpFor = "user";
+            const data = {
+                otp: otp,
+                expiresAt: expiresAt,
+                otpFor: otpFor,
+                otpForId: id
+            }
+            await Otp.create(data);
+            let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
+            if (!otp_is_exists) {
+                res.status(500).json({message: "Internal server error."})
+            }
+
+            const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
+            const serviceId = process.env.EMAIL_JS_SERVICE_ID;
+            const templateId = process.env.EMAIL_JS_TEMPLATE_ID;
+            const templateParams = {
+                to_name: `${user.name}`,
+                message: `To continue with resetting your password, use the following otp:  ${otp_is_exists.otp} `,
+                reply_to: `${user.email}`,
+                subject: "Prasinos: Reset Password"
+            };
+            await emailjs.send(serviceId, templateId, templateParams, { publicKey: publicKey });
+            let userInfo = {
+                id: id 
+            }
+            res.json({user: userInfo});
+        }
+        else if (user && !user.verified) {
+            res.status(404).json({ message: "Verify your email first" })
+        }
+        else {
+            res.status(404).json({ message: "Email does not exist" })
+        }
+    }
+    catch (err) {
+        res.status(400).json({ errors: err.errors });
+    }
+});
+
+// TODO: Route to check otp for forget password
+router.put("/resethandler", async (req, res) => {
+    try {
+        let id = req.body.id;
+        let otp = req.body.otp;
+        let status = 200;
+        let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
+        if (!otp_is_exists){
+            status = 400;
+        } else{
+            const now = new Date();
+            if (now > otp_is_exists.expiresAt) {
+                status = 301;
+            }
+            else if (otp == otp_is_exists.otp.toString()) {
+                status = 200;
+            }
+            else {
+                status = 401;
+            }
+        }
+
+        let num = await Otp.destroy({ where: { otpForId: id } });
+
+        if (num !== 1) {
+            status = 400;
+        }
+        if (status === 200) {
+            res.json({
+                message: "User was verified successfully."
+            });
+        } else if (status === 400) {
+            res.status(400).json({
+                message: `Cannot verify user with id ${id}. Either because of OTP expiry or server error.`
+            });
+        } else if (status == 401) {
+            res.status(401).json({ message: 'Invalid verification attempt' });
+        } else if (status == 301) {
+            res.json({ message: "Reload" })
+        }
+    }
+    catch (err) {
+        res.status(400).json({ message: err.errors });
+    }
+});
+
+
+// Get id and store it in next form submission using formik
+
+router.put("/forgetReset", async (req, res) => {
+    let id = req.body.id;
+
+    let user = await User.findByPk(id);
+    if (!user) {
+        res.sendStatus(404);
+        return;
+    };
+    let data = req.body;
+    data.password = await bcrypt.hash(data.password, 10);
+
+    let validationSchema = yup.object({
+        oldPassword: yup.string().trim().min(8).required()
+            .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
+                "password at least 1 letter and 1 number"),
+        password: yup.string().trim().min(8).required()
+            .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
+                "password at least 1 letter and 1 number")
+    });
+    try {
+        data = await validationSchema.validate(data,
+            { abortEarly: false });
+
+        let match = await bcrypt.compare(data.oldPassword, user.password);
+
+        let num = await User.update({password: data.password}, {
+            where: { id: id }
+        });
+
+        if (num == 1 || !match) {
+            res.json({
+                message: "Password was resest successfully."
+            });
+        }
+        else {
+            res.status(400).json({
+                message: `Cannot reset password.`
+            });
+        }
+    }
+    catch (err) {
+        res.status(400).json({ errors: err.errors });
+    }
+})
+
 module.exports = router;
+
+

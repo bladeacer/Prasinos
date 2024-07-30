@@ -39,7 +39,7 @@ export default function Unauthorized(is_in) {
                     </>
                 )}
 
-                {is_in === 2 && !is_accent[12] && (
+                {is_in === 2 && !is_accent[12] (
                     <>
                         <Typography variant="h3" sx={{ mb: 3 }}>Access Denied :(</Typography>
                         <Typography sx={{ fontSize: '20px' }}>You need to login to view this page.</Typography>

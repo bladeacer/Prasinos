@@ -23,6 +23,18 @@ module.exports = (sequelize, DataTypes) => {
         imageFile: {
             type: DataTypes.STRING(20),
             defaultValue: null
+        },
+        points: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        eventsJoined: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+        },
+        company: {
+            type: DataTypes.STRING(150),
+            defaultValue: "Add your company via settings"
         }
     }, {
         tableName: 'users',

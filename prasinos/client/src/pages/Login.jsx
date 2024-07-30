@@ -104,6 +104,9 @@ function Login() {
                             type="submit">
                             Login
                         </Button>
+
+                        <Typography variant='h6' sx={{ mt: 2 }}>Don't have an account? <a href="/register">Register here</a></Typography>
+                        <Typography variant='h6' sx={{ mt: 2 }}>Forgot your password? <a href="/reset">Click here</a></Typography>
                     </Box>
                     <ToastContainer />
                     <CustBox>
