@@ -14,6 +14,7 @@ function Register() {
         initialValues: {
             name: "",
             email: "",
+            phoneNumber: "",
             password: "",
             confirmPassword: ""
         },
@@ -28,6 +29,7 @@ function Register() {
                 .email('Enter a valid email')
                 .max(50, 'Email must be at most 50 characters')
                 .required('Email is required'),
+            phoneNumber: yup.string().trim().required('Phone number is required'),
             password: yup.string().trim()
                 .min(8, 'Password must be at least 8 characters')
                 .max(50, 'Password must be at most 50 characters')
@@ -55,12 +57,11 @@ function Register() {
 
     return (
         <Box sx={{
-            marginTop: 30,
+            marginTop: 8,
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            marginLeft: "50%"
-        }}>
+            alignItems: 'center'
+        }} style={{ marginLeft: "5%", marginRight: "-10%", marginTop: "130px"}}>
             <Typography variant="h5" sx={{ my: 2 }}>
                 Register
             </Typography>
@@ -85,6 +86,16 @@ function Register() {
                     onBlur={formik.handleBlur}
                     error={formik.touched.email && Boolean(formik.errors.email)}
                     helperText={formik.touched.email && formik.errors.email}
+                />
+                <TextField
+                    fullWidth margin="dense" autoComplete="off"
+                    label="Phone Number"
+                    name="phoneNumber"
+                    value={formik.values.phoneNumber}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
+                    helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
                 />
                 <TextField
                     fullWidth margin="dense" autoComplete="off"

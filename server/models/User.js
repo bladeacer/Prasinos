@@ -7,6 +7,10 @@ module.exports = (sequelize, DataTypes) => {
           type: DataTypes.STRING(50),
           allowNull: false,
         },
+        phoneNumber: {
+          type: DataTypes.STRING(20),
+          allowNull: false
+      },
         email: {
           type: DataTypes.STRING(50),
           allowNull: false,
@@ -42,6 +46,18 @@ module.exports = (sequelize, DataTypes) => {
         as: "redeemedRewards",
       });
     };
+    User.associate = (models) => {
+      User.hasMany(models.Event, {
+          foreignKey: 'userId',
+          as: 'events'
+      });
+      User.hasMany(models.Booking, {
+          foreignKey: "userId",
+          as: 'bookings',
+
+          onDelete: "cascade"
+      });
+  };
   
     return User;
   };

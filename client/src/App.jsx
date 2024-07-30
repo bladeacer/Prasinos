@@ -31,18 +31,45 @@ import Reward from "./pages/Rewards"; // Staff
 import EditReward from "./pages/EditReward"; // Staff
 import UserRewards from "./pages/UserRewards"; // User
 
+// Manveer + Zara
+import EventsProposal from './pages/Events';
+import Events from './pages/UserEventListPage';
+import AddEvent from './pages/AddEvent';
+import AdminDashboard from './pages/AdminDashboard';
+import EditEvent from './pages/EditEvent';
+import Bookings from './pages/Bookings';
+import EditBooking from './pages/EditBooking';
+import MyForm from './pages/MyForm';
+import ReviewEvent from './pages/ReviewEvent';
+import BookEventPage from './pages/BookEventPage';
+import EventListPage from './pages/EventListPage';
+import PaymentPage from './pages/PaymentPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import EventAttendance from './pages/Attendance';
+import ViewEvent from './pages/ViewEvent';
+
 function App() {
   const [showChatbot, setShowChatbot] = useState(false);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Add a loading state
 
   useEffect(() => {
-    // Check if user is logged in
-    if (localStorage.getItem("accessToken")) {
-      http.get("/user/auth").then((res) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      setIsLoading(true);
+      http.get('/user/auth').then((res) => {
         setUser(res.data.user);
+        setIsLoading(false);
+      }).catch(() => {
+        setIsLoading(false);
       });
+    } else {
+      setIsLoading(false);
     }
-  }, []);
+  }, [localStorage.getItem("accessToken")]);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const logout = () => {
     localStorage.clear();
@@ -52,6 +79,17 @@ function App() {
   const handleChatbotClick = () => {
     setShowChatbot(!showChatbot);
   };
+  function ProtectedRoute({ children, allowedRoles }) {
+
+    if (!user || !allowedRoles.includes(user.role)) {
+      // Redirect user to home page if not allowed
+      console.log("Redirecting to events");
+      console.log(user);
+      return <Events replace />;
+    }
+
+    return children;
+  }
 
   return (
     <UserContext.Provider value={{ user, setUser }}>
@@ -67,10 +105,7 @@ function App() {
                 <LinkContainer to="/" style={{ paddingRight: "3%" }}>
                   <Nav.Link>Home</Nav.Link>
                 </LinkContainer>
-                <LinkContainer to="/" style={{ paddingRight: "3%" }}>
-                  <Nav.Link>Bookings</Nav.Link>
-                </LinkContainer>
-                <LinkContainer to="/eventfeedback" style={{ paddingRight: "3%" }}>
+                <LinkContainer to="/eventlistpage" style={{ paddingRight: "3%" }}>
                   <Nav.Link>Events</Nav.Link>
                 </LinkContainer>
                 <LinkContainer to="/websitefeedback" style={{ paddingRight: "3%" }}>
@@ -91,6 +126,26 @@ function App() {
                   <Link to="/rewards">
                     <Typography>Staff - Rewards</Typography>
                   </Link>
+                )}
+                {user && user.role === 'admin' && (
+                  <>
+                    <Link to="/dashboard"><Typography>Dashboard</Typography></Link>
+                  </>
+                )}
+                {user && user.role === 'admin' && (
+                  <>
+                    <Link to="/reviewevent"><Typography>Review Event</Typography></Link>
+                  </>
+                )}
+                {user && user.role !== 'admin' && (
+                  <>
+                    <Link to="/eventsproposal"><Typography>Events Proposal</Typography></Link>
+                  </>
+                )}
+                {user && user.role === 'admin' && (
+                  <>
+                    <Link to="/bookings"><Typography>Bookings - Staff</Typography></Link>
+                  </>
                 )}
                 {!user && (
                   <>
@@ -124,15 +179,38 @@ function App() {
             <Route path="/replywebsitefb/:id" element={<Reply />} />
             {/* Jun Long */}
             <Route path="/rewards" element={<Reward />} />
-              <Route path="/addreward" element={<AddReward />} />
-              <Route path="/editreward/:id" element={<EditReward />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/user-rewards/:userid" element={<UserRewards />} />
-              <Route
-                path="/user-rewards/:userid/redeemed-rewards"
-                element={<UserRewards />}
-              />
+            <Route path="/addreward" element={<AddReward />} />
+            <Route path="/editreward/:id" element={<EditReward />} />
+            <Route path="/user-rewards/:userid" element={<UserRewards />} />
+            <Route
+              path="/user-rewards/:userid/redeemed-rewards"
+              element={<UserRewards />}
+            />
+            {/* Manveer + Zara */}
+            <Route path={"/events"} element={<Events />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path={"/eventsproposal"} element={<EventsProposal />} />
+            <Route path="/editbooking/:id" element={<EditBooking />} />
+            <Route path="/form" element={<MyForm />} />
+            <Route path="/bookeventpage/:id" element={<BookEventPage />} /> {/* Updated route */}
+            <Route path="/eventlistpage" element={<EventListPage />} />
+            <Route path="/payment" element={<PaymentPage />} /> {/* Routing to Payments Page */}
+            <Route path="/paymentsuccess" element={<PaymentSuccessPage />} />
+            <Route path={"/addevent"} element={<AddEvent />} />
+            <Route path={"/editevent/:id"} element={<EditEvent />} />
+            <Route path={"/event/:id"} element={<ViewEvent />} />
+            <Route path={"/register"} element={<Register />} />
+            <Route path={"/reviewevent"} element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ReviewEvent />
+              </ProtectedRoute>
+            } />
+            <Route path={"/dashboard"} element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path={"/attendance/:eventId"} element={<EventAttendance />} /> {/* Add the new route */}
           </Routes>
           <div className="chatbot-icon-container" onClick={handleChatbotClick}>
             <img src={chatbotIcon} alt="Chatbot" className="chatbot-icon" />

@@ -5,6 +5,25 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
+const { Sequelize } = require('sequelize');
+const eventRoutes = require('./routes/event');
+
+const db = require('./models');
+// Validate environment variables
+if (!process.env.APP_PORT || !process.env.CLIENT_URL || !process.env.DB_HOST || !process.env.DB_NAME || !process.env.DB_USER || !process.env.DB_PWD) {
+    console.error("ERROR: Missing required environment variables. Check your .env file.");
+    process.exit(1);
+}
+
+// Initialize Sequelize with MySQL
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PWD, {
+    dialect: 'mysql',
+    host: process.env.DB_HOST
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'));
 
 // Enable CORS
 app.use(cors({
@@ -37,8 +56,23 @@ app.use("/reward", rewardRoute);
 const redeemedRewardsRouter = require("./routes/redeemedRewards");
 app.use("/redeemed-rewards", redeemedRewardsRouter);
 // Manveer + Zara
+const eventRoute = require('./routes/event');
+app.use("/event", eventRoute);
+const paymentRoute = require('./routes/payment');
+app.use("/payment", paymentRoute);
+const bookingRoute = require('./routes/booking');
+app.use("/booking", bookingRoute);
+const adminRoute = require('./routes/admin');
+app.use("/admin", adminRoute);
+const attendanceRoute = require('./routes/attendance');
+app.use("/attendance", attendanceRoute);
 
-const db = require('./models');
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
+
+db.sequelize = sequelize;
 db.sequelize.sync({ alter: true })
     .then(() => {
         let port = process.env.APP_PORT;
