@@ -1,0 +1,48 @@
+{
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.16.0",
+    "@mui/material": "^5.16.0",
+    "@mui/x-date-pickers": "^7.1.0",
+    "@react-google-maps/api": "^2.19.3",
+    "axios": "^1.7.2",
+    "bootstrap": "^5.3.3",
+    "dayjs": "^1.11.11",
+    "formik": "^2.4.6",
+    "http-proxy-middleware": "^3.0.0",
+    "mysql2": "^3.10.3",
+    "react": "^18.2.0",
+    "react-calendar": "^5.0.0",
+    "react-dom": "^18.2.0",
+    "react-input-mask": "^2.0.4",
+    "react-router-dom": "^6.24.1",
+    "react-toastify": "^10.0.5",
+    "recharts": "^2.12.7",
+    "sequelize": "^6.37.3",
+    "use-places-autocomplete": "^4.0.1",
+    "yup": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react-swc": "^3.5.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "vite": "^5.3.5",
+    "vite-plugin-resolve": "^2.5.2"
+  }
+}
