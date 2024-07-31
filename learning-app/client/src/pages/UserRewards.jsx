@@ -82,6 +82,7 @@ function UserRewards() {
       // Ensure data is an array
       if (Array.isArray(data)) {
         setRedeemedRewards(data);
+        console.log(redeemedRewards);
       } else {
         console.error("Unexpected data format:", data);
         setRedeemedRewards([]); // Reset if data is not as expected
@@ -924,34 +925,37 @@ function UserRewards() {
 
         <Grid container spacing={2} sx={{ mb: 4, justifyContent: "center" }}>
           {redeemedRewards.length > 0 ? (
-            redeemedRewards.map((reward) => (
-              <Grid item xs={12} sm={6} md={4} key={reward.id}>
-                {" "}
-                {/* Ensure unique key */}
-                <Card sx={{ height: "100%" }}>
-                  <CardContent>
-                    <Typography variant="h6" component="div">
-                      {reward.name || "No Name"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {reward.description || "No Description"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <b>Points:</b> {reward.pointsNeeded || "N/A"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <b>Tier:</b> {reward.tier || "N/A"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <b>Time Redeemed:</b>{" "}
-                      {reward.timeRedeemed
-                        ? new Date(reward.timeRedeemed).toLocaleString()
-                        : "N/A"}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))
+            redeemedRewards
+              .sort(
+                (a, b) => new Date(b.timeRedeemed) - new Date(a.timeRedeemed)
+              ) // Sort by timeRedeemed in descending order
+              .map((reward) => (
+                <Grid item xs={12} sm={6} md={4} key={reward.id}>
+                  {/* Ensure unique key */}
+                  <Card sx={{ height: "100%" }}>
+                    <CardContent>
+                      <Typography variant="h6" component="div">
+                        {reward.name || "No Name"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {reward.description || "No Description"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <b>Points:</b> {reward.pointsNeeded || "N/A"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <b>Tier:</b> {reward.tier || "N/A"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <b>Time Redeemed:</b>{" "}
+                        {reward.timeRedeemed
+                          ? new Date(reward.timeRedeemed).toLocaleString()
+                          : "N/A"}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))
           ) : (
             <Grid item xs={12}>
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>

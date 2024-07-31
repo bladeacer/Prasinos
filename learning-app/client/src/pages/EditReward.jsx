@@ -12,7 +12,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  MenuItem,
   Alert,
 } from "@mui/material";
 import { useFormik } from "formik";
@@ -20,26 +19,28 @@ import * as yup from "yup";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function EditReward() {
+function EditBooking() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [imageFile, setImageFile] = useState(null);
-  const [reward, setReward] = useState({
-    name: "",
-    description: "",
-    points_needed: "",
-    tier_required: "",
+  const [booking, setBooking] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    dateTimeBooked: "",
+    eventId: "",
+    userId: "",
+    pax: "",
   });
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchReward = async () => {
+    const fetchBooking = async () => {
       try {
-        const response = await http.get(`/reward/${id}`);
-        setImageFile(response.data.imageFile);
-        setReward(response.data);
+        const response = await http.get(`/booking/${id}`);
+        setBooking(response.data);
         setLoading(false);
       } catch (err) {
         setError(true);
@@ -47,51 +48,55 @@ function EditReward() {
       }
     };
 
-    fetchReward();
+    fetchBooking();
   }, [id]);
 
   const formik = useFormik({
-    initialValues: reward,
+    initialValues: booking,
     enableReinitialize: true,
     validationSchema: yup.object({
-      name: yup
+      firstName: yup
         .string()
         .trim()
-        .min(3, "Name must be at least 3 characters")
-        .max(100, "Name must be at most 100 characters")
-        .required("Name is required"),
-      description: yup
+        .min(2, "First Name must be at least 2 characters")
+        .max(100, "First Name must be at most 100 characters")
+        .required("First Name is required"),
+      lastName: yup
         .string()
         .trim()
-        .min(3, "Description must be at least 3 characters")
-        .max(200, "Description must be at most 200 characters")
-        .required("Description is required"),
-      points_needed: yup
+        .min(2, "Last Name must be at least 2 characters")
+        .max(100, "Last Name must be at most 100 characters")
+        .required("Last Name is required"),
+      email: yup
+        .string()
+        .email("Invalid email format")
+        .required("Email is required"),
+      phoneNumber: yup
+        .string()
+        .trim()
+        .min(10, "Phone Number must be at least 10 characters")
+        .max(15, "Phone Number must be at most 15 characters")
+        .required("Phone Number is required"),
+      dateTimeBooked: yup.date().required("Booking Date and Time are required"),
+      eventId: yup.number().required("Event ID is required"),
+      userId: yup.number().required("User ID is required"),
+      pax: yup
         .number()
-        .positive("Points needed must be a positive number")
-        .required("Points needed is required"),
-      tier_required: yup
-        .string()
-        .oneOf(["Bronze", "Silver", "Gold"], "Invalid tier")
-        .required("Tier required is required"),
+        .positive("PAX must be a positive number")
+        .required("PAX is required"),
     }),
     onSubmit: async (data) => {
       try {
-        if (imageFile) {
-          data.imageFile = imageFile;
-        }
-        data.name = data.name.trim();
-        data.description = data.description.trim();
-        const response = await http.put(`/reward/${id}`, data);
+        const response = await http.put(`/booking/${id}`, data);
         if (response.status === 200) {
-          toast.success("Reward updated successfully!");
-          navigate("/rewards");
+          toast.success("Booking updated successfully!");
+          navigate("/bookings");
         } else {
-          toast.error("Failed to update reward.");
+          toast.error("Failed to update booking.");
         }
       } catch (error) {
-        toast.error("Failed to update reward.");
-        console.error("Error updating reward:", error);
+        toast.error("Failed to update booking.");
+        console.error("Error updating booking:", error);
       }
     },
   });
@@ -104,54 +109,26 @@ function EditReward() {
     setOpen(false);
   };
 
-  const deleteReward = async () => {
+  const deleteBooking = async () => {
     try {
-      await http.delete(`/reward/${id}`);
-      navigate("/rewards");
+      await http.delete(`/booking/${id}`);
+      navigate("/bookings");
     } catch (error) {
-      console.error("Error deleting reward:", error);
+      console.error("Error deleting booking:", error);
     }
-  };
-
-  const onFileChange = (e) => {
-    let file = e.target.files[0];
-    if (file) {
-      if (file.size > 1024 * 1024) {
-        toast.error("Maximum file size is 1MB");
-        return;
-      }
-      let formData = new FormData();
-      formData.append("file", file);
-      http
-        .post("/file/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        .then((res) => {
-          setImageFile(res.data.filename);
-        })
-        .catch((error) => {
-          toast.error("Failed to upload file.");
-        });
-    }
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
   };
 
   if (error) {
     return (
       <Box>
         <Typography variant="h5" sx={{ my: 2 }}>
-          Error 404: Reward not found
+          Error 404: Booking not found
         </Typography>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Either the Reward ID is deleted or invalid.
+          Either the Booking ID is deleted or invalid.
         </Alert>
-        <Button variant="contained" onClick={() => navigate("/rewards")}>
-          Go Back to Rewards
+        <Button variant="contained" onClick={() => navigate("/bookings")}>
+          Go Back to Bookings
         </Button>
       </Box>
     );
@@ -160,7 +137,7 @@ function EditReward() {
   return (
     <Box>
       <Typography variant="h5" sx={{ my: 2 }}>
-        Edit Reward
+        Edit Booking
       </Typography>
       {!loading && (
         <Box component="form" onSubmit={formik.handleSubmit}>
@@ -170,107 +147,113 @@ function EditReward() {
                 fullWidth
                 margin="dense"
                 autoComplete="off"
-                label="Name"
-                name="name"
-                value={formik.values.name}
+                label="First Name"
+                name="firstName"
+                value={formik.values.firstName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                error={
+                  formik.touched.firstName && Boolean(formik.errors.firstName)
+                }
+                helperText={formik.touched.firstName && formik.errors.firstName}
               />
               <TextField
                 fullWidth
                 margin="dense"
                 autoComplete="off"
-                multiline
-                minRows={2}
-                label="Description"
-                name="description"
-                value={formik.values.description}
+                label="Last Name"
+                name="lastName"
+                value={formik.values.lastName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={
-                  formik.touched.description &&
-                  Boolean(formik.errors.description)
+                  formik.touched.lastName && Boolean(formik.errors.lastName)
+                }
+                helperText={formik.touched.lastName && formik.errors.lastName}
+              />
+              <TextField
+                fullWidth
+                margin="dense"
+                autoComplete="off"
+                label="Email"
+                name="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.email && Boolean(formik.errors.email)}
+                helperText={formik.touched.email && formik.errors.email}
+              />
+              <TextField
+                fullWidth
+                margin="dense"
+                autoComplete="off"
+                label="Phone Number"
+                name="phoneNumber"
+                value={formik.values.phoneNumber}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.phoneNumber &&
+                  Boolean(formik.errors.phoneNumber)
                 }
                 helperText={
-                  formik.touched.description && formik.errors.description
+                  formik.touched.phoneNumber && formik.errors.phoneNumber
                 }
               />
               <TextField
                 fullWidth
                 margin="dense"
                 autoComplete="off"
-                label="Points Needed"
-                name="points_needed"
-                value={formik.values.points_needed}
+                label="Booking Date and Time"
+                name="dateTimeBooked"
+                type="datetime-local"
+                value={formik.values.dateTimeBooked}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={
-                  formik.touched.points_needed &&
-                  Boolean(formik.errors.points_needed)
+                  formik.touched.dateTimeBooked &&
+                  Boolean(formik.errors.dateTimeBooked)
                 }
                 helperText={
-                  formik.touched.points_needed && formik.errors.points_needed
+                  formik.touched.dateTimeBooked && formik.errors.dateTimeBooked
                 }
               />
               <TextField
                 fullWidth
                 margin="dense"
-                select
-                label="Tier Required *"
-                name="tier_required"
-                value={formik.values.tier_required}
+                autoComplete="off"
+                label="Event ID"
+                name="eventId"
+                value={formik.values.eventId}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={
-                  formik.touched.tier_required &&
-                  Boolean(formik.errors.tier_required)
-                }
-                helperText={
-                  formik.touched.tier_required && formik.errors.tier_required
-                }
-              >
-                {["Bronze", "Silver", "Gold"].map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid item xs={12} md={6} lg={4}>
-              <Box sx={{ textAlign: "center", mt: 2 }}>
-                <Button variant="contained" component="label">
-                  Upload Image
-                  <input
-                    hidden
-                    accept="image/*"
-                    multiple
-                    type="file"
-                    onChange={onFileChange}
-                  />
-                </Button>
-                {imageFile && (
-                  <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
-                    <img
-                      alt="reward"
-                      src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}
-                    />
-                  </Box>
-                )}
-                {imageFile && (
-                  <Box sx={{ mt: 2, textAlign: "center" }}>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      onClick={removeImage}
-                    >
-                      Remove Image
-                    </Button>
-                  </Box>
-                )}
-              </Box>
+                error={formik.touched.eventId && Boolean(formik.errors.eventId)}
+                helperText={formik.touched.eventId && formik.errors.eventId}
+              />
+              <TextField
+                fullWidth
+                margin="dense"
+                autoComplete="off"
+                label="User ID"
+                name="userId"
+                value={formik.values.userId}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.userId && Boolean(formik.errors.userId)}
+                helperText={formik.touched.userId && formik.errors.userId}
+              />
+              <TextField
+                fullWidth
+                margin="dense"
+                autoComplete="off"
+                label="PAX"
+                name="pax"
+                value={formik.values.pax}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.pax && Boolean(formik.errors.pax)}
+                helperText={formik.touched.pax && formik.errors.pax}
+              />
             </Grid>
           </Grid>
 
@@ -290,17 +273,17 @@ function EditReward() {
         </Box>
       )}
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Delete Reward</DialogTitle>
+        <DialogTitle>Delete Booking</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this reward?
+            Are you sure you want to delete this booking?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button variant="contained" color="inherit" onClick={handleClose}>
             Cancel
           </Button>
-          <Button variant="contained" color="error" onClick={deleteReward}>
+          <Button variant="contained" color="error" onClick={deleteBooking}>
             Delete
           </Button>
         </DialogActions>
@@ -310,4 +293,4 @@ function EditReward() {
   );
 }
 
-export default EditReward;
+export default EditBooking;
