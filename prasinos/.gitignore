@@ -1,5 +1,5 @@
 /server/node_modules
-/server/public
+/server/public/uploads/*
 /client/public
 /server/unused
 /client/unused

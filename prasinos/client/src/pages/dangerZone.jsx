@@ -20,8 +20,7 @@ export default function DangerZone() {
     const deleteUser = () => {
         http.delete('/user/delete')
             .then((res) => {
-                console.log(res.data);
-                navigate("/home", {replace: true});
+                localStorage.removeItem("accessToken");                navigate("/home", {replace: true});
                 window.location.reload();
             })
             .catch((err) =>{
@@ -55,7 +54,7 @@ export default function DangerZone() {
                         <Button href={"/edit"} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Edit Details</Button>
                     </Box>
                     <Box sx={{ positon: 'absolute', mt: -4.75, ml: 95, width: '35vw' }}>
-                        <Button href={"/reset"} onClick={logout} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
+                        <Button href={"/resetendpoint"} sx={{ backgroundColor: 'red', color: 'white', borderRadius: '30px', fontSize: '18px' }}>Reset Password</Button>
                     </Box>
 
                     <Box sx={{ positon: 'absolute', mt: 14.75, ml: 95, width: '35vw' }}>

@@ -1,12 +1,5 @@
-- [x] Test verify handler with passphrase (fail, store otp in database schema instead)
-- [x] Code store otp in database schema for user
-- [ ] Code usage of otp for reset password
-- [x] Test if `App.jsx` crashes after new changes
-- [ ] Create new emailjs account to bypass quota (they clowning)
-- [ ] Check if verify self crashes code
-- [ ] Test delete user route
-- [x] Migrate to MySQL
-- [ ] Refactor user route code for staff route so staff can also reset password and all
-- [x] Refactor MUI grid code into staff homepage
-- [ ] Delete route for user **priority for CRUD criteria**
-- [ ] Delete read routes (of staff) for staff
+Account Management
+- Login
+- Register
+- Verify and forget password using EmailJS
+

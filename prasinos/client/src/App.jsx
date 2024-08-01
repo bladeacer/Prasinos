@@ -9,6 +9,7 @@ import Settings from './pages/Settings';
 import Unauthorized from './pages/Unauthorized';
 import DangerZone from './pages/dangerZone'
 import EditUser from './pages/EditUser';
+import ResetPassword from './pages/ResetPassword';
 import { is_accent, goof_check } from './pages/reusables/accent_parser';
 import { HomeWrapper, BookingWrapper, EventWrapper, RewardsWrapper, SupportWrapper, SelectLogWrapper, EverythingWrapper } from './pages/reusables/wrappers';
 import StaffLogin from './pages/staffLogin';
@@ -103,7 +104,37 @@ export default function App() {
         </Routes>
       </Router>
       <UserContext.Provider value={{ user, setUser }}>
-        <TopNavbarV2 />
+        <StaffContext.Provider value={{ staff, setStaff }}>
+          <TopNavbarV2 />
+          <Router>
+            <Routes>
+              <Route path="*" element={<></>} />
+              <Route path={"/staffLogin"} element={
+                <>
+                  {!staff && is_accent[13] && (
+                    <StaffLogin />
+                  )}
+
+                </>
+              } />
+              <Route path={"/staffRegister"} element={
+                <>
+                  {!staff && is_accent[14] && (
+                    <StaffRegister />
+                  )}
+
+                </>
+              } />
+              <Route path={"/staffHome"} element={
+                <>
+                  {staff && is_accent[15] && (
+                    <StaffHome />
+                  )}
+                </>
+              } />
+            </Routes>
+          </Router>
+        </StaffContext.Provider>
         <Router>
           <Routes>
             <Route path="*" element={<></>} />
@@ -195,7 +226,7 @@ export default function App() {
             <Route path="/resetendpoint" element={
               <>
                 {user && user.verified && !staff && is_accent[16] && (
-                  <></>
+                  <ResetPassword />
                 )}
               </>
             } />
@@ -211,38 +242,9 @@ export default function App() {
             } />
           </Routes>
         </Router>
-      </UserContext.Provider>
 
-      <StaffContext.Provider value={{ staff, setStaff }}>
-        <Router>
-          <Routes>
-            <Route path="*" element={<></>} />
-            <Route path={"/staffLogin"} element={
-              <>
-                {!staff && is_accent[13] && (
-                  <StaffLogin />
-                )}
 
-              </>
-            } />
-            <Route path={"/staffRegister"} element={
-              <>
-                {!staff && is_accent[14] && (
-                  <StaffRegister />
-                )}
-
-              </>
-            } />
-            <Route path={"/staffHome"} element={
-              <>
-                {staff && is_accent[15] && (
-                  <StaffHome />
-                )}
-              </>
-            } />
-          </Routes>
-        </Router>
-      </StaffContext.Provider>
+      </UserContext.Provider >
     </>
   );
 }

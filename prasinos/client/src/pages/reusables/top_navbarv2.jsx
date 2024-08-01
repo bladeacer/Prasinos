@@ -2,17 +2,17 @@ import * as React from 'react';
 import imgUrl from '../../assets/prasinos-logo.jpg';
 import { Box, Button, Typography } from '@mui/material';
 import { AccentedButton, CustomAppBar, D9Background, CustButton, CustButtonsStack, CustNavStack, ImageBox, SignInButton, SignUpButton } from './components/navbar_components';
-import { useContext } from 'react';
-import { UserContext } from '../../contexts/Contexts';
 import url from '../../assets/dimmed-logo.png'
 import { SidebarData } from './SideBarData';
 import { useState } from 'react';
 import './sidebar.css'
 import { is_accent } from './accent_parser';
-import { logout } from './logout';
-
+import { logout, staffLogout } from './logout';
+import { useContext } from 'react';
+import { StaffContext, UserContext } from '../../contexts/Contexts';
 export default function TopNavbarV2() {
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
+    const { staff, setStaff } = useContext(StaffContext);
     const [sidebar, setSidebar] = useState(false);
     const showSidebar = () => setSidebar(!sidebar);
 
@@ -20,7 +20,7 @@ export default function TopNavbarV2() {
         <>
             <Box sx={{ flexGrow: 1, zIndex: 1 }}>
 
-                {!is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && (
+                {!is_accent[5] && !is_accent[6] && !is_accent[8] && !is_accent[9] && !is_accent[10] && !is_accent[11] && !is_accent[13] && !is_accent[14] && !is_accent[15] && !is_accent[16] && (
                     <>
                         <ImageBox
                             component="img"
@@ -111,8 +111,6 @@ export default function TopNavbarV2() {
                             {user && (
                                 <>
                                     <CustButtonsStack spacing={3} direction="row">
-                
-
                                         <CustButton href="/settings">{user.name.slice(0, 8)}..</CustButton>
                                         <SignUpButton onClick={logout}>Logout</SignUpButton>
                                         <>
@@ -122,23 +120,32 @@ export default function TopNavbarV2() {
                                         </>
                                         <>
                                             {!user.imageFile && (
-                                                <CustButton href="/settings" sx={{fontSize: '0.75rem', height: '50px', width: '90px', borderRadius: '50%' }}>No profile picture yet</CustButton>
+                                                <CustButton href="/settings" sx={{ fontSize: '0.75rem', height: '50px', width: '90px', borderRadius: '50%' }}>No profile picture yet</CustButton>
                                             )}
                                         </>
+                                    </CustButtonsStack>
+                                </>
+                            )}
+                            {staff && (
+                                <>
+                                    <CustButtonsStack spacing={3} direction="row">
+                                        <CustButton>{user.name.slice(0, 8)}..</CustButton>
+                                        <SignUpButton onClick={staffLogout}>Logout</SignUpButton>
                                     </CustButtonsStack>
                                 </>
                             )}
                         </CustomAppBar>
                     </>
                 )}
-                {(is_accent[5] || is_accent[6] || is_accent[9] || is_accent[11]) && (
+                {((is_accent[5] || is_accent[6]) || ((is_accent[9] || is_accent[10] || is_accent[11] || is_accent[16]) && user)) && (
                     <>
                         <ImageBox
                             component="img"
                             sx={{
                                 opacity: '0.30',
                                 maxWidth: { xs: 0, md: 0, lg: 195, xl: 195 },
-                                marginTop: '-2px'
+                                marginTop: '-2px',
+                                zIndex: -10
                             }}
                             alt="Prasinos logo"
                             src={url}
@@ -217,9 +224,17 @@ export default function TopNavbarV2() {
                                         </>
                                         <>
                                             {!user.imageFile && (
-                                                <CustButton sx={{fontSize: '0.75rem', height: '50px', width: '90px', borderRadius: '50%' }}>No profile picture yet</CustButton>
+                                                <CustButton sx={{ fontSize: '0.75rem', height: '50px', width: '90px', borderRadius: '50%' }}>No profile picture yet</CustButton>
                                             )}
                                         </>
+                                    </CustButtonsStack>
+                                </>
+                            )}
+                            {staff && (
+                                <>
+                                    <CustButtonsStack spacing={3} direction="row">
+                                        <CustButton>{staff.name.slice(0, 8)}..</CustButton>
+                                        <SignUpButton>Logout</SignUpButton>
                                     </CustButtonsStack>
                                 </>
                             )}

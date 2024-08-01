@@ -25,7 +25,7 @@ router.post("/register", async (req, res) => {
                 "password at least 1 letter and 1 number"),
         phone: yup.string().lowercase().min(8).max(50).required()
             .matches(/^\+65\s?([689]\d{7}|[1][-\s]\d{7}|[3]\d{3}[-\s]\d{4})$/,
-                "Express in the form '+65 81234567'")
+                "Express in the form '+65 81234567'"),
     });
     try {
         data = await validationSchema.validate(data,
@@ -142,7 +142,7 @@ router.get("/auth", validateToken, async (req, res) => {
             imageFile: user.imageFile,
             points: user.points,
             eventsJoined: user.eventsJoined,
-            company: user.company
+            company: user.company,
         };
         res.json({
             user: userInfo,
@@ -177,36 +177,13 @@ router.get("/", async (req, res) => {
 
 router.put("/edit", validateToken, async (req, res) => {
     let id = req.user.id;
-    // Check id not found
     let user = await User.findByPk(id);
     if (!user) {
         res.sendStatus(404);
         return;
     }
-
     let data = req.body;
-    data.password = user.password;
-    // Validate request body
-    let validationSchema = yup.object({
-        name: yup.string().trim()
-            .min(3, 'Name must be at least 3 characters')
-            .max(50, 'Name must be at most 50 characters')
-            .required('Name is required')
-            .matches(/^[a-zA-Z '-,.]+$/,
-                "Name only allow letters, spaces and characters: ' - , ."),
-        email: yup.string().trim()
-            .email('Enter a valid email')
-            .max(50, 'Email must be at most 50 characters')
-            .required('Email is required'),
-        phone: yup.string()
-            .required("Phone number is required")
-            .matches(/^\+65\s?([689]\d{7}|[1][-\s]\d{7}|[3]\d{3}[-\s]\d{4})$/,
-                "Express in the form '+65 81234567'")
-    });
     try {
-        data = await validationSchema.validate(data,
-            { abortEarly: false });
-
         let num = await User.update(data, {
             where: { id: id }
         });
@@ -237,8 +214,6 @@ router.put("/reset", validateToken, async (req, res) => {
 
     let data = req.body;
     data.password = await bcrypt.hash(data.password, 10);
-
-    // TODO: Add logic to call OTP entity associated with user
 
     let validationSchema = yup.object({
         password: yup.string().trim().min(8).required()
@@ -404,7 +379,7 @@ router.post("/getResetUser", async (req, res) => {
             await Otp.create(data);
             let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
             if (!otp_is_exists) {
-                res.status(500).json({message: "Internal server error."})
+                res.status(500).json({ message: "Internal server error." })
             }
 
             const publicKey = process.env.EMAIL_JS_PUBLIC_KEY;
@@ -418,9 +393,9 @@ router.post("/getResetUser", async (req, res) => {
             };
             await emailjs.send(serviceId, templateId, templateParams, { publicKey: publicKey });
             let userInfo = {
-                id: id 
+                id: id
             }
-            res.json({user: userInfo});
+            res.json({ user: userInfo });
         }
         else if (user && !user.verified) {
             res.status(404).json({ message: "Verify your email first" })
@@ -434,16 +409,15 @@ router.post("/getResetUser", async (req, res) => {
     }
 });
 
-// TODO: Route to check otp for forget password
 router.put("/resethandler", async (req, res) => {
     try {
         let id = req.body.id;
         let otp = req.body.otp;
         let status = 200;
         let otp_is_exists = await Otp.findOne({ where: { otpForId: id } });
-        if (!otp_is_exists){
+        if (!otp_is_exists) {
             status = 400;
-        } else{
+        } else {
             const now = new Date();
             if (now > otp_is_exists.expiresAt) {
                 status = 301;
@@ -480,12 +454,8 @@ router.put("/resethandler", async (req, res) => {
     }
 });
 
-
-// Get id and store it in next form submission using formik
-
 router.put("/forgetReset", async (req, res) => {
     let id = req.body.id;
-
     let user = await User.findByPk(id);
     if (!user) {
         res.sendStatus(404);
@@ -495,9 +465,6 @@ router.put("/forgetReset", async (req, res) => {
     data.password = await bcrypt.hash(data.password, 10);
 
     let validationSchema = yup.object({
-        oldPassword: yup.string().trim().min(8).required()
-            .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
-                "password at least 1 letter and 1 number"),
         password: yup.string().trim().min(8).required()
             .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
                 "password at least 1 letter and 1 number")
@@ -506,9 +473,7 @@ router.put("/forgetReset", async (req, res) => {
         data = await validationSchema.validate(data,
             { abortEarly: false });
 
-        let match = await bcrypt.compare(data.oldPassword, user.password);
-
-        let num = await User.update({password: data.password}, {
+        let num = await User.update({ password: data.password }, {
             where: { id: id }
         });
 
@@ -527,6 +492,7 @@ router.put("/forgetReset", async (req, res) => {
         res.status(400).json({ errors: err.errors });
     }
 })
+
 
 module.exports = router;
 

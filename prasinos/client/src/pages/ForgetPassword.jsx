@@ -5,10 +5,12 @@ import { Typography, Box, Button, TextField } from "@mui/material";
 import http from '../http';
 import { toast, ToastContainer } from 'react-toastify';
 import { useState } from "react";
+import { useNavigate } from 'react';
 
 export default function ForgetPassword() {
     const [id, setID] = useState(0);
     const [dispReset, setDispReset] = useState(false);
+    const navigate = useNavigate();
     const formik = useFormik({
         initialValues: {
             email: ""
@@ -69,25 +71,17 @@ export default function ForgetPassword() {
 
     const formik2 = useFormik({
         initialValues: {
-            oldPassword: "",
             password: "",
             confirmPassword: ""
         },
         enableReinitialize: true,
         validationSchema: yup.object({
-            oldPassword: yup.string().trim()
-                .min(8, 'Password must be at least 8 characters')
-                .max(50, 'Password must be at most 50 characters')
-                .required('Password is required')
-                .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
-                    "Password at least 1 letter and 1 number"),
             password: yup.string().trim()
                 .min(8, 'Password must be at least 8 characters')
                 .max(50, 'Password must be at most 50 characters')
                 .required('Password is required')
                 .matches(/^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/,
-                    "Password at least 1 letter and 1 number")
-                .notOneOf([yup.ref('oldPassword')], 'New password must not be same as old password'),
+                    "Password at least 1 letter and 1 number"),
             confirmPassword: yup.string().trim()
                 .required('Confirm password is required')
                 .oneOf([yup.ref('password')], 'Passwords must match'),
@@ -96,7 +90,8 @@ export default function ForgetPassword() {
             data.id = id;
             http.put("/user/forgetReset", data)
                 .then((res) => {
-                    window.location = "/home"
+                    navigate("/home", {replace: true});
+                    window.location.reload();
                 })
                 .catch(function (err) {
                     if (err.response.data.message) {
@@ -179,18 +174,6 @@ export default function ForgetPassword() {
                         </Typography>
                         <Box component="form" onSubmit={formik2.handleSubmit}>
 
-                            <Typography variant='h6' sx={{ mt: 1 }}>Old Password</Typography>
-                            <TextField
-                                fullWidth margin="dense" autoComplete="off"
-                                label="Old Password"
-                                name="oldPassword" type="password"
-                                value={formik2.values.oldPassword}
-                                onChange={formik2.handleChange}
-                                onBlur={formik2.handleBlur}
-                                error={formik2.touched.oldPassword && Boolean(formik2.errors.oldPassword)}
-                                helperText={formik2.touched.oldPassword && formik2.errors.oldPassword}
-                            />
-
                             <Typography variant='h6' sx={{ mt: 1 }}>Password</Typography>
                             <TextField
                                 fullWidth margin="dense" autoComplete="off"
@@ -229,6 +212,5 @@ export default function ForgetPassword() {
                 <CloseButton href="/home">X</CloseButton>
             </LogBox>
         </LoginWrapper>
-
     )
 }

@@ -6,13 +6,15 @@ import { useEffect, useState } from "react";
 import { Typography, Box, Button, TextField, Grid } from "@mui/material";
 import http from '../http'
 import { toast, ToastContainer } from 'react-toastify';
+import zIndex from "@mui/material/styles/zIndex";
 
 export default function EditUser() {
     const navigate = useNavigate();
     const [user, setUser] = useState({
         name: "",
         email: "",
-        phone: ""
+        phone: "",
+        company: ""
     })
     const [loading, setLoading] = useState(true);
     const [imageFile, setImageFile] = useState(null);
@@ -35,27 +37,29 @@ export default function EditUser() {
             name: yup.string().trim()
                 .min(3, 'Name must be at least 3 characters')
                 .max(50, 'Name must be at most 50 characters')
-                .required('Name is required')
                 .matches(/^[a-zA-Z '-,.]+$/,
                     "Name only allow letters, spaces and characters: ' - , ."),
             email: yup.string().trim()
                 .email('Enter a valid email')
-                .max(50, 'Email must be at most 50 characters')
-                .required('Email is required'),
+                .max(50, 'Email must be at most 50 characters'),
             phone: yup.string()
-                .required("Phone number is required")
                 .matches(/^\+65\s?([689]\d{7}|[1][-\s]\d{7}|[3]\d{3}[-\s]\d{4})$/,
-                    "Express in the form '+65 81234567'")
+                    "Express in the form '+65 81234567'"),
+            company: yup.string()
+                .min(10, 'Company must be at least 3 characters')
+                .max(150, 'Company must be at most 50 characters')
+                .matches(/^[a-zA-Z '-,.]+$/,
+                    "Company only allow letters, spaces and characters: ' - , ."),
         }),
         onSubmit: (data) => {
+            data.name = data.name.trim();
+            data.email = data.email.trim().toLowerCase();
+            data.phone = data.phone;
+            data.company = data.company.trim();
             if (imageFile) {
                 data.imageFile = imageFile;
             }
-
-            data.name = data.name.trim();
-            data.email = data.email.trim().toLowerCase();
-            data.password = user.password;
-            data.phone = data.phone;
+            console.log(data);
             http.put("/user/edit", data)
                 .then((res) => {
                     navigate("/settings", { replace: true });
@@ -97,12 +101,12 @@ export default function EditUser() {
         <>
             <LoginWrapper sx={{ borderRadius: '10px' }}>
                 <LogBox>
-                    <Typography variant="h5" sx={{ my: 2 }}>
-                        Edit User
-                    </Typography>
-                    {/* {user.name} {user.email} {user.password} {user.createdAt} */}
+
                     {!loading && (
                         <>
+                            <Typography variant="h5" sx={{ mb: 2 }}>
+                                Edit User
+                            </Typography>
                             <Box component="form" onSubmit={formik.handleSubmit}>
 
                                 <Typography variant='h6' sx={{ mt: 0 }}>Name</Typography>
@@ -139,25 +143,40 @@ export default function EditUser() {
                                     error={formik.touched.phone && Boolean(formik.errors.phone)}
                                     helperText={formik.touched.phone && formik.errors.phone}
                                 />
-                                <Button variant="contained" type="submit" sx={{mt: 2}}>
-                                    Save
-                                </Button>
 
-                                <Typography variant='h6' sx={{ mt: 4 }}>Upload profile picture</Typography>
-                                <Button variant="contained" component="label">
-                                    Upload Image
-                                    <input hidden accept="image/*" multiple type="file"
-                                        onChange={onFileChange} />
-                                </Button>
+                                <Typography variant='h6' sx={{ mt: 1 }}>Company</Typography>
+                                <TextField
+                                    fullWidth margin="dense" autoComplete="off"
+                                    label="Company"
+                                    name="company"
+                                    value={formik.values.company}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={formik.touched.company && Boolean(formik.errors.company)}
+                                    helperText={formik.touched.company && formik.errors.company}
+                                />
+
+                                <Typography variant='h6' sx={{ mt: 1 }}>Upload profile picture</Typography>
                                 {
                                     imageFile && (
-                                        <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
-                                            <img alt="tutorial"
-                                                src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}>
+                                        <Box className="smallImage" sx={{ mt: 3, width: '150px' }}>
+                                            <img alt="image"
+                                                src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`} sx={{ zIndex: 10 }}>
                                             </img>
                                         </Box>
                                     )
                                 }
+                                <Button variant="contained" component="label" sx={{ my: 4, ml: 22, mt: -20 }}>
+                                    Upload Image
+                                    <input hidden accept="image/*" multiple type="file"
+                                        onChange={onFileChange} />
+                                </Button>
+
+                                <Button variant="contained" type="submit" sx={{ mt: 2 }}>
+                                    Save
+                                </Button>
+
+
                             </Box>
                         </>
                     )}
