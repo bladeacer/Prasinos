@@ -32,7 +32,7 @@ router.post("/register", async (req, res) => {
             return;
         }
 
-        // Hash passowrd
+        // Hash password
         data.password = await bcrypt.hash(data.password, 10);
         // Create user
         let result = await User.create(data);

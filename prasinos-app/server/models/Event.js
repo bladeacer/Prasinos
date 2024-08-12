@@ -4,29 +4,100 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(100),
             allowNull: false
         },
-        refCode: {
-            type: DataTypes.STRING(50),
-            allowNull: false
-        },
-        organization: {
-            type: DataTypes.STRING(100),
-            allowNull: false
-        },
-        date: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW
-        },
-        time: {
-            type: DataTypes.TIME,
-            allowNull: false
-        },
-        description: {
+        eventDescription: {
             type: DataTypes.TEXT,
             allowNull: false
         },
-        imageUrl: {
+        eventLocation: {
+            type: DataTypes.STRING(255),
+            allowNull: false
+        },
+        eventStartDate: {
+            type: DataTypes.DATEONLY,
+            allowNull: false
+        },
+        eventEndDate: {
+            type: DataTypes.DATEONLY,
+            allowNull: false
+        },
+        eventStartTime: {
+            type: DataTypes.TIME,
+            allowNull: false
+        },
+        eventEndTime: {
+            type: DataTypes.TIME,
+            allowNull: false
+        },
+        eventOrganizerType: {
+            type: DataTypes.ENUM('individual', 'organization', "community club", "government agency"),
+            allowNull: false
+        },
+        eventOrganizerName: {
+            type: DataTypes.STRING(255),
+            allowNull: false
+        },
+        eventScope: {
+            type: DataTypes.ENUM('open', 'invitation'),
+            allowNull: false
+        },
+        expectedAttendance: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        participationFee: {
+            type: DataTypes.DECIMAL,
+            allowNull: false
+        },
+        eventActivity: {
+            type: DataTypes.STRING(100),
+            allowNull: false
+        },
+        otherEventActivity: {
+            type: DataTypes.STRING(255),
+            allowNull: true
+        },
+        contactNumber: {
+            type: DataTypes.STRING(20),
+            allowNull: false
+        },
+        email: {
+            type: DataTypes.STRING(100),
+            allowNull: false
+        },
+        useAccountInfo: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
+        },
+        consentApproved: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
+        },
+        termsApproved: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
+        },
+        supportingDocs: {
+            type: DataTypes.JSON, // or JSONB if using PostgreSQL
+            allowNull: true
+        },
+        fundingRequests: {
+            type: DataTypes.JSON, // or JSONB if using PostgreSQL
+            allowNull: true
+        },
+        eventImage: {
+            type: DataTypes.STRING, // Ensure this matches the field type in your database
+            allowNull: true // or false if eventImage is required
+        },
+        adminComment: {
             type: DataTypes.STRING,
+            allowNull: true
+        },
+        eventStatus: {
+            type: DataTypes.ENUM("Pending Review", "Approved", "Rejected", "Action Needed", "Draft"),
+            allowNull: false
+        },
+        requestChangefields: {
+            type: DataTypes.JSON,
             allowNull: true
         }
     }, {
@@ -37,10 +108,6 @@ module.exports = (sequelize, DataTypes) => {
         Event.belongsTo(models.User, {
             foreignKey: "userId",
             as: 'user'
-        });
-        Event.hasMany(models.Booking, {
-            foreignKey: "eventId",
-            as: 'bookings'
         });
     };
 

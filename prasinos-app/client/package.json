@@ -17,13 +17,18 @@
     "@mui/material": "^5.16.0",
     "@mui/x-date-pickers": "^7.1.0",
     "axios": "^1.7.2",
+    "bootstrap": "^5.3.3",
     "dayjs": "^1.11.11",
     "formik": "^2.4.6",
+    "mysql2": "^3.10.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-input-mask": "^2.0.4",
+    "react-number-format": "^5.4.0",
     "react-router-dom": "^6.24.1",
     "react-toastify": "^10.0.5",
+    "recharts": "^2.12.7",
+    "sequelize": "^6.37.3",
     "yup": "^1.4.0"
   },
   "devDependencies": {

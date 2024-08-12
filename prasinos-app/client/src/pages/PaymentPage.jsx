@@ -1,200 +1,93 @@
-import React, { useState, useRef } from 'react';
-import { Box, Typography, TextField, Button, FormControl, RadioGroup, FormControlLabel, Radio, Grid, Divider } from '@mui/material';
-import InputMask from 'react-input-mask';
-import axios from './axiosConfig';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Box, Typography, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+import { useNavigate } from 'react-router-dom'
+
+const validationSchema = yup.object({
+    cardholderName: yup.string().required('Cardholder Name is required'),
+    cardNumber: yup.string()
+        .matches(/^\d{16}$/, 'Credit Card Number must be 16 digits')
+        .required('Credit Card Number is required'),
+    cvc: yup.string()
+        .matches(/^\d{3}$/, 'CVC must be 3 digits')
+        .required('CVC is required'),
+    expiryDate: yup.string()
+        .matches(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Expiry Date must be in MM/YY format')
+        .required('Expiry Date is required'),
+});
 
 const PaymentPage = () => {
     const navigate = useNavigate();
-    const { state } = useLocation();
-    const expiryDateRef = useRef(null);
-    const initialFormData = {
-        cardNumber: '',
-        cardholderName: '',
-        expiryDate: '',
-        cvc: '',
-        staffDiscount: '',
-        voucherCode: '',
-        quantity: state?.quantity || 2,
-        unitPrice: state?.unitPrice || 25.00,
-        totalPrice: state?.totalPrice || 50.00,
-        event: state?.event || 'Environment Fundraising Run',
-        refCode: state?.refCode || '155645'
-    };
-
-    const [formData, setFormData] = useState(initialFormData);
-    const [errors, setErrors] = useState({});
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        let newValue = value;
-        if (name === 'cardNumber') {
-            newValue = value.slice(0, 16).replace(/\D/g, ''); // Max 16 digits
-        } else if (name === 'cvc') {
-            newValue = value.slice(0, 3).replace(/\D/g, ''); // Max 3 digits
-        } else if (name === 'expiryDate') {
-            newValue = value; // Input mask handles formatting
-        } else if (name === 'cardholderName') {
-            newValue = value.replace(/[^a-zA-Z\s]/g, ''); // Only letters and spaces
-        }
-
-        setFormData({ ...formData, [name]: newValue });
-    };
-
-    const validateForm = () => {
-        let validationErrors = {};
-        if (!formData.cardNumber) validationErrors.cardNumber = 'Card number is required';
-        if (!formData.cardholderName) validationErrors.cardholderName = 'Cardholder name is required';
-        if (!formData.expiryDate) validationErrors.expiryDate = 'Expiry date is required';
-        else if (!/^\d{2}\/\d{2}$/.test(formData.expiryDate)) validationErrors.expiryDate = 'Expiry date must be in MM/YY format';
-        if (!formData.cvc) validationErrors.cvc = 'CVC is required';
-        return validationErrors;
-    };
-
-    const handleFormSubmit = async (e) => {
-        e.preventDefault();
-        const validationErrors = validateForm();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            return;
-        }
-        try {
-            const response = await axios.post('/payment', formData);
-            if (response.status === 200) {
-                navigate('/payment-success', { state: { ...formData } });
-            }
-        } catch (error) {
-            if (error.response) {
-                // Error response from server
-                setErrors({ form: error.response.data.message });
-            } else {
-                console.error('Error submitting the payment', error);
-                setErrors({ form: 'An unexpected error occurred' });
-            }
-        }
-    };
+    const formik = useFormik({
+        initialValues: {
+            cardholderName: '',
+            cardNumber: '',
+            cvc: '',
+            expiryDate: '',
+        },
+        validationSchema,
+        onSubmit: (values) => {
+            // Handle form submission
+            navigate('/booking-success');
+        },
+    });
 
     return (
-        <Box sx={{ padding: 4 }}>
-            <Typography variant="h4" sx={{ my: 2 }}>
-                Payment
+        <Box sx={{ maxWidth: 600, mx: 'auto', mt: 5, p: 3 }}>
+            <Typography variant="h5" sx={{ mb: 3 }}>
+                Payment Details
             </Typography>
-            <Divider sx={{ my: 2 }} />
 
-            <Typography variant="h6">Booking Summary:</Typography>
-            <Typography>Event: {formData.event}</Typography>
-            <Typography>Ref. Code: {formData.refCode}</Typography>
-            <Typography>Quantity: {formData.quantity}</Typography>
-            <Typography>Unit Price: ${formData.unitPrice.toFixed(2)}</Typography>
-            <Typography>Total: ${formData.totalPrice.toFixed(2)}</Typography>
-
-            <Divider sx={{ my: 2 }} />
-
-            <form onSubmit={handleFormSubmit}>
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <FormControl component="fieldset">
-                            <RadioGroup row aria-label="payment-method" name="paymentMethod" defaultValue="visa">
-                                <FormControlLabel value="visa" control={<Radio />} label="Visa" />
-                                <FormControlLabel value="mastercard" control={<Radio />} label="MasterCard" />
-                                <FormControlLabel value="amex" control={<Radio />} label="Amex" />
-                                <FormControlLabel value="paynow" control={<Radio />} label="PayNow" />
-                            </RadioGroup>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            required
-                            name="cardNumber"
-                            label="Card Number"
-                            value={formData.cardNumber}
-                            onChange={handleChange}
-                            error={!!errors.cardNumber}
-                            helperText={errors.cardNumber}
-                            inputProps={{ maxLength: 16 }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            required
-                            name="cvc"
-                            label="CVC"
-                            value={formData.cvc}
-                            onChange={handleChange}
-                            error={!!errors.cvc}
-                            helperText={errors.cvc}
-                            inputProps={{ maxLength: 3 }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            required
-                            name="cardholderName"
-                            label="Cardholder Name"
-                            value={formData.cardholderName}
-                            onChange={handleChange}
-                            error={!!errors.cardholderName}
-                            helperText={errors.cardholderName}
-                            inputProps={{ pattern: '[a-zA-Z\\s]*' }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <InputMask
-                            mask="99/99"
-                            value={formData.expiryDate}
-                            onChange={handleChange}
-                        >
-                            {(inputProps) => (
-                                <TextField
-                                    {...inputProps}
-                                    fullWidth
-                                    required
-                                    name="expiryDate"
-                                    label="Expiry Date (MM/YY)"
-                                    value={formData.expiryDate}
-                                    onChange={handleChange}
-                                    inputRef={expiryDateRef}
-                                    error={!!errors.expiryDate}
-                                    helperText={errors.expiryDate}
-                                />
-                            )}
-                        </InputMask>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            name="staffDiscount"
-                            label="Staff Discount"
-                            value={formData.staffDiscount}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            name="voucherCode"
-                            label="Voucher/Gift Code"
-                            value={formData.voucherCode}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                </Grid>
-                {errors.form && (
-                    <Typography color="error" sx={{ mt: 2 }}>
-                        {errors.form}
-                    </Typography>
-                )}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                    <Button variant="contained" onClick={() => window.history.back()}>
-                        Back
-                    </Button>
-                    <Button variant="contained" color="primary" type="submit">
-                        Submit Payment
-                    </Button>
-                </Box>
+            <form onSubmit={formik.handleSubmit}>
+                <TextField
+                    fullWidth
+                    label="Cardholder Name"
+                    name="cardholderName"
+                    value={formik.values.cardholderName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.cardholderName && Boolean(formik.errors.cardholderName)}
+                    helperText={formik.touched.cardholderName && formik.errors.cardholderName}
+                    sx={{ mb: 2 }}
+                />
+                <TextField
+                    fullWidth
+                    label="Credit Card Number"
+                    name="cardNumber"
+                    value={formik.values.cardNumber}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.cardNumber && Boolean(formik.errors.cardNumber)}
+                    helperText={formik.touched.cardNumber && formik.errors.cardNumber}
+                    sx={{ mb: 2 }}
+                />
+                <TextField
+                    fullWidth
+                    label="CVC"
+                    name="cvc"
+                    type="password"
+                    value={formik.values.cvc}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.cvc && Boolean(formik.errors.cvc)}
+                    helperText={formik.touched.cvc && formik.errors.cvc}
+                    sx={{ mb: 2 }}
+                />
+                <TextField
+                    fullWidth
+                    label="Expiry Date (MM/YY)"
+                    name="expiryDate"
+                    value={formik.values.expiryDate}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.expiryDate && Boolean(formik.errors.expiryDate)}
+                    helperText={formik.touched.expiryDate && formik.errors.expiryDate}
+                    sx={{ mb: 2 }}
+                />
+                <Button variant="contained" color="primary" onClick={() => navigate('/booking-success')}>
+                    Submit
+                </Button>
             </form>
         </Box>
     );

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Grid } from '@mui/material';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Grid, InputAdornment, IconButton, Typography, TextField } from '@mui/material';
 import http from '../http';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -16,13 +15,11 @@ function EditBooking() {
         title: "",
         description: ""
     });
-    const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         http.get(`/booking/${id}`).then((res) => {
             setBooking(res.data);
-            setImageFile(res.data.imageFile);
             setLoading(false);
         });
     }, []);
@@ -31,21 +28,43 @@ function EditBooking() {
         initialValues: booking,
         enableReinitialize: true,
         validationSchema: yup.object({
-            title: yup.string().trim()
-                .min(3, 'Title must be at least 3 characters')
-                .max(100, 'Title must be at most 100 characters')
-                .required('Title is required'),
-            description: yup.string().trim()
-                .min(3, 'Description must be at least 3 characters')
-                .max(500, 'Description must be at most 500 characters')
-                .required('Description is required')
+            firstName: yup
+                .string()
+                .matches(/^[A-Za-z]+$/, "First name cannot be numbers only")
+                .min(3, "First name must be at least 3 characters")
+                .required("First name is required"),
+            lastName: yup
+                .string()
+                .matches(/^[A-Za-z]+$/, "Last name cannot be numbers only")
+                .min(3, "Last name must be at least 3 characters")
+                .required("Last name is required"),
+            email: yup
+                .string()
+                .email("Invalid email address")
+                .required("Email is required"),
+            phoneNumber: yup
+                .string()
+                .matches(/^\d{8}$/, "Phone number must be 8 digits")
+                .required("Phone number is required"),
+            dateTimeBooked: yup
+                .date()
+                .required("Date and Time of Booking are required"),
+            eventId: yup
+                .number()
+                .positive("Event ID must be a positive number")
+                .required("Event ID is required"),
+            pax: yup
+                .number()
+                .positive("PAX must be a positive number")
+                .required("PAX is required"),
         }),
         onSubmit: (data) => {
-            if (imageFile) {
-                data.imageFile = imageFile;
-            }
-            data.title = data.title.trim();
-            data.description = data.description.trim();
+            data.firstName = data.firstName.trim();
+            data.lastName = data.lastName.trim();
+            data.email = data.email.trim();
+            data.phoneNumber = data.phoneNumber.trim();
+            data.dateTimeBooked = data.dateTimeBooked.trim();
+            data.pax = parseInt(data.pax.toString().trim(), 10);
             http.put(`/booking/${id}`, data)
                 .then((res) => {
                     console.log(res.data);
@@ -68,33 +87,9 @@ function EditBooking() {
         http.delete(`/booking/${id}`)
             .then((res) => {
                 console.log(res.data);
-                navigate("/bookings");
+                navigate("/bookings/:id");
             });
     }
-
-    const onFileChange = (e) => {
-        let file = e.target.files[0];
-        if (file) {
-            if (file.size > 1024 * 1024) {
-                toast.error('Maximum file size is 1MB');
-                return;
-            }
-
-            let formData = new FormData();
-            formData.append('file', file);
-            http.post('/file/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
-                .then((res) => {
-                    setImageFile(res.data.filename);
-                })
-                .catch(function (error) {
-                    console.log(error.response);
-                });
-        }
-    };
 
     return (
         <Box>
@@ -108,43 +103,76 @@ function EditBooking() {
                             <Grid item xs={12} md={6} lg={8}>
                                 <TextField
                                     fullWidth margin="dense" autoComplete="off"
-                                    label="Title"
-                                    name="title"
-                                    value={formik.values.title}
+                                    label="First Name"
+                                    name="firstName"
+                                    value={formik.values.firstName}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
-                                    error={formik.touched.title && Boolean(formik.errors.title)}
-                                    helperText={formik.touched.title && formik.errors.title}
+                                    error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                                    helperText={formik.touched.firstName && formik.errors.firstName}
                                 />
                                 <TextField
                                     fullWidth margin="dense" autoComplete="off"
                                     multiline minRows={2}
-                                    label="Description"
-                                    name="description"
-                                    value={formik.values.description}
+                                    label="Last Name"
+                                    name="lastName"
+                                    value={formik.values.lastName}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
-                                    error={formik.touched.description && Boolean(formik.errors.description)}
-                                    helperText={formik.touched.description && formik.errors.description}
+                                    error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                                    helperText={formik.touched.lastName && formik.errors.lastName}
                                 />
-                            </Grid>
-                            <Grid item xs={12} md={6} lg={4}>
-                                <Box sx={{ textAlign: 'center', mt: 2 }} >
-                                    <Button variant="contained" component="label">
-                                        Upload Image
-                                        <input hidden accept="image/*" multiple type="file"
-                                            onChange={onFileChange} />
-                                    </Button>
-                                    {
-                                        imageFile && (
-                                            <Box className="aspect-ratio-container" sx={{ mt: 2 }}>
-                                                <img alt="booking"
-                                                    src={`${import.meta.env.VITE_FILE_BASE_URL}${imageFile}`}>
-                                                </img>
-                                            </Box>
-                                        )
-                                    }
-                                </Box>
+                                <TextField
+                                    fullWidth margin="dense" autoComplete="off"
+                                    label="Email"
+                                    name="email"
+                                    value={formik.values.email}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={formik.touched.email && Boolean(formik.errors.email)}
+                                    helperText={formik.touched.email && formik.errors.email}
+                                />
+                                <TextField
+                                    fullWidth margin="dense" autoComplete="off"
+                                    label="Phone Number"
+                                    name="phoneNumber"
+                                    value={formik.values.phoneNumber}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
+                                    helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
+                                />
+                                <TextField
+                                    fullWidth margin="dense" autoComplete="off"
+                                    label="Pax"
+                                    name="pax"
+                                    type="number"
+                                    value={formik.values.pax}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={formik.touched.pax && Boolean(formik.errors.pax)}
+                                    helperText={formik.touched.pax && formik.errors.pax}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <IconButton
+                                                    aria-label="decrease pax"
+                                                    onClick={() => formik.setFieldValue('pax', Math.max(1, formik.values.pax - 1))}
+                                                >
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="increase pax"
+                                                    onClick={() => formik.setFieldValue('pax', formik.values.pax + 1)}
+                                                >
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
                             </Grid>
                         </Grid>
                         <Box sx={{ mt: 2 }}>

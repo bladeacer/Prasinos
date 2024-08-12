@@ -12,7 +12,7 @@ import UserContext from '../contexts/UserContext';
 
 const ITEMS_PER_PAGE = 10;
 
-function Bookings() {
+function StaffBooking() {
     const [bookingList, setBookingList] = useState([]);
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -22,10 +22,12 @@ function Bookings() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { user } = useContext(UserContext);
     const [booking, setBooking] = useState({
-        title: "",
-        description: ""
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        pax: 0
     });
 
     const formik = useFormik({
@@ -34,12 +36,12 @@ function Bookings() {
         validationSchema: yup.object({
             firstName: yup
                 .string()
-                .matches(/^[A-Za-z]+$/, "First name cannot be numbers only")
+                .matches(/^[A-Za-z]+$/, "First name can only be alphabets")
                 .min(3, "First name must be at least 3 characters")
                 .required("First name is required"),
             lastName: yup
                 .string()
-                .matches(/^[A-Za-z]+$/, "Last name cannot be numbers only")
+                .matches(/^[A-Za-z]+$/, "Last name can only be alphabets")
                 .min(3, "Last name must be at least 3 characters")
                 .required("Last name is required"),
             email: yup
@@ -66,11 +68,8 @@ function Bookings() {
                     lastName: values.lastName ? values.lastName.trim() : '',
                     email: values.email ? values.email.trim() : '',
                     phoneNumber: values.phoneNumber ? values.phoneNumber.trim() : '',
-                    dateTimeBooked: values.dateTimeBooked ? values.dateTimeBooked.trim() : '',
                     pax: values.pax ? parseInt(values.pax.toString().trim(), 10) : 0,
                 };
-
-                console.log('Cleaned data:', cleanedData);
 
                 await http.put(`/booking/${selectedBooking.id}`, cleanedData);
                 console.log("Updating booking with data:", values);
@@ -84,21 +83,16 @@ function Bookings() {
     });
 
     useEffect(() => {
-        if (user) {
-            getEvents();
-        }
-    }, [user]);
+        getEvents();
+    }, []);
 
     const onSearchChange = (e) => {
         setSearch(e.target.value);
     };
 
     const getEvents = async () => {
-        if (!user) return;
-
         try {
-            // Use the new endpoint to fetch events by user ID
-            const res = await http.get(`/booking/user/${user.id}`);
+            const res = await http.get('/booking');
             const groupedEvents = res.data.reduce((acc, booking) => {
                 const event = acc.find(e => e.id === booking.eventId);
                 if (event) {
@@ -121,19 +115,16 @@ function Bookings() {
             }, []);
             setBookingList(groupedEvents);
             setTotalPages(Math.ceil(groupedEvents.length / ITEMS_PER_PAGE));
+            setLoading(false);
         } catch (error) {
             console.error('Error fetching events:', error);
-        } finally {
             setLoading(false);
         }
     };
 
     const searchEvents = async () => {
-        if (!user) return;
-
         try {
-            // Use the new endpoint with a search parameter
-            const res = await http.get(`/booking/user/${user.id}&search=${search}`);
+            const res = await http.get(`/booking?search=${search}`);
             const groupedEvents = res.data.reduce((acc, booking) => {
                 const event = acc.find(e => e.id === booking.eventId);
                 if (event) {
@@ -243,7 +234,7 @@ function Bookings() {
     return (
         <Box>
             <Typography variant="h5" sx={{ my: 2 }}>
-                Bookings
+                Staff Bookings - Processed Bookings
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -260,11 +251,6 @@ function Bookings() {
                     <Clear />
                 </IconButton>
                 <Box sx={{ flexGrow: 1 }} />
-                {user && (
-                    <Link to="/eventlistpage">
-                        <Button variant='contained'>Register for Event</Button>
-                    </Link>
-                )}
             </Box>
 
             <List>
@@ -344,31 +330,29 @@ function Bookings() {
                 </Button>
             </Box>
 
-            {/* Booking Details Dialog */}
+            {/* View Booking Details Dialog */}
             <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth>
                 <DialogTitle>Booking Details</DialogTitle>
                 <DialogContent>
-                    {selectedEvent && (
-                        <Box>
-                            <Typography variant="h6">Attendees</Typography>
-                            <List>
-                                {selectedEvent && selectedEvent.bookings.map(booking => (
-                                    <ListItem key={booking.id}>
-                                        <ListItemText
-                                            primary={`${booking.firstName} ${booking.lastName}`}
-                                            secondary={`PAX: ${booking.pax}, Email: ${booking.email}, Phone: ${booking.phoneNumber}`}
-                                        />
-                                        <IconButton onClick={() => handleOpenEditDialog(booking)}>
-                                            <Edit />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDeleteBooking(booking.id)}>
-                                            <Delete />
-                                        </IconButton>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>
-                    )}
+                    {selectedEvent && selectedEvent.bookings.map((booking) => (
+                        <Card key={booking.id} sx={{ mb: 2 }}>
+                            <CardContent>
+                                <Typography variant="h6">Booking ID: {booking.id}</Typography>
+                                <Typography variant="subtitle1">Name: {booking.firstName} {booking.lastName}</Typography>
+                                <Typography variant="subtitle1">Email: {booking.email}</Typography>
+                                <Typography variant="subtitle1">Phone: {booking.phoneNumber}</Typography>
+                                <Typography variant="subtitle1">PAX: {booking.pax}</Typography>
+                                <Box display="flex" justifyContent="flex-end" sx={{ mt: 1 }}>
+                                    <IconButton color="primary" onClick={() => handleOpenEditDialog(booking)}>
+                                        <Edit />
+                                    </IconButton>
+                                    <IconButton color="secondary" onClick={() => handleDeleteBooking(booking.id)}>
+                                        <Delete />
+                                    </IconButton>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Close</Button>
@@ -376,69 +360,58 @@ function Bookings() {
             </Dialog>
 
             {/* Edit Booking Dialog */}
-            <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} fullWidth>
+            <Dialog open={editDialogOpen} onClose={handleCloseEditDialog}>
                 <DialogTitle>Edit Booking</DialogTitle>
                 <DialogContent>
                     <form onSubmit={formik.handleSubmit}>
                         <TextField
                             fullWidth
                             margin="normal"
-                            id="firstName"
-                            name="firstName"
                             label="First Name"
+                            name="firstName"
                             value={formik.values.firstName}
                             onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
                             error={formik.touched.firstName && Boolean(formik.errors.firstName)}
                             helperText={formik.touched.firstName && formik.errors.firstName}
                         />
                         <TextField
                             fullWidth
                             margin="normal"
-                            id="lastName"
-                            name="lastName"
                             label="Last Name"
+                            name="lastName"
                             value={formik.values.lastName}
                             onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
                             error={formik.touched.lastName && Boolean(formik.errors.lastName)}
                             helperText={formik.touched.lastName && formik.errors.lastName}
                         />
                         <TextField
                             fullWidth
                             margin="normal"
-                            id="email"
-                            name="email"
                             label="Email"
-                            type="email"
+                            name="email"
                             value={formik.values.email}
                             onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
                             error={formik.touched.email && Boolean(formik.errors.email)}
                             helperText={formik.touched.email && formik.errors.email}
                         />
                         <TextField
                             fullWidth
                             margin="normal"
-                            id="phoneNumber"
-                            name="phoneNumber"
                             label="Phone Number"
+                            name="phoneNumber"
                             value={formik.values.phoneNumber}
                             onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
                             error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
                             helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
                         />
                         <TextField
                             fullWidth
                             margin="normal"
-                            id="pax"
-                            name="pax"
                             label="PAX"
+                            name="pax"
                             type="number"
                             value={formik.values.pax}
                             onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
                             error={formik.touched.pax && Boolean(formik.errors.pax)}
                             helperText={formik.touched.pax && formik.errors.pax}
                         />
@@ -453,4 +426,4 @@ function Bookings() {
     );
 }
 
-export default Bookings;
+export default StaffBooking;

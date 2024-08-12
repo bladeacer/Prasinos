@@ -1,5 +1,6 @@
 const global = {
-    datetimeFormat: 'D MMM YYYY h:mm A'
+    dateForm: "YYYY-MM-DD",
+    datetimeFormat: 'YYYY-MM-DD HH:mm',
 }
 
 export default global;

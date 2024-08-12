@@ -2,38 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Typography, Grid, Card, CardContent, Divider, Button } from '@mui/material';
 import { Event, Schedule } from '@mui/icons-material';
-
-// Sample event data - replace with actual data fetching logic
-const sampleEvents = [
-    {
-        id: 1,
-        eventName: 'Event 1',
-        refCode: 'ABC123',
-        organization: 'Organization A',
-        date: '2024-07-15',
-        time: '10:00 AM',
-        imageUrl: 'https://example.com/event1-image.jpg',
-    },
-    {
-        id: 2,
-        eventName: 'Event 2',
-        refCode: 'XYZ456',
-        organization: 'Organization B',
-        date: '2024-08-01',
-        time: '2:00 PM',
-        imageUrl: 'https://example.com/event2-image.jpg',
-    },
-    // Add more events as needed
-];
+import http from '../http';
+import dayjs from 'dayjs';
 
 const EventListPage = () => {
-    // State to hold events data
     const [events, setEvents] = useState([]);
 
+    const sortEventsByStartDate = (events) => events.sort((a, b) => new Date(a.eventStartDate) - new Date(b.eventStartDate));
+
     useEffect(() => {
-        // Simulating data fetch from API
-        setEvents(sampleEvents);
-    }, []);
+        http.get('/event').then((res) => {
+            let eventData = res.data;
+            eventData = eventData.filter(event => event.eventStatus === 'Approved');
+            let sortedEvent = sortEventsByStartDate(eventData);
+            setEvents(sortedEvent);
+        }, []);
+    });
 
     return (
         <Box>
@@ -50,15 +34,15 @@ const EventListPage = () => {
                                 {event.eventName}
                             </Typography>
                             <Typography variant="subtitle1" gutterBottom>
-                                Ref code: {event.refCode}
+                                Ref code: {event.id}
                             </Typography>
                             <Typography variant="subtitle1" gutterBottom>
-                                By: {event.organization}
+                                By: {event.eventOrganizerName}
                             </Typography>
                             <Grid container spacing={2} alignItems="center">
                                 <Grid item xs={4}>
                                     <img
-                                        src={event.imageUrl}
+                                        src={`${import.meta.env.VITE_FILE_BASE_URL}${event.eventImage}`}
                                         alt="Event"
                                         style={{ maxWidth: '100%', height: 'auto' }}
                                     />
@@ -66,11 +50,11 @@ const EventListPage = () => {
                                 <Grid item xs={8}>
                                     <Box display="flex" alignItems="center" mb={1}>
                                         <Event sx={{ mr: 1 }} />
-                                        <Typography>Date: {event.date}</Typography>
+                                        <Typography>Date: {event.eventStartDate} - {event.eventEndDate}</Typography>
                                     </Box>
                                     <Box display="flex" alignItems="center">
                                         <Schedule sx={{ mr: 1 }} />
-                                        <Typography>Time: {event.time}</Typography>
+                                        <Typography>Time: {event.eventStartTime} - {event.eventEndTime}</Typography>
                                     </Box>
                                 </Grid>
                             </Grid>
