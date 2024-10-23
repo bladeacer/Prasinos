@@ -20,6 +20,30 @@ Branden: [Support Management](https://github.com/bladeacer/NYP-FSDP/tree/support
 
 Zara: [Booking System](https://github.com/bladeacer/NYP-FSDP/tree/bookingSystem)
 
+___
 #### Technical jargon
-Use of a locally hosted MySQL database with credentials defined in the `.env` files.
+##### Front-end 
+Create [Vite](https://vite.dev/guide/) App with React
+- Tailwind.css
+- Material UI
+- Gemini API for Chatbot
 
+
+##### Back-end
+Back-end is written using Express.js
+- Authentication is done with [JWTs](https://jwt.io/).
+
+___
+## Development 
+The code uses a locally hosted MySQL database with placeholder credentials defined in the `.env` files. Hence, you would need to define your own credentials.
+- Server [.env](./server/.env) file
+    - APP_SECRET for JWTs to work
+    - EMAIL_JS_PUBLIC_KEY, EMAIL_JS_SERVICE_ID, EMAIL_JS_TEMPLATE_ID for email notifications to work (obtain by creating an account with [EmailJS](https://www.emailjs.com/)
+    > Note that there is a monthly quota of 200 emails per month on the free plan
+- Client [.env](./client/.env) file
+    - REACT_APP_GEMINI_API_KEY for chatbot
+
+
+> This code is not deployed to a live website
+
+To run it, you would have to install MySQL and provide the placeholder credentials. Alternatively, you can slightly modify the [index.js](./server/index.js) file to use an alternative database provider like SQLite.
