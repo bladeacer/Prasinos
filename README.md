@@ -20,6 +20,8 @@ Branden: [Support Management](https://github.com/bladeacer/NYP-FSDP/tree/support
 
 Zara: [Booking System](https://github.com/bladeacer/NYP-FSDP/tree/bookingSystem)
 
+Jun Long: [Rewards](https://github.com/bladeacer/NYP-FSDP/tree/rewardSystem)
+
 ___
 #### Technical jargon
 ##### Front-end 
