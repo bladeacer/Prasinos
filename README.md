@@ -1,6 +1,6 @@
 # Prasinos
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 ![Thumbnail](assets/thumbnail.png)
 
@@ -67,6 +67,7 @@ To run it, you would have to install MySQL and provide the placeholder credentia
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/233154G"><img src="https://avatars.githubusercontent.com/u/167153528?v=4?s=100" width="100px;" alt="Z T"/><br /><sub><b>Z T</b></sub></a><br /><a href="https://github.com/bladeacer/Prasinos/commits?author=233154G" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/junlongg06"><img src="https://avatars.githubusercontent.com/u/167966451?v=4?s=100" width="100px;" alt="junlong"/><br /><sub><b>junlong</b></sub></a><br /><a href="https://github.com/bladeacer/Prasinos/commits?author=junlongg06" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/features/security"><img src="https://avatars.githubusercontent.com/u/27347476?v=4?s=100" width="100px;" alt="Dependabot"/><br /><sub><b>Dependabot</b></sub></a><br /><a href="#infra-dependabot" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://allcontributors.org"><img src="https://avatars.githubusercontent.com/u/46410174?v=4?s=100" width="100px;" alt="All Contributors"/><br /><sub><b>All Contributors</b></sub></a><br /><a href="#infra-all-contributors" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
     </tr>
   </tbody>
 </table>
