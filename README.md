@@ -1,6 +1,6 @@
 # Prasinos
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 ![Thumbnail](assets/thumbnail.png)
 
@@ -64,6 +64,7 @@ To run it, you would have to install MySQL and provide the placeholder credentia
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/bladeacer"><img src="https://avatars.githubusercontent.com/u/148305363?v=4?s=100" width="100px;" alt="bladeacer"/><br /><sub><b>bladeacer</b></sub></a><br /><a href="https://github.com/bladeacer/Prasinos/commits?author=bladeacer" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Manveer04"><img src="https://avatars.githubusercontent.com/u/155811338?v=4?s=100" width="100px;" alt="Manveer04"/><br /><sub><b>Manveer04</b></sub></a><br /><a href="https://github.com/bladeacer/Prasinos/commits?author=Manveer04" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Ninjapro882"><img src="https://avatars.githubusercontent.com/u/156459050?v=4?s=100" width="100px;" alt="Branden"/><br /><sub><b>Branden</b></sub></a><br /><a href="https://github.com/bladeacer/Prasinos/commits?author=Ninjapro882" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/233154G"><img src="https://avatars.githubusercontent.com/u/167153528?v=4?s=100" width="100px;" alt="Z T"/><br /><sub><b>Z T</b></sub></a><br /><a href="https://github.com/bladeacer/Prasinos/commits?author=233154G" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
